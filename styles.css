@@ -354,6 +354,18 @@ body{
 	pointer-events:none;
 }
 
+/* Фоновое изображение: ширина 100vw, прижато к низу */
+.bg-fullwidth-bottom{
+	position:fixed;
+	left:50%;
+	bottom:0;
+	transform:translateX(-50%);
+	width:100vw;
+	height:auto;
+	z-index:1;
+	pointer-events:none;
+}
+
 /* Фоновый iframe: высота 100vh, центр по вертикали */
 .bg-iframe-fullheight-center{
 	position:fixed;

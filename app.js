@@ -947,6 +947,37 @@ function renderRoute(){
 		renderSlide44();
 		return;
 	}
+	// Слайд 45 — фон svg на всю высоту экрана
+	if(route.index === 45){
+		$app.innerHTML = '';
+		const root = document.createElement('section');
+		root.className = 'view';
+		root.style.background = 'var(--bg-dark)';
+
+		const bg = document.createElement('img');
+		bg.src = './mts/сalls-schedule.svg';
+		bg.alt = '';
+		bg.className = 'bg-fullwidth-bottom';
+		root.appendChild(bg);
+
+		const textWrap = document.createElement('div');
+		textWrap.style.position = 'relative';
+		textWrap.style.zIndex = '2';
+		textWrap.style.padding = 'var(--pad)';
+		textWrap.style.maxWidth = '50vw';
+		textWrap.style.textAlign = 'left';
+		textWrap.style.fontWeight = '400';
+		textWrap.style.lineHeight = '140%';
+		textWrap.style.fontSize = 'var(--fz-main)';
+		root.appendChild(textWrap);
+
+		$app.appendChild(root);
+
+		const slideObj = DATA.slides[45] || null;
+		const body = slideObj?.body || '';
+		typeInto(textWrap, body);
+		return;
+	}
 	// Типовые слайды (включая 02,03,08,20,22,25,35)
 	cleanup = renderTwoColSlide(route.index);
 }
