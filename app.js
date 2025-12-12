@@ -7,14 +7,32 @@ const DATA = {
 };
 
 const VIDEO_MAP = {
+	6: './mts/ui-mvp.mp4',
 	2: './mts/problem.mp4',
 	3: './mts/сall-center.mp4',
 	8: './mts/problem.mp4',
+	28: './mts/illustrations.mp4',
 	20: './mts/habits.mp4',
 	22: './mts/victory.mp4',
 	25: './mts/сheck-outs.mp4',
+	48: './mts/topology.mp4',
 	35: './mts/slippers.mp4',
 };
+
+// Для этих слайдов используем iframe в правой части вместо видео
+const IFRAME_MAP = {
+	10: './mts/ui-phone/ui-du/ui-du.html',
+	11: './mts/ui-phone/ui-switch/ui-switch.html',
+	12: './mts/ui-phone/ui-port/ui-port.html',
+	13: './mts/ui-phone/ui-ls/ui-ls.html',
+	14: './mts/ui-phone/ui-dynamic/ui-dynamic.html',
+	24: './mts/message/message-slow.html',
+	33: './mts/ui-phone/ui-port-naked/ui-port-naked.html',
+	34: './mts/message/message-port.html',
+};
+
+// На каких слайдах поверх видео нужен эффект шума
+const NOISE_SLIDES = new Set([2, 3, 8, 20, 22, 25, 35]);
 
 const $app = document.getElementById('app');
 const $side = document.getElementById('sideMenu');
@@ -278,17 +296,31 @@ function renderTwoColSlide(index){
 
 	const holder = document.createElement('div');
 	holder.className = 'video-holder';
-	const video = document.createElement('video');
-	video.src = VIDEO_MAP[index] || '';
-	video.muted = true;
-	video.loop = true;
-	video.autoplay = true;
-	video.playsInline = true;
-	video.preload = 'auto';
-	holder.appendChild(video);
+	const iframeSrc = IFRAME_MAP[index];
+	if (iframeSrc) {
+		const frame = document.createElement('iframe');
+		frame.src = iframeSrc;
+		frame.setAttribute('title', 'Slide ' + String(index).padStart(2,'0') + ' Iframe');
+		frame.setAttribute('loading', 'lazy');
+		holder.appendChild(frame);
+	} else {
+		const video = document.createElement('video');
+		video.src = VIDEO_MAP[index] || '';
+		video.muted = true;
+		video.loop = true;
+		video.autoplay = true;
+		video.playsInline = true;
+		video.preload = 'auto';
+		holder.appendChild(video);
+	}
 	right.appendChild(holder);
 
-	const noiseHandle = attachNoiseOverlay(holder, { alpha: 16, refreshInterval: 2 });
+	// Шум накладываем только на отмеченных слайдах
+	let noiseHandle = null;
+	// (для iframe шума не делаем)
+	if (!IFRAME_MAP[index] && NOISE_SLIDES.has(index)) {
+		noiseHandle = attachNoiseOverlay(holder, { alpha: 16, refreshInterval: 2 });
+	}
 
 	root.appendChild(left);
 	root.appendChild(right);
@@ -299,7 +331,7 @@ function renderTwoColSlide(index){
 	const body = slideObj?.body || '';
 	typeInto(mainText, body);
 
-	return () => noiseHandle.detach();
+	return () => { if (noiseHandle) noiseHandle.detach(); };
 }
 
 /* Слайд 01 — центр логотип, фон/ховер эффект, текст 80vw с отступами */
@@ -450,6 +482,129 @@ function renderSlide29(){
 	typeInto(textWrap, body);
 }
 
+/* Слайд 46 — фоновые видео switches.mp4 (100vh, центр), текст слева */
+function renderSlide46(){
+	$app.innerHTML = '';
+	const root = document.createElement('section');
+	root.className = 'view';
+	root.style.background = 'var(--bg-dark)';
+
+	const bg = document.createElement('video');
+	bg.src = './mts/switches.mp4';
+	bg.className = 'bg-fullheight-center';
+	bg.muted = true;
+	bg.loop = true;
+	bg.autoplay = true;
+	bg.playsInline = true;
+	bg.preload = 'auto';
+	bg.setAttribute('aria-hidden', 'true');
+	root.appendChild(bg);
+
+	const textWrap = document.createElement('div');
+	textWrap.style.position = 'relative';
+	textWrap.style.zIndex = '2';
+	textWrap.style.padding = 'var(--pad)';
+	textWrap.style.maxWidth = '50vw';
+	textWrap.style.textAlign = 'left';
+	textWrap.style.fontWeight = '400';
+	textWrap.style.lineHeight = '140%';
+	textWrap.style.fontSize = 'var(--fz-main)';
+	root.appendChild(textWrap);
+
+	$app.appendChild(root);
+
+	const slideObj = DATA.slides[46] || null;
+	const body = slideObj?.body || '';
+	typeInto(textWrap, body);
+}
+
+/* Слайд 47 — фоновые видео connection.mp4 (100vh, центр), текст слева */
+function renderSlide47(){
+	$app.innerHTML = '';
+	const root = document.createElement('section');
+	root.className = 'view';
+	root.style.background = 'var(--bg-dark)';
+
+	const bg = document.createElement('video');
+	bg.src = './mts/сonnection.mp4';
+	bg.className = 'bg-fullheight-center';
+	bg.muted = true;
+	bg.loop = true;
+	bg.autoplay = true;
+	bg.playsInline = true;
+	bg.preload = 'auto';
+	bg.setAttribute('aria-hidden', 'true');
+	root.appendChild(bg);
+
+	const textWrap = document.createElement('div');
+	textWrap.style.position = 'relative';
+	textWrap.style.zIndex = '2';
+	textWrap.style.padding = 'var(--pad)';
+	textWrap.style.maxWidth = '50vw';
+	textWrap.style.textAlign = 'left';
+	textWrap.style.fontWeight = '400';
+	textWrap.style.lineHeight = '140%';
+	textWrap.style.fontSize = 'var(--fz-main)';
+	root.appendChild(textWrap);
+
+	$app.appendChild(root);
+
+	const slideObj = DATA.slides[47] || null;
+	const body = slideObj?.body || '';
+	typeInto(textWrap, body);
+}
+
+/* Слайд 44 — фоновое видео fullscreen + справа SVG, текст слева */
+function renderSlide44(){
+	$app.innerHTML = '';
+	const root = document.createElement('section');
+	root.className = 'view slide-two-col';
+	root.style.background = 'var(--bg-dark)';
+
+	// Фоновое видео на весь экран
+	const bg = document.createElement('video');
+	bg.src = './mts/ui-test-cable/ui-test-cable.mp4';
+	bg.muted = true;
+	bg.loop = true;
+	bg.autoplay = true;
+	bg.playsInline = true;
+	bg.preload = 'auto';
+	bg.style.position = 'fixed';
+	bg.style.inset = '0';
+	bg.style.width = '100vw';
+	bg.style.height = '100vh';
+	bg.style.objectFit = 'cover';
+	bg.style.zIndex = '0';
+	root.appendChild(bg);
+
+	const left = document.createElement('div');
+	left.className = 'slide-left';
+	left.style.zIndex = '1';
+	const right = document.createElement('div');
+	right.className = 'slide-right';
+	right.style.zIndex = '1';
+
+	const mainText = document.createElement('div');
+	mainText.className = 'main-text';
+	left.appendChild(mainText);
+
+	const holder = document.createElement('div');
+	holder.className = 'video-holder';
+	const img = document.createElement('img');
+	img.src = './mts/ui-test-cable/ui-test-cable.svg';
+	img.alt = '';
+	holder.appendChild(img);
+	right.appendChild(holder);
+
+	root.appendChild(left);
+	root.appendChild(right);
+	$app.appendChild(root);
+
+	const slideObj = DATA.slides[44] || null;
+	const body = slideObj?.body || '';
+	typeInto(mainText, body);
+}
+
 /* Рендерер маршрута */
 let cleanup = null;
 function renderRoute(){
@@ -470,12 +625,62 @@ function renderRoute(){
 		renderSlide05();
 		return;
 	}
+	// Фоновые iframe на всю высоту: 37–42
+	const bgIframeMap = {
+		37: './mts/ui-flow/office/index-office.html',
+		38: './mts/ui-flow/office/index-office-task.html',
+		39: './mts/ui-flow/entrance/index-entrance.html',
+		40: './mts/ui-flow/switch/index-switch.html',
+		41: './mts/ui-flow/switch/index-port.html',
+		42: './mts/ui-flow/home/index-home.html',
+	};
+	if (bgIframeMap[route.index]) {
+		$app.innerHTML = '';
+		const root = document.createElement('section');
+		root.className = 'view';
+		root.style.background = 'var(--bg-dark)';
+		// фон-iframe
+		const bg = document.createElement('iframe');
+		bg.src = bgIframeMap[route.index];
+		bg.className = 'bg-iframe-fullheight-center';
+		bg.setAttribute('title', 'Flow Iframe');
+		bg.setAttribute('loading', 'lazy');
+		root.appendChild(bg);
+		// текст слева
+		const textWrap = document.createElement('div');
+		textWrap.style.position = 'relative';
+		textWrap.style.zIndex = '2';
+		textWrap.style.padding = 'var(--pad)';
+		textWrap.style.maxWidth = '50vw';
+		textWrap.style.textAlign = 'left';
+		textWrap.style.fontWeight = '400';
+		textWrap.style.lineHeight = '140%';
+		textWrap.style.fontSize = 'var(--fz-main)';
+		root.appendChild(textWrap);
+		$app.appendChild(root);
+		const slideObj = DATA.slides[route.index] || null;
+		const body = slideObj?.body || '';
+		typeInto(textWrap, body);
+		return;
+	}
 	if(route.index === 27){
 		renderSlide27();
 		return;
 	}
 	if(route.index === 29){
 		renderSlide29();
+		return;
+	}
+	if(route.index === 46){
+		renderSlide46();
+		return;
+	}
+	if(route.index === 47){
+		renderSlide47();
+		return;
+	}
+	if(route.index === 44){
+		renderSlide44();
 		return;
 	}
 	// Типовые слайды (включая 02,03,08,20,22,25,35)

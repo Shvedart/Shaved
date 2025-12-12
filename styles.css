@@ -99,6 +99,21 @@ body{
 	height:100%;
 	object-fit:cover;
 }
+.video-holder img{
+	position:absolute;
+	inset:0;
+	/* width:100%; */
+	height:100vh;
+	object-fit:contain;
+}
+.video-holder iframe{
+	position:absolute;
+	inset:0;
+	width:100%;
+	height:100%;
+	border:0;
+	background:transparent;
+}
 .noise-overlay{
 	position:absolute;
 	left:0;
@@ -324,6 +339,20 @@ body{
 	width:auto;
 	z-index:1;
 	pointer-events:none;
+}
+
+/* Фоновый iframe: высота 100vh, центр по вертикали */
+.bg-iframe-fullheight-center{
+	position:fixed;
+	left:0;
+	top:50%;
+	transform:translateY(-50%);
+	width:100vw;
+	height:100vh;
+	border:0;
+	z-index:1;
+	pointer-events:none;
+	background:transparent;
 }
 
 /* Правый фиксированный iframe на фоне */
