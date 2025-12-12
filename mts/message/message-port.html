@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<title>Message Port SVG Demo</title>
+	<style>
+		:root {
+			--bg: #101620;
+		}
+		html, body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow: hidden; /* никаких прокруток */
+			background: var(--bg);
+		}
+		/* Контейнер 50vw x 100vh */
+		.container {
+			/* width: 50vw; */
+			height: 100vh;
+			margin: 0 auto; /* по центру страницы по горизонтали */
+			background: var(--bg);
+			display: flex;
+			align-items: center;   /* вертикальное центрирование содержимого */
+			justify-content: center; /* горизонтальное центрирование содержимого */
+		}
+		/* Колонка сообщений строго по центру контейнера */
+		.messages {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 2vh; /* расстояние между "сообщениями" */
+			width: 100%;
+			height: 100%;
+			overflow: hidden; /* перестраховка от прокруток внутри */
+		}
+		/* SVG как сообщения, размеры заданы в vh */
+		.message {
+			height: 10vh; /* размер в vh, ширина подстраивается пропорционально */
+			width: auto;
+			opacity: 0;
+			transform: translateY(1vh);
+			animation: fadeIn 400ms ease-out forwards;
+			/* filter: drop-shadow(0 0.8vh 1.2vh rgba(0, 0, 0, 0.2)); */
+			user-select: none;
+			pointer-events: none;
+		}
+		@keyframes fadeIn {
+			from { opacity: 0; transform: translateY(1vh); }
+			to   { opacity: 1; transform: translateY(0); }
+		}
+	</style>
+	<!-- Никаких внешних файлов: весь код внутри документа -->
+</head>
+<body>
+	<div class="container">
+		<div class="messages" id="messages" aria-live="polite" aria-label="Сообщения">
+			<!-- Сообщения будут появляться программно -->
+		</div>
+	</div>
+
+	<script>
+		(function () {
+			/* Список SVG из корневой папки */
+			const svgFiles = [
+				'message-port-01.svg',
+				'message-port-02.svg',
+				'message-port-03.svg',
+				'message-port-04.svg',
+				'message-port-05.svg'
+			];
+
+			const messagesEl = document.getElementById('messages');
+			let index = 0;
+			const delayMs = 700; /* задержка появления между "сообщениями" */
+
+			function addNextMessage() {
+				if (index >= svgFiles.length) return;
+				const img = new Image();
+				img.className = 'message';
+				img.src = svgFiles[index];
+				img.alt = 'Сообщение ' + (index + 1);
+				img.decoding = 'async';
+				img.loading = 'eager';
+				messagesEl.appendChild(img);
+				index += 1;
+				if (index < svgFiles.length) {
+					setTimeout(addNextMessage, delayMs);
+				}
+			}
+
+			/* Запуск после загрузки */
+			if (document.readyState === 'complete' || document.readyState === 'interactive') {
+				addNextMessage();
+			} else {
+				window.addEventListener('DOMContentLoaded', addNextMessage, { once: true });
+			}
+		})();
+	</script>
+</body>
+</html>
+
+

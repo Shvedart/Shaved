@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>График звонков</title>
+  <style>
+    :root {
+      --pad-left: 55px;
+      --pad-right: 55px;
+      --pad-bottom: 160px; /* снизу на 30px больше, график выше */
+      --pad-top: 300px; /* возвращено исходное значение сверху */
+      --bar-gap: 0px; /* без промежутков между столбцами */
+      --animation-total-s: 1.5;
+      --bar-gradient: linear-gradient(0deg, #FFF 37.31%, #FFA200 86.03%, #FF0021 107.8%);
+      --labels-color: rgba(255,255,255,0.8);
+      --axis-color: #e9e9e9;
+      --bg-color: #000000; /* чёрный фон */
+      --text-color: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color: var(--text-color);
+      background: var(--bg-color);
+    }
+    .page {
+      min-height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    .chart {
+      position: relative;
+      width: 100%;
+      padding: var(--pad-top) var(--pad-right) var(--pad-bottom) var(--pad-left);
+    }
+    /* Область столбцов (шкал) заполняет всю доступную ширину между отступами */
+    .bars-area {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(var(--num-bars, 1), 1fr);
+      gap: var(--bar-gap);
+      align-items: end; /* столбцы растут снизу вверх */
+    }
+    /* Дополнительно тонкая сетка по вертикали (необязательно). Отключено по умолчанию. */
+    .bars-area::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--axis-color) 1px, transparent 1px);
+      background-size: calc((100% - (var(--num-bars, 1) - 1) * var(--bar-gap)) / var(--num-bars, 1)) 100%;
+      opacity: 0; /* 0 — скрыто; поставить 0.25 чтобы слегка показать разделители */
+    }
+    .bar {
+      position: relative;
+      height: 0%; /* стартовая высота для анимации */
+      /* border-radius: 8px 8px 0 0; */
+      background: var(--bar-gradient);
+      overflow: hidden;
+      will-change: height;
+      /* Без теней по требованию */
+      box-shadow: none;
+      /* Анимационные параметры будут устанавливаться инлайном для каждого столбца */
+      animation-fill-mode: both;
+    }
+    @keyframes grow {
+      from { height: 0%; }
+      to   { height: var(--target-height, 0%); }
+    }
+    /* Подписи снизу: дни месяца и день недели */
+    .x-labels {
+      position: absolute;
+      left: var(--pad-left);
+      right: var(--pad-right);
+      bottom: 0;
+      height: var(--pad-bottom);
+      display: grid;
+      grid-template-columns: repeat(var(--num-bars, 1), 1fr);
+      align-content: end;
+      gap: var(--bar-gap);
+      padding-bottom: 130px; /* небольшой внутренний отступ от нижней границы */
+      pointer-events: none;
+    }
+    .x-label {
+      font-size: 10px;
+      line-height: 1.2;
+      color: var(--labels-color);
+      text-align: center;
+      opacity: 0.9;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+    /* Метка над максимальной шкалой */
+    .max-note {
+      position: absolute;
+      transform: translateX(-50%);
+      padding: 0;
+      background: transparent; /* без плашки */
+      color: #ffffff;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: none;
+    }
+    .max-note::after { display: none; }
+    /* Заголовок/пояснение сверху — место зарезервировано отступом var(--pad-top) */
+    .header-slot {
+      position: absolute;
+      left: var(--pad-left);
+      right: var(--pad-right);
+      top: 0;
+      height: var(--pad-top);
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 18px;
+      color: var(--text-color);
+      pointer-events: none;
+      display: none; /* скрываем заголовок */
+    }
+    .title {
+      font-weight: 700;
+      font-size: 20px;
+      opacity: 0.9;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="chart" id="chart">
+      <div class="bars-area" id="barsArea" style="--num-bars: 1;"></div>
+      <div class="x-labels" id="xLabels" style="--num-bars: 1;"></div>
+      <div class="max-note" id="maxNote" style="opacity:0; visibility:hidden;"></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      // Данные. Максимум сделаем 12300, чтобы над самым высоким было «12 300 звонков в день».
+      // Стартовая дата — 1 число месяца, среда (например, 1 мая 2024 было средой).
+      const startDate = new Date(2024, 4, 1); // 0-based: 4 = май; 1 мая 2024 — среда
+      const numDays = 30; // 30 столбцов
+      // 30 значений, максимум 12 300 около 20 числа
+      const values = [
+        8500, 8200, 7900, 7400, 7000, 9300, 10800, 10400, 9900, 10100,
+        9500, 8800, 11000, 9800, 10300, 9700, 9400, 9200, 8800, 12300,
+        10800, 10400, 10600, 10200, 9000, 7600, 11200, 10900, 10500, 10700
+      ];
+      // Контроль длины
+      const N = Math.min(numDays, values.length);
+      const weekDaysShort = ["вс","пн","вт","ср","чт","пт","сб"];
+
+      const chartEl = document.getElementById('chart');
+      const barsArea = document.getElementById('barsArea');
+      const xLabels = document.getElementById('xLabels');
+      const maxNote = document.getElementById('maxNote');
+
+      // Установим количество столбцов в CSS-переменную
+      barsArea.style.setProperty('--num-bars', String(N));
+      xLabels.style.setProperty('--num-bars', String(N));
+
+      // Нормализация по максимуму
+      const maxValue = Math.max(...values.slice(0, N));
+      const maxIndex = values.slice(0, N).indexOf(maxValue);
+
+      // Настройка длительности и задержек для последовательной анимации
+      const totalS = parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--animation-total-s')) || 1.5;
+      const perBarS = totalS / N; // длительность одной шкалы и шаг задержки
+
+      // Генерация DOM для столбцов и подписей снизу
+      barsArea.innerHTML = '';
+      xLabels.innerHTML = '';
+
+      function formatNumberWithSpaces(num) {
+        return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      }
+      function makeLabel(date) {
+        const d = date.getDate();
+        const wd = weekDaysShort[date.getDay()];
+        return `${d} ${wd}`;
+      }
+      // Подготовим массив дат
+      const dates = Array.from({ length: N }, (_, i) => {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        return d;
+      });
+
+      const minHeightPercent = 70; // столбцы ближе к верху, разброс не более 30% (70–100)
+      dates.forEach((date, i) => {
+        const val = values[i];
+        const ratio = (val / maxValue); // 0..1
+        const percent = minHeightPercent + ratio * (100 - minHeightPercent); // 70..100
+
+        // Создаем столбец
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.setProperty('--target-height', percent.toFixed(4) + '%');
+        bar.style.animationName = 'grow';
+        bar.style.animationDuration = `${perBarS}s`;
+        bar.style.animationTimingFunction = 'cubic-bezier(.2,.7,.2,1)';
+        bar.style.animationDelay = `${i * perBarS}s`;
+        bar.style.animationFillMode = 'both';
+        barsArea.appendChild(bar);
+
+        // Подписка снизу
+        const lbl = document.createElement('div');
+        lbl.className = 'x-label';
+        lbl.textContent = makeLabel(date);
+        xLabels.appendChild(lbl);
+      });
+
+      // Метка для максимума
+      function positionMaxNote() {
+        if (maxIndex < 0) return;
+        const bars = barsArea.children;
+        if (!bars[maxIndex]) return;
+        const maxBar = bars[maxIndex];
+        const barRect = maxBar.getBoundingClientRect();
+        const chartRect = chartEl.getBoundingClientRect();
+
+        // Позиционируем по центру столбца и над его верхом
+        const centerX = barRect.left + barRect.width / 2;
+        const topY = barRect.top; // верх столбца
+        const offsetAbove = 24; // чуть выше и без наложения
+        const noteRect = maxNote.getBoundingClientRect();
+
+        maxNote.style.left = `${centerX - chartRect.left}px`;
+        let topPos = topY - chartRect.top - offsetAbove - noteRect.height;
+        if (topPos < 0) topPos = 0;
+        maxNote.style.top = `${topPos}px`;
+      }
+
+      // Текст метки над максимумом — как просили
+      maxNote.textContent = `${formatNumberWithSpaces(maxValue)} звонков в день`;
+
+      // Делаем метку видимой после завершения последней анимации
+      const lastBar = barsArea.children[N - 1];
+      const showNoteAt = totalS * 1000; // мс
+      setTimeout(() => {
+        positionMaxNote();
+        maxNote.style.opacity = '1';
+        maxNote.style.visibility = 'visible';
+      }, showNoteAt + 20);
+
+      // При ресайзе пересчитываем позицию
+      window.addEventListener('resize', () => {
+        // Небольшая задержка, чтобы после рефлоу получить точные размеры
+        requestAnimationFrame(positionMaxNote);
+      });
+    })();
+  </script>
+</body>
+</html>
+
+

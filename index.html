@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>Портфолио — Денис Шведюк</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="./styles.css">
+	<link rel="icon" href="./ui-element/mts-logo.svg">
+</head>
+<body>
+	<div id="app"></div>
+
+	<!-- Боковое меню -->
+	<aside id="sideMenu" aria-hidden="true">
+		<div class="side-menu__header">
+			<div class="side-menu__title">Слайды</div>
+			<button class="side-menu__close" aria-label="Закрыть меню">×</button>
+		</div>
+		<nav class="side-menu__list" id="sideMenuList"></nav>
+	</aside>
+	<div id="sideMenuBackdrop" tabindex="-1" aria-hidden="true"></div>
+
+	<!-- Нижнее меню (общее) -->
+	<footer id="footerMenu" class="footer">
+		<a class="footer__brand" href="#/home" data-link="home">Шведюк Д.А.</a>
+		<a class="footer__resume" href="./Шведюк_Денис_Product-дизайнер.pdf" download>Резюме ↗</a>
+	</footer>
+
+	<!-- Правый верх: проект и метка интерактивности -->
+	<div id="topRight" class="top-right">
+		<button class="top-right__project" id="btnProject">МТС/<span id="slideNumber">00</span></button>
+		<div class="top-right__interactive" id="interactiveBadge" hidden>интерактивный ✦</div>
+	</div>
+
+	<!-- Правый низ: стрелки навигации -->
+	<div id="controls" class="controls" aria-label="Навигация по слайдам">
+		<button class="controls__arrow" id="btnPrev" aria-label="Назад">
+			<img src="./ui-element/arrow-back.svg" alt="←">
+		</button>
+		<button class="controls__arrow" id="btnNext" aria-label="Вперёд">
+			<img src="./ui-element/arrow-forward.svg" alt="→">
+		</button>
+	</div>
+
+	<script src="./mts/document/text-type.js"></script>
+	<script src="./app.js" type="module"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Гибкость — страница с контейнерами</title>
+  <style>
+    :root {
+      --pad-top-first: 8px;
+      --pad-bottom-first: 16px;
+      --pad-vert: 8px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      min-height: 100vh;
+      background-color: #EDE8E1;
+      overflow: hidden; /* отключаем скролл страницы */
+    }
+    .page {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* центр по горизонтали */
+      height: 100vh;
+      gap: 8px;
+      margin-left: -120px;
+      justify-content: center;
+    }
+    .group {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* центрируем вложенный контент */
+      gap: 0;
+      background-color: #fff;
+      border-radius: 24px;
+    }
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container--white {
+      padding: 8px 0px 0px 0px; /* сверху 8px, снизу 16px, сбоку 0 */
+    }
+    .container--pad {
+      padding: var(--pad-vert) 0; /* сверху/снизу 8px, сбоку 0 */
+    }
+    img, svg {
+      display: block;
+      height: auto;
+      max-width: 100%;
+    }
+    .icon {
+      display: block;
+    }
+    /* элементы, которые будут появляться/исчезать */
+    .flicker-target {
+      opacity: 1;
+      max-height: 1000px; /* достаточно большое значение для плавного схлопывания */
+      overflow: hidden;
+      transition: opacity 500ms ease, max-height 500ms ease;
+      will-change: opacity, max-height;
+    }
+    .flicker-hiding {
+      opacity: 0;
+      max-height: 0;
+      pointer-events: none;
+    }
+    .flicker-hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- На самом верху -->
+    <img class="icon icon--up" src="up.svg" alt="Вверх">
+
+    <!-- Родительский контейнер с тремя вложенными -->
+    <div class="group">
+      <!-- 1) Белый фон, отступы: сверху 8px, снизу 16px, сбоку 0 -->
+      <div class="container container--white">
+        <img src="01.svg" alt="01">
+      </div>
+
+      <!-- 2) Паддинги сверху/снизу по 8px -->
+      <div class="container container--pad">
+        <img src="02.svg" alt="02">
+        <img src="03.svg" alt="03">
+        <img class="flicker-target" src="04.svg" alt="04">
+        <img class="flicker-target" src="05.svg" alt="05">
+        <img class="flicker-target" src="06.svg" alt="06">
+      </div>
+
+      <!-- 3) Паддинги сверху/снизу по 8px -->
+      <div class="container container--pad">
+        <img src="07.svg" alt="07">
+        <img src="08.svg" alt="08">
+        <img class="flicker-target" src="09.svg" alt="09">
+        <img class="flicker-target" src="10.svg" alt="10">
+        <img class="flicker-target" src="11.svg" alt="11">
+      </div>
+    </div>
+
+    <!-- Под контейнерами -->
+    <img class="icon icon--down" src="down.svg" alt="Вниз">
+  </div>
+
+  <script>
+    // Рандомное появление/исчезновение элементов 04–06 и 09–11
+    (function () {
+      const targets = Array.from(document.querySelectorAll('.flicker-target'));
+      if (targets.length === 0) return;
+      const groupEl = document.querySelector('.group'); // больше не анимируем высоту группы
+
+      // все элементы стартуют видимыми
+      targets.forEach(el => el.classList.remove('flicker-hidden'));
+
+      // Убрали анимацию высоты контейнера, плавность обеспечивается max-height каждого элемента
+
+      function getRandomSample(arr, count) {
+        const indices = new Set();
+        const result = [];
+        while (result.length < count && indices.size < arr.length) {
+          const i = Math.floor(Math.random() * arr.length);
+          if (!indices.has(i)) {
+            indices.add(i);
+            result.push(arr[i]);
+          }
+        }
+        return result;
+      }
+
+      // Управление скрытием/показом с финальным display:none
+      const hideHandlers = new WeakMap();
+      function hideElement(el) {
+        if (el.classList.contains('flicker-hidden') || el.classList.contains('flicker-hiding')) return;
+        el.classList.add('flicker-hiding');
+        const onEnd = (e) => {
+          if (e.propertyName !== 'opacity') return;
+          // если не отменили скрытие
+          if (el.classList.contains('flicker-hiding')) {
+            el.classList.remove('flicker-hiding');
+            el.classList.add('flicker-hidden'); // полностью выключить из потока
+          }
+          el.removeEventListener('transitionend', onEnd);
+          hideHandlers.delete(el);
+        };
+        hideHandlers.set(el, onEnd);
+        el.addEventListener('transitionend', onEnd);
+      }
+      function showElement(el) {
+        // если есть слушатель скрытия — снять
+        if (hideHandlers.has(el)) {
+          el.removeEventListener('transitionend', hideHandlers.get(el));
+          hideHandlers.delete(el);
+        }
+        if (!el.classList.contains('flicker-hidden')) {
+          // если в процессе скрытия — отменяем
+          el.classList.remove('flicker-hiding');
+          return;
+        }
+        // вернуть в поток
+        el.classList.remove('flicker-hidden');
+        // стартуем со скрытого состояния (без display:none)
+        el.classList.add('flicker-hiding');
+        // следующий кадр — убрать hiding, чтобы анимация проявления сработала
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            el.classList.remove('flicker-hiding');
+          });
+        });
+      }
+      function toggleElement(el) {
+        if (el.classList.contains('flicker-hidden')) showElement(el);
+        else hideElement(el);
+      }
+      function tick() {
+        // случайно скрываем/показываем 1 или 2 элемента
+        const howMany = Math.random() < 0.5 ? 1 : 2;
+        const chosen = getRandomSample(targets, howMany);
+        chosen.forEach(toggleElement);
+      }
+
+      // интервал переключений: 1.25 секунды
+      setInterval(tick, 1250);
+    })();
+  </script>
+</body>
+<html>
+
+

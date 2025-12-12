@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>До/после — визуализация размеров</title>
+  <style>
+    :root{
+      --pad-side:55px;     /* отступы слева/справа */
+      --gap:55px;          /* расстояние между блоками */
+      --pad-top:250px;     /* верхний отступ страницы */
+      --pad-bottom:130px;  /* отступ снизу страницы */
+      --text-color:#ffffff;
+      --bg:#000000;
+      --bar-radius:4px;
+      --shadow:0 8px 24px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.3);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text-color);
+      font:600 18px/1.25 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Helvetica Neue", sans-serif;
+    }
+
+    /* Контейнер — задаёт необходимые отступы и сетку 1x2 */
+    .page{
+      min-height:100vh;
+      padding:var(--pad-top) var(--pad-side) var(--pad-bottom);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:var(--gap);
+      align-items:end; /* блоки притянуты к низу */
+    }
+
+    /* Обёртка каждой колонки — на всю доступную высоту */
+    .col{
+      position:relative;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end; /* бар у нижней кромки */
+    }
+
+    .label{
+      position:absolute;
+      left:18px;
+      top:-18px;
+      font-weight:600;
+      font-size:28px;
+      line-height:1.1;
+      letter-spacing:.2px;
+      user-select:none;
+      pointer-events:none;
+      white-space:pre-line;
+      color: #000000;
+    }
+    .label small{
+      display:block;
+      font-size:20px;
+      font-weight:700;
+      opacity:.9;
+    }
+    /* Модификатор для правой подписи */
+    .label--right{
+      color:#ffffff;
+      left: -1px;
+      top: -105px;
+    }
+
+    /* Непосредственно визуальный блок (столбик) */
+    .bar{
+      position:relative;
+      width:100%;
+      height:0; /* анимируется из JS */
+      box-shadow:var(--shadow);
+      background:
+        linear-gradient(56deg, #BFA5C3 0%, #B4B4CF 27.4%, #B8E8FD 57.99%, #FFFBBB 76.61%, #FDD9C8 84.13%, #C6C0CE 100%),
+        #EEE8E0;
+    }
+
+    /* Подпись прогресса внизу справа (для наглядности) */
+    .legend{
+      position:fixed;
+      left:var(--pad-side);
+      right:var(--pad-side);
+      bottom:24px;
+      display:flex;
+      justify-content:space-between;
+      gap:var(--gap);
+      font:500 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Helvetica Neue", sans-serif;
+      color:#bdbdbd;
+      opacity:.85;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      /* Если пользователь просит меньше анимаций — показываем финал сразу */
+      .bar{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <main class="page" id="page">
+    <!-- Левая колонка (было) -->
+    <section class="col" id="col-left">
+      <div class="bar" id="bar-left" aria-label="Было: до 7 МБ">
+        <div class="label">
+          было
+          <small id="value-left">≈ 0 КБ</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Правая колонка (стало) -->
+    <section class="col" id="col-right">
+      <div class="bar" id="bar-right" aria-label="Стало: до 320 КБ">
+        <div class="label label--right">
+          стало
+          <small id="value-right">≈ 0 КБ</small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const KB_IN_MB = 1024;
+      const TARGET_LEFT_MB = 7.0;                 // было ≈ 7 МБ
+      const TARGET_LEFT_KB = TARGET_LEFT_MB * KB_IN_MB;
+      const TARGET_RIGHT_KB = 320;              // стало ≈ 320 КБ
+
+      const page = document.getElementById('page');
+      const barLeft = document.getElementById('bar-left');
+      const barRight = document.getElementById('bar-right');
+      const valueLeft = document.getElementById('value-left');
+      const valueRight = document.getElementById('value-right');
+
+      // Easing функции
+      const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t); // быстро стартует, долго «тянется» к финишу
+      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);                // быстро стартует и быстро заканчивает
+
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function formatSizeFromKB(totalKB){
+        if (totalKB < KB_IN_MB) {
+          return `${Math.round(totalKB)} КБ`;
+        }
+        const mb = totalKB / KB_IN_MB;
+        // для плавности – 1 знак после запятой, но финал выставим точно "≈ 7 МБ"
+        return `${mb.toFixed(1)} МБ`;
+      }
+
+      function measureMaxBarHeight(){
+        // Высота области для столбиков: это высота колонки (100% от области page)
+        // которую даёт сетка с нужными внутренними отступами страницы.
+        const colRect = document.getElementById('col-left').getBoundingClientRect();
+        return colRect.height;
+      }
+
+      function setFinalHeights(){
+        const maxH = measureMaxBarHeight();
+        const leftTargetPx = maxH; // левый — «эталон» (100%)
+        const ratio = TARGET_RIGHT_KB / TARGET_LEFT_KB;
+        const rightTargetPx = Math.max(2, leftTargetPx * ratio);
+        return { leftTargetPx, rightTargetPx };
+      }
+
+      function animateBar({
+        element,
+        targetPx,
+        duration,
+        ease,
+        onProgress,
+        onComplete
+      }){
+        if (prefersReduced || duration <= 0){
+          element.style.height = `${targetPx}px`;
+          onProgress && onProgress(1);
+          onComplete && onComplete();
+          return;
+        }
+        let rafId = 0;
+        const start = performance.now();
+        function frame(now){
+          const t = Math.min(1, (now - start) / duration);
+          const p = ease(t);
+          element.style.height = `${targetPx * p}px`;
+          onProgress && onProgress(p);
+          if (t < 1){
+            rafId = requestAnimationFrame(frame);
+          }else{
+            onComplete && onComplete();
+          }
+        }
+        rafId = requestAnimationFrame(frame);
+        return () => cancelAnimationFrame(rafId);
+      }
+
+      function play(){
+        const { leftTargetPx, rightTargetPx } = setFinalHeights();
+
+        // Левый: 0 → 7 МБ
+        animateBar({
+          element: barLeft,
+          targetPx: leftTargetPx,
+          duration: 6000,
+          ease: easeOutExpo,
+          onProgress: (p) => {
+            const currentKB = TARGET_LEFT_KB * p;
+            // динамическое отображение от 0 КБ до 7 МБ
+            valueLeft.textContent = `≈ ${formatSizeFromKB(currentKB)}`;
+          },
+          onComplete: () => {
+            valueLeft.textContent = `≈ ${TARGET_LEFT_MB} МБ`;
+          }
+        });
+
+        // Правый: 0 → 320 КБ
+        animateBar({
+          element: barRight,
+          targetPx: rightTargetPx,
+          duration: 1200,
+          ease: easeOutCubic,
+          onProgress: (p) => {
+            const currentKB = TARGET_RIGHT_KB * p;
+            valueRight.textContent = `≈ ${Math.round(currentKB)} КБ`;
+          },
+          onComplete: () => {
+            valueRight.textContent = `≈ ${TARGET_RIGHT_KB} КБ`;
+          }
+        });
+      }
+
+      // Первый запуск
+      play();
+
+      // На ресайз — пересчитать целевые высоты и выставить финальные значения пропорционально
+      let resizeTimer = 0;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const { leftTargetPx, rightTargetPx } = setFinalHeights();
+          barLeft.style.height = `${leftTargetPx}px`;
+          barRight.style.height = `${rightTargetPx}px`;
+          // Обновим подписи (финальные)
+          valueLeft.textContent = `≈ ${TARGET_LEFT_MB} МБ`;
+          valueRight.textContent = `≈ ${TARGET_RIGHT_KB} КБ`;
+        }, 80);
+      }, { passive:true });
+    })();
+  </script>
+</body>
+</html>
+
+

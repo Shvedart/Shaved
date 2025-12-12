@@ -1,0 +1,28 @@
+<svg width="720" height="720" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_1067_7636)" filter="url(#filter0_d_1067_7636)">
+<mask id="mask0_1067_7636" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="250" y="207" width="220" height="221">
+<path d="M470 207.5H250V427.5H470V207.5Z" fill="white" style="fill:white;fill-opacity:1;"/>
+</mask>
+<g mask="url(#mask0_1067_7636)">
+<path d="M470 207.5H250V427.5H470V207.5Z" fill="#FF0032" style="fill:#FF0032;fill:color(display-p3 1.0000 0.0000 0.1961);fill-opacity:1;"/>
+<path d="M396.562 224.418V234.543H418.702V275.177H431.077V234.543H453.172V224.418H396.562Z" fill="white" style="fill:white;fill-opacity:1;"/>
+<path d="M316.953 224.418L300.753 257.987L284.599 224.418H266.914V275.177H279.334V238.863L295.128 269.552H306.423L322.218 238.863V275.177H334.593V224.418H316.953Z" fill="white" style="fill:white;fill-opacity:1;"/>
+<path d="M440.791 393.659C440.476 395.684 439.666 397.349 438.361 398.609C437.146 399.779 435.481 400.634 433.411 401.129C431.386 401.579 428.371 401.849 425.221 401.849C421.936 401.849 419.056 401.444 416.581 400.589C414.196 399.779 412.306 398.339 411.001 396.359C409.651 394.379 408.976 391.5 408.976 387.765V382.59C408.976 378.9 409.651 376.02 411.001 373.995C412.351 372.015 414.196 370.575 416.581 369.765C419.011 368.91 421.936 368.505 425.221 368.505C428.371 368.505 431.386 368.775 433.411 369.225C435.481 369.72 437.146 370.53 438.361 371.745C439.666 373.005 440.476 374.67 440.791 376.695H453.165C452.805 372.51 451.411 368.955 448.936 366.075C446.686 363.465 443.536 361.575 439.621 360.405C435.841 359.28 430.846 358.695 425.221 358.695C419.281 358.695 414.151 359.55 409.921 361.215C405.647 362.925 402.317 365.76 400.022 369.675C397.817 373.41 396.692 378.45 396.602 384.57V385.155L397.277 385.2L396.602 385.245V385.29V385.83C396.692 391.95 397.817 396.989 400.022 400.724C402.317 404.639 405.647 407.474 409.921 409.184C414.151 410.849 419.281 411.704 425.221 411.704C430.846 411.704 435.841 411.119 439.621 409.994C443.536 408.824 446.641 406.934 448.936 404.324C451.411 401.489 452.85 397.889 453.165 393.704H440.791V393.659Z" fill="white" style="fill:white;fill-opacity:1;"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_d_1067_7636" x="0" y="0" width="720" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="42.5"/>
+<feGaussianBlur stdDeviation="125"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0 0 0 0 0 0.196078 0 0 0 0.3 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1067_7636"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1067_7636" result="shape"/>
+</filter>
+<clipPath id="clip0_1067_7636">
+<rect width="220" height="220" fill="white" style="fill:white;fill-opacity:1;" transform="translate(250 207.5)"/>
+</clipPath>
+</defs>
+</svg>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Порты — анимация скрытия и перестановок</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      min-height: 100vh;
+      background: #EDE8E1;
+      overflow: hidden;
+    }
+    .page {
+      height: 100vh;
+      display: flex;
+      /* align-items: center; */
+      justify-content: center;
+      padding: 16px;
+    }
+    .port-container {
+      /* width: min(386px, 100%);
+      display: flex;
+      flex-direction: column;
+      border-radius: 24px;
+      padding: 8px 0; */
+    }
+    /* Обёртка каждого SVG — анимируем ЕЁ, чтобы соседи плавно занимали место */
+    .port-item {
+      overflow: hidden;
+      opacity: 1;
+      max-height: 2000px; /* заведомо больше высоты любых svg */
+      margin: 6px 0;      /* вместо gap, чтобы схлопывать без остаточного промежутка */
+      transform: translateZ(0); /* для FLIP */
+      transition:
+        opacity 500ms ease,
+        max-height 500ms ease,
+        margin 500ms ease,
+        transform 400ms ease;
+      will-change: opacity, max-height, margin, transform;
+    }
+    .port-item.is-hiding {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+    .port-item.is-hidden {
+      display: none;
+    }
+    .port-item img, .port-item svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  </style>
+  <!-- Все стили и JS — только внутри этой страницы -->
+</head>
+<body>
+  <div class="page">
+    <div class="port-container" id="portContainer">
+      <div class="port-item" data-id="port-01" data-order="1"><img src="port-01.svg" alt="port-01"></div>
+      <div class="port-item" data-id="port-02" data-order="2"><img src="port-02.svg" alt="port-02"></div>
+      <div class="port-item" data-id="port-03" data-order="3"><img src="port-03.svg" alt="port-03"></div>
+      <div class="port-item" data-id="port-04" data-order="4"><img src="port-04.svg" alt="port-04"></div>
+      <div class="port-item" data-id="port-05" data-order="5"><img src="port-05.svg" alt="port-05"></div>
+      <div class="port-item" data-id="port-06" data-order="6"><img src="port-06.svg" alt="port-06"></div>
+      <div class="port-item" data-id="port-07" data-order="7"><img src="port-07.svg" alt="port-07"></div>
+      <div class="port-item" data-id="port-08" data-order="8"><img src="port-08.svg" alt="port-08"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const container = document.getElementById('portContainer');
+      const fixedIds = new Set(['port-01', 'port-02', 'port-03']); // не трогаем
+
+      function getAllItems() {
+        return Array.from(container.querySelectorAll('.port-item'));
+      }
+      function getMovableItems() {
+        return getAllItems().filter(el => !fixedIds.has(el.dataset.id));
+      }
+      function getVisibleItems(arr = getAllItems()) {
+        return arr.filter(el => !el.classList.contains('is-hidden'));
+      }
+
+      // Снятие/показ с плавной анимацией без рывков
+      const hideEndMap = new WeakMap();
+      function hideItem(el) {
+        if (el.classList.contains('is-hidden') || el.classList.contains('is-hiding')) return;
+        el.classList.add('is-hiding');
+        const onEnd = (e) => {
+          if (e.propertyName !== 'opacity') return;
+          if (el.classList.contains('is-hiding')) {
+            el.classList.remove('is-hiding');
+            el.classList.add('is-hidden'); // полностью выключить
+          }
+          el.removeEventListener('transitionend', onEnd);
+          hideEndMap.delete(el);
+        };
+        hideEndMap.set(el, onEnd);
+        el.addEventListener('transitionend', onEnd);
+      }
+      function showItem(el) {
+        if (!el.classList.contains('is-hidden')) return;
+        // вернуть в поток и плавно проявить
+        el.classList.remove('is-hidden');
+        el.classList.add('is-hiding'); // старт из скрытого состояния
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            el.classList.remove('is-hiding'); // запустить анимацию появления
+          });
+        });
+      }
+      function toggleItem(el) {
+        if (el.classList.contains('is-hidden')) showItem(el);
+        else hideItem(el);
+      }
+
+      // FLIP-анимация при перестановках (только видимые элементы)
+      function measurePositions(elements) {
+        const map = new Map();
+        elements.forEach(el => {
+          map.set(el.dataset.id, el.getBoundingClientRect());
+        });
+        return map;
+      }
+      function applyFLIP(before, elementsAfter) {
+        elementsAfter.forEach(el => {
+          const a = el.getBoundingClientRect();
+          const b = before.get(el.dataset.id);
+          if (!b) return;
+          const dx = b.left - a.left;
+          const dy = b.top - a.top;
+          if (dx || dy) {
+            el.style.transform = `translate(${dx}px, ${dy}px)`;
+            // force reflow
+            el.getBoundingClientRect();
+            requestAnimationFrame(() => {
+              el.style.transform = '';
+            });
+          }
+        });
+      }
+      function swapTwoVisibleMovables() {
+        const movableVisible = getVisibleItems(getMovableItems());
+        if (movableVisible.length < 2) return;
+        const before = measurePositions(getVisibleItems());
+        // выберем 2 разных элемента
+        let i = Math.floor(Math.random() * movableVisible.length);
+        let j = Math.floor(Math.random() * movableVisible.length);
+        if (i === j) j = (j + 1) % movableVisible.length;
+        const a = movableVisible[i];
+        const b = movableVisible[j];
+        // Поменять местами в DOM
+        const aNext = a.nextSibling;
+        const bNext = b.nextSibling;
+        if (aNext === b) {
+          container.insertBefore(b, a);
+        } else if (bNext === a) {
+          container.insertBefore(a, b);
+        } else {
+          container.insertBefore(b, aNext);
+          container.insertBefore(a, bNext);
+        }
+        // Применить FLIP к всем видимым после перестановки
+        applyFLIP(before, getVisibleItems());
+      }
+
+      // Случайное действие: скрыть/показать один из 04..08 или переставить два из них
+      function tick() {
+        const action = Math.random();
+        if (action < 0.45) {
+          // toggle одного
+          const movable = getMovableItems();
+          const target = movable[Math.floor(Math.random() * movable.length)];
+          toggleItem(target);
+        } else {
+          // swap двух видимых
+          swapTwoVisibleMovables();
+        }
+      }
+
+      // Интервал переключений
+      setInterval(tick, 1250);
+    })();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <style>
+            /* Глобально скрываем скроллбары и запрещаем боковую прокрутку */
+            html, body {
+                overflow-x: hidden !important;
+                overscroll-behavior-x: none;
+            }
+            /* Скрываем скроллбары для всех элементов */
+            * {
+                -ms-overflow-style: none; /* IE/Edge */
+                scrollbar-width: none;    /* Firefox */
+            }
+            *::-webkit-scrollbar {
+                width: 0 !important;
+                height: 0 !important;     /* WebKit */
+            }
+            /* Без горизонтальной прокрутки внутри основного вьюпорта */
+            #uiViewport {
+                overflow-x: hidden;
+            }
+            /* Центрирование изображений по горизонтали при сжатии экрана */
+            #uiViewport {
+                display: flex;
+                justify-content: center;   /* центр по горизонтали */
+                align-items: flex-start;   /* верх по вертикали */
+            }
+            #uiImage {
+                display: block;
+                margin: 0 auto;
+            }
+            img[style*="position: absolute"] {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        </style>
+    </head>
+    <body style="margin: 0px; height: 100vh; overflow: hidden; background-color: black;">
+        <img src="../bg-down.png" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <div id="uiViewport" style="position: absolute; top: 0; left: 0; height: 100vh; width: 100vw; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior-x: none;">
+            <img class="uiImage" src="01-dynamic.svg" alt="UI image 01" style="position: absolute; height: 100vh; pointer-events: none;">
+            <img class="uiImage" src="02-dynamic.svg" alt="UI image 02" style="position: absolute; height: 100vh; pointer-events: none;">
+            <img class="uiImage" src="03-dynamic.svg" alt="UI image 03" style="position: absolute; height: 100vh; pointer-events: none;">
+            <img class="uiImage" src="04-dynamic.svg" alt="UI image 04" style="position: absolute; height: 100vh; pointer-events: none;">
+            <img class="uiImage" src="05-dynamic.svg" alt="UI image 05" style="position: absolute; height: 100vh; pointer-events: none;">
+        </div>
+        <img src="../bg-up.png" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <img src="../frame.svg" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <script>
+            (function () {
+                const frames = Array.from(document.querySelectorAll('#uiViewport .uiImage'));
+                const INTERVAL_MS = 300;
+                let currentIndex = 0;
+
+                function showFrame(index) {
+                    for (let i = 0; i < frames.length; i += 1) {
+                        frames[i].style.display = i === index ? 'block' : 'none';
+                    }
+                }
+
+                function startSequence() {
+                    if (frames.length === 0) return;
+                    showFrame(currentIndex);
+                    setInterval(() => {
+                        currentIndex = (currentIndex + 1) % frames.length;
+                        showFrame(currentIndex);
+                    }, INTERVAL_MS);
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', startSequence, { once: true });
+                } else {
+                    startSequence();
+                }
+            })();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,349 @@
+/* Базовые переменные и сброс */
+:root{
+	--pad:55px;
+	--bg-dark:#000000;
+	--bg-home:#203450;
+	--text:#ffffff;
+	--text-dim:#9aa3ad;
+	--menu-gap:18px;
+	--menu-size:21px; /* Inter Regular 21px */
+	--radius:14px;
+	--shadow:0 10px 30px rgba(0,0,0,0.25);
+	--fz-main: clamp(28px, calc(0.9804vw + 15.18px), 34px); /* 1512→30px, 1920→34px */
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html,body,#app{margin:0;padding:0}
+body{
+	font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+	background:#000;
+	color:var(--text);
+}
+
+/* Общие контейнеры вью */
+.view{
+	position:relative;
+	min-height:100vh;
+	width:100vw;
+	overflow:hidden;
+}
+
+/* Главный экран */
+.home{
+	background:var(--bg-home);
+}
+.home__video{
+	position:fixed;
+	inset:0;
+	width:100vw;
+	height:100vh;
+	object-fit:cover;
+	pointer-events:none;
+	filter:saturate(1.05) contrast(1.05) brightness(1.02);
+}
+.home__noise{
+	position:fixed;
+	inset:0;
+	pointer-events:none;
+}
+.home__text{
+	position:relative;
+	z-index:2;
+	padding:var(--pad);
+	max-width:50vw;
+	text-align:left;
+	font-weight:400;
+	line-height:140%;
+	font-size:var(--fz-main);
+}
+
+/* Двухколоночный типовой слайд */
+.slide-two-col{
+	display:flex;
+	min-height:100vh;
+}
+.slide-two-col .slide-left,
+.slide-two-col .slide-right{
+	width:50vw;
+	min-height:100vh;
+	position:relative;
+}
+.slide-two-col .slide-left{
+	display:flex;
+	align-items:flex-start;
+	justify-content:flex-end;
+	padding:var(--pad);
+}
+.slide-two-col .slide-left .main-text{
+	width:100%;
+	text-align:left;
+	font-weight:400;
+	line-height:140%;
+	font-size:var(--fz-main);
+}
+.slide-two-col .slide-right{
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	overflow:hidden;
+}
+.video-holder{
+	position:relative;
+	width:100%;
+	height:100%;
+}
+.video-holder video{
+	position:absolute;
+	inset:0;
+	width:100%;
+	height:100%;
+	object-fit:cover;
+}
+.noise-overlay{
+	position:absolute;
+	left:0;
+	top:0;
+	width:100%;
+	height:100%;
+	pointer-events:none;
+	image-rendering:pixelated;
+}
+
+/* Слайд 01 — центрированный логотип + фон-эффект */
+.slide-01{
+	display:grid;
+	place-items:center;
+	min-height:100vh;
+	background:#000;
+	position:relative;
+}
+.slide-01__burst{
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	mix-blend-mode:lighten;
+	background: radial-gradient(600px 600px at 50% 50%, rgba(255,0,122,0.25), rgba(77,61,255,0.15), transparent 70%);
+	transition: background-position 0.15s ease-out;
+}
+.slide-01__logo{
+	position:relative;
+	z-index:2;
+	display:block;
+	width:min(22vw, 320px);
+	height:auto;
+	filter:drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+}
+
+/* Нижнее меню (общее) */
+.footer{
+	position:fixed;
+	left:var(--pad);
+	bottom:var(--pad);
+	display:flex;
+	align-items:center;
+	gap:var(--menu-gap);
+	z-index:50;
+	font-size:var(--menu-size);
+}
+.footer a, .footer button{
+	color:var(--text);
+	text-decoration:none;
+	background:transparent;
+	border:none;
+	cursor:pointer;
+	padding:0;
+	font:inherit;
+}
+.footer__brand:hover,
+.footer__resume:hover,
+.footer__project:hover{opacity:0.8}
+.footer__nav{
+	display:none;
+}
+.footer__arrow{display:none}
+.footer__project{display:none}
+.footer__interactive{display:none}
+
+/* Боковое меню */
+#sideMenu{
+	position:fixed;
+	top:0; right:0;
+	height:100vh;
+	width:min(520px, 86vw);
+	background:#0d0d10;
+	color:var(--text);
+	transform:translateX(110%);
+	transition:transform .28s ease;
+	z-index:60;
+	display:flex;
+	flex-direction:column;
+	box-shadow:-16px 0 40px rgba(0,0,0,0.45);
+}
+#sideMenu[aria-hidden="false"]{transform:translateX(0)}
+#sideMenuBackdrop{
+	position:fixed;
+	inset:0;
+	background:rgba(0,0,0,0.35);
+	backdrop-filter: blur(2px);
+	opacity:0;
+	pointer-events:none;
+	transition:opacity .2s ease;
+	z-index:55;
+}
+#sideMenuBackdrop[aria-hidden="false"]{
+	opacity:1;
+	pointer-events:auto;
+}
+.side-menu__header{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	padding:20px 22px;
+	border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.side-menu__title{
+	font-weight:600;
+}
+.side-menu__close{
+	font-size:28px;
+	line-height:1;
+	width:40px;height:40px;
+	border-radius:8px;
+	background:rgba(255,255,255,0.06);
+	color:var(--text);
+}
+.side-menu__list{
+	padding:10px 6px 18px 6px;
+	overflow:auto;
+}
+.side-item{
+	display:flex;
+	align-items:center;
+	gap:10px;
+	padding:10px 14px;
+	border-radius:10px;
+	cursor:pointer;
+	transition:background .12s ease;
+}
+.side-item:hover{background:rgba(255,255,255,0.06)}
+.side-item__num{
+	display:inline-block;
+	min-width:38px;
+	color:var(--text-dim);
+}
+.side-item__title{
+	flex:1;
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+.side-item__badge{
+	color:var(--text-dim);
+	font-size:0.9em;
+}
+.side-item--active{background:rgba(255,255,255,0.10)}
+
+/* Эффект курсора для тайпинга */
+.typewriter__cursor{
+	animation:blink .9s step-end infinite
+}
+@keyframes blink{50%{opacity:0}}
+
+/* Переносы строк из исходного текста */
+.typewriter__content{
+	white-space: pre-line;
+}
+
+/* Правый верх: проект и интерактивность */
+.top-right{
+	position:fixed;
+	top:var(--pad);
+	right:var(--pad);
+	z-index:50;
+	text-align:right;
+	font-size:var(--menu-size);
+}
+.top-right__project{
+	background:transparent;
+	color:var(--text);
+	border:none;
+	cursor:pointer;
+	padding:0;
+	font:inherit;
+}
+.top-right__project:hover{opacity:.85}
+.top-right__interactive{
+	margin-top:6px;
+	color:var(--text-dim);
+}
+
+/* Правый низ: стрелки навигации */
+.controls{
+	position:fixed;
+	right:var(--pad);
+	bottom:var(--pad);
+	z-index:50;
+	display:flex;
+	align-items:center;
+	gap:4px;
+	padding:8px;
+	border-radius:16px;
+	background:rgba(255,255,255,0.06);
+	backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+	/* box-shadow: var(--shadow); */
+}
+.controls__arrow{
+	width:49px;
+    height:40px;
+	display:grid;place-items:center;
+	border:none;
+	border-radius:8px;
+	background:transparent;
+	cursor:pointer;
+	transition:background .12s ease, transform .12s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.controls__arrow:hover{
+	background:rgba(255,255,255,0.08);
+	transform:translateY(-1px);
+}
+.controls__arrow img{
+	width:40px;height:26px;display:block
+}
+
+/* Фоновое изображение: высота 100vh, центрируется по вертикали (и по горизонтали) */
+.bg-fullheight-center{
+	position:fixed;
+	left:50%;
+	top:50%;
+	transform:translate(-50%, -50%);
+	height:100vh;
+	width:auto;
+	z-index:1;
+	pointer-events:none;
+}
+
+/* Правый фиксированный iframe на фоне */
+.iframe-right{
+	position:fixed;
+	inset:0;
+	width:100vw;
+	height:100vh;
+	border:0;
+	z-index:1;
+}
+
+/* Адаптивность */
+@media (max-width: 900px){
+	.home__text{max-width:86vw}
+	.slide-two-col{display:block}
+	.slide-two-col .slide-left,
+	.slide-two-col .slide-right{width:100vw}
+	.slide-two-col .slide-right{min-height:50vh}
+	.footer{left:20px; bottom:20px}
+}
+
+

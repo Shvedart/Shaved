@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <style>
+            /* Глобально скрываем скроллбары и запрещаем боковую прокрутку */
+            html, body {
+                overflow-x: hidden !important;
+                overscroll-behavior-x: none;
+            }
+            /* Скрываем скроллбары для всех элементов */
+            * {
+                -ms-overflow-style: none; /* IE/Edge */
+                scrollbar-width: none;    /* Firefox */
+            }
+            *::-webkit-scrollbar {
+                width: 0 !important;
+                height: 0 !important;     /* WebKit */
+            }
+            /* Без горизонтальной прокрутки внутри основного вьюпорта */
+            #uiViewport {
+                overflow-x: hidden;
+            }
+            /* Центрирование изображений по горизонтали при сжатии экрана */
+            #uiViewport {
+                display: flex;
+                justify-content: center;   /* центр по горизонтали */
+                align-items: flex-start;   /* верх по вертикали */
+            }
+            #uiImage {
+                display: block;
+                margin: 0 auto;
+            }
+            img[style*="position: absolute"] {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        </style>
+    </head>
+    <body style="margin: 0px; height: 100vh; overflow: hidden; background-color: black;">
+        <img src="bg-entrance-down.png" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <div id="uiViewport" style="position: absolute; top: 0; left: 0; height: 100vh; width: 100vw; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior-x: none;">
+            <img id="uiImage" src="ui-entrance.svg" alt="UI image" style="display: block; height: 199vh;">
+        </div>
+        <img src="bg-entrance-up.png" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <img src="../frame-flow.svg" alt="background image" style="position: absolute; height: 100vh; pointer-events: none;">
+        <script>
+            (function () {
+                const viewport = document.getElementById('uiViewport');
+                const image = document.getElementById('uiImage');
+
+                const HOLD_TOP_MS = 2000;       /* Пауза сверху 2 секунды */
+                const HOLD_BOTTOM_MS = 3500;    /* Пауза снизу 2 секунды */
+                const RESUME_IDLE_MS = 3000;     /* Возобновление после бездействия */
+                const BASE_SPEED_PX_PER_S = 600;/* Базовая скорость для расчёта длительности */
+                const MIN_LEG_MS = 600;         /* Минимальная длительность на участок (для плавности) */
+
+                let rafId = 0;
+                let resumeTimer = 0;
+                let userInteracting = false;
+
+                /** Возможные состояния: 'HOLD_TOP' | 'SCROLL_DOWN' | 'HOLD_BOTTOM' | 'SCROLL_UP' */
+                let state = 'HOLD_TOP';
+                let holdTopUntilTs = 0;
+                let holdBottomUntilTs = 0;
+                let lastTs = 0;
+
+                /* Переменные текущего «участка» скролла с ease-in-out */
+                let legStartTop = 0;
+                let legEndTop = 0;
+                let legStartTs = 0;
+                let legDurationMs = 0;
+
+                function getMaxScroll() {
+                    return Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+                }
+
+                function easeInOutCubic(t) {
+                    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                }
+
+                function startLeg(direction, tsNow) {
+                    const maxScroll = getMaxScroll();
+                    legStartTop = viewport.scrollTop;
+                    legEndTop = direction === 'down' ? maxScroll : 0;
+                    const distance = Math.abs(legEndTop - legStartTop); // в px
+                    const durationBySpeed = (distance / Math.max(1, BASE_SPEED_PX_PER_S)) * 1000;
+                    legDurationMs = Math.max(MIN_LEG_MS, durationBySpeed);
+                    legStartTs = tsNow || performance.now();
+                }
+
+                function startLoop() {
+                    cancelAnimationFrame(rafId);
+                    lastTs = performance.now();
+                    rafId = requestAnimationFrame(step);
+                }
+
+                function step(ts) {
+                    if (userInteracting) return; /* Пользователь рулит — выходим из цикла */
+
+                    const dtSec = Math.min(50, ts - lastTs) / 1000; /* защита от больших кадров */
+                    lastTs = ts;
+                    const maxScroll = getMaxScroll();
+                    const atTop = viewport.scrollTop <= 1;
+                    const atBottom = viewport.scrollTop >= (maxScroll - 1);
+
+                    if (state === 'HOLD_TOP') {
+                        if (holdTopUntilTs === 0) {
+                            holdTopUntilTs = ts + HOLD_TOP_MS;
+                        }
+                        if (ts >= holdTopUntilTs) {
+                            holdTopUntilTs = 0;
+                            state = 'SCROLL_DOWN';
+                            startLeg('down', ts);
+                        }
+                    } else if (state === 'SCROLL_DOWN') {
+                        if (legStartTs === 0) startLeg('down', ts);
+                        const t = Math.min(1, (ts - legStartTs) / legDurationMs);
+                        const p = easeInOutCubic(t);
+                        viewport.scrollTop = legStartTop + (legEndTop - legStartTop) * p;
+                        if (t >= 1) {
+                            state = 'HOLD_BOTTOM';
+                            holdBottomUntilTs = ts + HOLD_BOTTOM_MS;
+                            legStartTs = 0; /* сброс участка */
+                        }
+                    } else if (state === 'HOLD_BOTTOM') {
+                        if (holdBottomUntilTs === 0) {
+                            holdBottomUntilTs = ts + HOLD_BOTTOM_MS;
+                        }
+                        if (ts >= holdBottomUntilTs) {
+                            holdBottomUntilTs = 0;
+                            state = 'SCROLL_UP';
+                            startLeg('up', ts);
+                        }
+                    } else if (state === 'SCROLL_UP') {
+                        if (legStartTs === 0) startLeg('up', ts);
+                        const t = Math.min(1, (ts - legStartTs) / legDurationMs);
+                        const p = easeInOutCubic(t);
+                        viewport.scrollTop = legStartTop + (legEndTop - legStartTop) * p;
+                        if (t >= 1) {
+                            state = 'HOLD_TOP';
+                            holdTopUntilTs = ts + HOLD_TOP_MS;
+                            legStartTs = 0; /* сброс участка */
+                        }
+                    }
+
+                    if (!userInteracting) {
+                        rafId = requestAnimationFrame(step);
+                    }
+                }
+
+                function scheduleResume() {
+                    clearTimeout(resumeTimer);
+                    resumeTimer = setTimeout(() => {
+                        userInteracting = false;
+                        const maxScroll = getMaxScroll();
+                        const atTop = viewport.scrollTop <= 1;
+                        const atBottom = viewport.scrollTop >= (maxScroll - 1);
+
+                        if (atTop) {
+                            state = 'HOLD_TOP';
+                            holdTopUntilTs = 0; /* новая 2с пауза сверху начнётся в step */
+                        } else if (atBottom) {
+                            state = 'HOLD_BOTTOM';
+                            holdBottomUntilTs = 0; /* новая 2с пауза снизу начнётся в step */
+                        } else {
+                            /* Если в середине — продолжим движение вниз до низа */
+                            state = 'SCROLL_DOWN';
+                            legStartTs = 0; /* пересчитаем участок при возобновлении */
+                        }
+                        startLoop();
+                    }, RESUME_IDLE_MS);
+                }
+
+                function onUserInteractStart() {
+                    userInteracting = true;
+                    cancelAnimationFrame(rafId);
+                    clearTimeout(resumeTimer);
+                    scheduleResume();
+                }
+
+                function init() {
+                    viewport.scrollTop = 0;
+                    state = 'HOLD_TOP';
+                    holdUntilTs = 0;
+
+                    /* Слушатели пользовательских событий для паузы анимации */
+                    viewport.addEventListener('wheel', onUserInteractStart, { passive: true });
+                    viewport.addEventListener('touchstart', onUserInteractStart, { passive: true });
+                    viewport.addEventListener('touchmove', onUserInteractStart, { passive: true });
+                    viewport.addEventListener('pointerdown', onUserInteractStart, { passive: true });
+                    viewport.addEventListener('scroll', () => {
+                        /* Если пользователь скроллит вручную, обновляем таймер возобновления */
+                        if (userInteracting) scheduleResume();
+                    }, { passive: true });
+
+                    startLoop();
+                }
+
+                if (image.complete) {
+                    /* Изображение уже в кэше — можно инициализировать сразу */
+                    init();
+                } else {
+                    image.addEventListener('load', init, { once: true });
+                }
+            })();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Таблица из бд.pdf</title>
+    <style>
+      /* Базовая типографика и сбросы */
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        color: #1f2937;
+        background: #ffffff;
+      }
+      
+      html, body {
+        height: 100%;
+      }
+      
+      /* Отступы страницы: 55px по бокам, 130px снизу */
+      .page {
+        padding: 0 55px 130px;
+        overflow-x: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      
+      /* Таблица */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      
+      .data-table thead th {
+        font-size: 10px;
+        color: #6b7280;
+        text-align: left;
+        vertical-align: bottom;
+        padding: 6px 6px;
+        border-bottom: 2px solid #e5e7eb;
+        white-space: normal;
+        line-height: 1.35;
+        overflow: hidden;
+      }
+      
+      .data-table tbody td {
+        font-size: 10px;
+        line-height: 1.35;
+        padding: 6px 6px;
+        vertical-align: top;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      
+      .data-table th,
+      .data-table td {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      
+      /* Чуть компактнее узкие колонки */
+      .data-table th:nth-child(1),
+      .data-table td:nth-child(1) {
+        width: 1%;
+        white-space: nowrap;
+      }
+      .data-table td:nth-child(7),
+      .data-table td:nth-child(9) {
+        width: 1%;
+        white-space: nowrap;
+      }
+      
+      /* Сузить колонки и перенести заголовки (8, 10, 12) в две строки */
+      .data-table th:nth-child(8),
+      .data-table td:nth-child(8) {
+        width: 120px;
+        max-width: 120px;
+      }
+      .data-table th:nth-child(10),
+      .data-table td:nth-child(10) {
+        width: 160px;
+        max-width: 160px;
+      }
+      .data-table th:nth-child(12),
+      .data-table td:nth-child(12) {
+        width: 140px;
+        max-width: 140px;
+      }
+      .data-table th:nth-child(8),
+      .data-table th:nth-child(10),
+      .data-table th:nth-child(12) {
+        white-space: normal;
+      }
+      
+      /* Выравнивание колонки "Расположение" */
+      .data-table th:nth-child(13),
+      .data-table td:nth-child(13) {
+        text-align: end;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя дома</th>
+            <th>Адрес</th>
+            <th>Контактное лицо</th>
+            <th>Телефон</th>
+            <th>Должность</th>
+            <th>№ Подъезда</th>
+            <th>Диапазон<br>квартир</th>
+            <th>Этажей</th>
+            <th>Этаж →<br>Диапазон квартир</th>
+            <th>Тип оборудования</th>
+            <th>Статус<br>оборудования</th>
+            <th>Расположение</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>ДУ-MOW-CNT-12/3</td>
+            <td>Москва, ул. Новослободская, д. 12/к. 3</td>
+            <td>Фролов Алексей Андреевич</td>
+            <td>+7 905 144 22 77</td>
+            <td>Консьерж</td>
+            <td>1</td>
+            <td>1-140</td>
+            <td>14</td>
+            <td>1:1-10; ...; 14:131-140</td>
+            <td>Кросс-110 (TR)</td>
+            <td>конечный</td>
+            <td>Подъезд 1, 14 этаж</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>ДУ-SPB-KRS-8/1</td>
+            <td>Санкт-Петербург, пр. Красных Зорь, д. 8/к. 1</td>
+            <td>Иванов Алексей Сергеевич</td>
+            <td>8 (921) 550-44-12</td>
+            <td>Управляющий дома</td>
+            <td>1</td>
+            <td>1-90</td>
+            <td>9</td>
+            <td>1:1-10; ...; 9:81-90</td>
+            <td>Кросс-120 (TR)</td>
+            <td>транзитный</td>
+            <td>Подъезд 1, 9 этаж</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>ДУ-NVS-CEN-44/2</td>
+            <td>Новосибирск, ул. Советская, д. 44/к. 2</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>1</td>
+            <td>1-60</td>
+            <td>9</td>
+            <td>1:1-6; ...; 10:55-60</td>
+            <td>Кросс-98 (TR)</td>
+            <td>резервный</td>
+            <td>Подъезд 1, 10 этаж</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>ДУ-KZN-SOV-5/2</td>
+            <td>Казань, ул. Советская, д. 5/к. 2</td>
+            <td>Рахматуллин Булат Фаритович</td>
+            <td>+7-917-332-99-48</td>
+            <td>Консьерж</td>
+            <td>1</td>
+            <td>1-100</td>
+            <td>10</td>
+            <td>1:1-10; ...; 10:91-100</td>
+            <td>Кросс-90</td>
+            <td>конечный</td>
+            <td>Подъезд 1, 10 этаж</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>ДУ-YAR-LEN-22/1</td>
+            <td>Ярославль, ул. Ленина, д. 22/к. 1</td>
+            <td>Фомина Ксения Павловна</td>
+            <td>+7 910 552 11 90</td>
+            <td>-</td>
+            <td>1</td>
+            <td>1-80</td>
+            <td>8</td>
+            <td>1:1-10; ...; 8:71-80</td>
+            <td>Кросс-75</td>
+            <td>конечный</td>
+            <td>Подъезд 1, 8 этаж</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>ДУ-YAR-LEN-22/1</td>
+            <td>Ярославль, ул. Ленина, д. 22/к. 1</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>2</td>
+            <td>81-160</td>
+            <td>8</td>
+            <td>1:81-90; ...; 8:151-160</td>
+            <td>ETH-12</td>
+            <td>требует проверки</td>
+            <td>Подъезд 2, 7 этаж</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>ДУ-OMK-KIR-18/4</td>
+            <td>Омск, ул. Кирова, д. 18/к. 4</td>
+            <td>Назарова Светлана Юрьевна</td>
+            <td>8 960 177 09 55</td>
+            <td>Консьерж</td>
+            <td>1</td>
+            <td>1-120</td>
+            <td>12</td>
+            <td>1:1-10; ...; 12:111-120</td>
+            <td>Кросс-110</td>
+            <td>конечный</td>
+            <td>Подъезд 1, 12 этаж</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>ДУ-RND-OKT-36/5</td>
+            <td>Ростов-на-Дону, пр-т Маршала Жукова, д. 36/к. 5</td>
+            <td>Степанова Дарья Викторовна</td>
+            <td>+7 900 300 20 20</td>
+            <td>Управляющий дома</td>
+            <td>2</td>
+            <td>121-240</td>
+            <td>12</td>
+            <td>1:121-130; ...; 12:231-240</td>
+            <td>ETH-48</td>
+            <td>перегружен</td>
+            <td>Подъезд 2, 10 этаж</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
+
+

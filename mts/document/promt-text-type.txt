@@ -1,0 +1,34 @@
+нужен мигающий курсор:
+Пара строк CSS в ваш проект:
+.typewriter__cursor{animation:blink .9s step-end infinite}@keyframes blink{50%{opacity:
+
+текст из файла text-slides.txt (открывать страницу через HTTP, не file://):
+<div id="slides"></div>
+<script>
+(async () => {
+  const res = await fetch('/path/to/Text.txt', { cache: 'no-store' });
+  const raw = await res.text();
+  const slides = TextTyper.parseSlides(raw); // строки, начинающиеся с "СЛАЙД" — заголовки
+
+  const root = document.getElementById('slides');
+  for (let i = 0; i < slides.length; i++) {
+    const s = slides[i];
+    const sec = document.createElement('section');
+    const tw = TextTyper.createTypewriter();
+    sec.appendChild(tw.root);
+    root.appendChild(sec);
+
+    await TextTyper.typeTokens(tw.content, TextTyper.parseTokens(s.body), {
+      typingSpeed: 42,
+      deletingSpeed: 28,
+      randomJitter: 0.3,
+      afterDeletePause: 160
+    });
+  }
+})();
+</script>
+
+Краткие требования:
+Подключить text-type.js и вызвать API: createTypewriter, parseTokens/parseSlides, typeTokens.
+Поддержать теги <delete>...</delete> (печатает и стирает) и <pause duration="N"/> (пауза N мс).
+Параметры скорости задать через typingSpeed и deletingSpeed.
