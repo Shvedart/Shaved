@@ -635,6 +635,49 @@ function renderRoute(){
 		renderSlide05();
 		return;
 	}
+	// Слайд 04 — центрированный текст (max 850px) с фиксированной высотой 300px
+	if(route.index === 4){
+		$app.innerHTML = '';
+		const root = document.createElement('section');
+		root.className = 'view';
+		root.style.background = 'var(--bg-dark)';
+		const box = document.createElement('div');
+		box.className = 'center-text-box';
+		const mainText = document.createElement('div');
+		mainText.className = 'main-text';
+		box.appendChild(mainText);
+		root.appendChild(box);
+		$app.appendChild(root);
+		const slideObj = DATA.slides[4] || null;
+		const body = slideObj?.body || '';
+		typeInto(mainText, body);
+		return;
+	}
+	// Универсальный центрированный текстовый слайд
+	function renderCenteredTextSlide(index){
+		$app.innerHTML = '';
+		const root = document.createElement('section');
+		root.className = 'view';
+		root.style.background = 'var(--bg-dark)';
+		const box = document.createElement('div');
+		box.className = 'center-text-box';
+		// Индивидуальные высоты для некоторых слайдов
+		const heightMap = { 21: '90px', 43: '130px', 49: '210px', 50: '210px' };
+		if (heightMap[index]) box.style.height = heightMap[index];
+		const mainText = document.createElement('div');
+		mainText.className = 'main-text';
+		box.appendChild(mainText);
+		root.appendChild(box);
+		$app.appendChild(root);
+		const slideObj = DATA.slides[index] || null;
+		const body = slideObj?.body || '';
+		typeInto(mainText, body);
+	}
+	// Слайды 09, 21, 36, 43, 49, 50 — центрированный текст
+	if([9, 21, 36, 43, 49, 50].includes(route.index)){
+		renderCenteredTextSlide(route.index);
+		return;
+	}
 	// Слайд 15 — светлая тема: фон #EDE8E1, текст чёрный, фон-iframe на всю высоту
 	if(route.index === 15){
 		$app.innerHTML = '';
