@@ -114,9 +114,9 @@ body{
 .video-holder img{
 	position:absolute;
 	inset:0;
-	/* width:100%; */
-	height:100vh;
-	object-fit:contain;
+	width:100%;
+	height:100%;
+	object-fit:contain; /* вписываем без обрезки */
 }
 .video-holder iframe{
 	position:absolute;
@@ -445,7 +445,7 @@ body{
 	.slide-two-col .slide-left,
 	.slide-two-col .slide-right{width:100vw}
 	.slide-two-col .slide-right{min-height:50vh}
-	.footer{left:20px; bottom:20px}
+	.footer{left:var(--pad); bottom:var(--pad)}
 }
 
 

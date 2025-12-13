@@ -1055,6 +1055,39 @@ function renderRoute(){
 		renderSlide44();
 		return;
 	}
+	// Слайд 31 — как 44, но без фонового видео; справа SVG svg-animation.svg
+	if(route.index === 31){
+		$app.innerHTML = '';
+		const root = document.createElement('section');
+		root.className = 'view slide-two-col';
+		root.style.background = 'var(--bg-dark)';
+
+		const left = document.createElement('div');
+		left.className = 'slide-left';
+		const right = document.createElement('div');
+		right.className = 'slide-right';
+
+		const mainText = document.createElement('div');
+		mainText.className = 'main-text';
+		left.appendChild(mainText);
+
+		const holder = document.createElement('div');
+		holder.className = 'video-holder';
+		const img = document.createElement('img');
+		img.src = './mts/svg-animation.svg';
+		img.alt = '';
+		holder.appendChild(img);
+		right.appendChild(holder);
+
+		root.appendChild(left);
+		root.appendChild(right);
+		$app.appendChild(root);
+
+		const slideObj = DATA.slides[31] || null;
+		const body = slideObj?.body || '';
+		typeInto(mainText, body);
+		return;
+	}
 	// Слайд 45 — фон svg на всю высоту экрана
 	if(route.index === 45){
 		$app.innerHTML = '';
