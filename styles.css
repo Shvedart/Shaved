@@ -180,6 +180,28 @@ body{
 	visibility:hidden;
 }
 
+/* Блокировка портретной ориентации на мобильных */
+.orientation-overlay{
+	position:fixed;
+	inset:0;
+	background:#000;
+	color:#fff;
+	display:none;
+	align-items:center;
+	justify-content:center;
+	text-align:center;
+	padding:24px;
+	z-index:100000;
+	font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+	font-size: clamp(16px, 2.4vw, 20px);
+	line-height:1.4;
+}
+.orientation-overlay__content{ max-width:540px; opacity:.9; }
+@media screen and (orientation: portrait) and (max-width: 1024px){
+	.orientation-overlay{ display:flex; }
+	html, body{ height:100%; overflow:hidden; }
+}
+
 /* Слайд 01 — центрированный логотип + фон-эффект */
 .slide-01{
 	display:grid;
