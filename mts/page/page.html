@@ -91,20 +91,42 @@
 
       // Снятие/показ с плавной анимацией без рывков
       const hideEndMap = new WeakMap();
-      function hideItem(el) {
+      function hideItem(el, onHidden) {
         if (el.classList.contains('is-hidden') || el.classList.contains('is-hiding')) return;
-        el.classList.add('is-hiding');
+        // финализация скрытия (на случай события или таймаута)
+        const finalize = () => {
+          if (!el.classList.contains('is-hiding')) return;
+          // Сначала делаем элемент невидимым
+          el.classList.add('is-hidden'); // полностью выключить
+          el.classList.remove('is-hiding');
+          // Переносим в самый низ на следующем кадре, чтобы не было «мигания»
+          requestAnimationFrame(() => {
+            container.appendChild(el);
+            if (typeof onHidden === 'function') onHidden();
+          });
+        };
         const onEnd = (e) => {
           if (e.propertyName !== 'opacity') return;
-          if (el.classList.contains('is-hiding')) {
-            el.classList.remove('is-hiding');
-            el.classList.add('is-hidden'); // полностью выключить
-          }
+          finalize();
           el.removeEventListener('transitionend', onEnd);
           hideEndMap.delete(el);
         };
         hideEndMap.set(el, onEnd);
         el.addEventListener('transitionend', onEnd);
+        // Гарантированно запускаем переход в следующем кадре
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            el.classList.add('is-hiding');
+          });
+        });
+        // Резервный таймаут, если transitionend не пришёл
+        setTimeout(() => {
+          if (hideEndMap.get(el) === onEnd) {
+            finalize();
+            el.removeEventListener('transitionend', onEnd);
+            hideEndMap.delete(el);
+          }
+        }, 700);
       }
       function showItem(el) {
         if (!el.classList.contains('is-hidden')) return;
@@ -120,6 +142,20 @@
       function toggleItem(el) {
         if (el.classList.contains('is-hidden')) showItem(el);
         else hideItem(el);
+      }
+
+      // Первый видимый «двигаемый» элемент в текущем порядке контейнера
+      function getFirstVisibleMovable() {
+        const children = Array.from(container.children);
+        for (const el of children) {
+          if (!el.classList || !el.classList.contains('port-item')) continue;
+          const id = el.dataset.id;
+          if (fixedIds.has(id)) continue;
+          if (!el.classList.contains('is-hidden')) {
+            return el;
+          }
+        }
+        return null;
       }
 
       // FLIP-анимация при перестановках (только видимые элементы)
@@ -172,22 +208,27 @@
         applyFLIP(before, getVisibleItems());
       }
 
-      // Случайное действие: скрыть/показать один из 04..08 или переставить два из них
-      function tick() {
-        const action = Math.random();
-        if (action < 0.45) {
-          // toggle одного
-          const movable = getMovableItems();
-          const target = movable[Math.floor(Math.random() * movable.length)];
-          toggleItem(target);
-        } else {
-          // swap двух видимых
-          swapTwoVisibleMovables();
+      // Бесконечная ротация: берём первый из 04..08, скрываем, переносим вниз и показываем
+      function startCyclicRotation() {
+        function step() {
+          const target = getFirstVisibleMovable();
+          if (!target) {
+            // если все скрыты (не должно быть), попробуем показать всех и продолжить
+            getMovableItems().forEach(showItem);
+            setTimeout(step, 300);
+            return;
+          }
+          hideItem(target, () => {
+            // элемент уже перенесён в конец внутри hideItem -> показываем его
+            showItem(target);
+            // небольшая пауза перед следующим шагом, чтобы анимации завершились
+            setTimeout(step, 400);
+          });
         }
+        step();
       }
-
-      // Интервал переключений
-      setInterval(tick, 1250);
+      // Запуск ротации
+      startCyclicRotation();
     })();
   </script>
 </body>

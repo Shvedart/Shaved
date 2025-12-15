@@ -11,7 +11,7 @@ const VIDEO_MAP = {
 	6: './mts/ui-mvp.mp4',
 	2: './mts/problem.mp4',
 	3: './mts/сall-center.mp4',
-	8: './mts/problem.mp4',
+	8: './mts/habits.mp4',
 	28: './mts/illustrations.mp4',
 	20: './mts/habits.mp4',
 	22: './mts/victory.mp4',
@@ -63,6 +63,45 @@ function applyFadeIn(el, events){
 		// запасной таймер на случай, если событие не придёт
 		setTimeout(done, 1200);
 	}catch(e){}
+}
+
+// Универсальная предзагрузка ассетов для прелоадера
+function preloadVideo(url){
+	return new Promise((resolve) => {
+		try{
+			const v = document.createElement('video');
+			v.muted = true;
+			v.preload = 'auto';
+			v.src = url;
+			const done = () => { cleanup(); resolve(true); };
+			const fail = () => { cleanup(); resolve(false); };
+			const cleanup = () => {
+				v.removeEventListener('loadeddata', done);
+				v.removeEventListener('canplaythrough', done);
+				v.removeEventListener('error', fail);
+			};
+			v.addEventListener('loadeddata', done, { once:true });
+			v.addEventListener('canplaythrough', done, { once:true });
+			v.addEventListener('error', fail, { once:true });
+			v.load();
+			setTimeout(done, 5000);
+		}catch(e){ resolve(false); }
+	});
+}
+function preloadImage(url){
+	return new Promise((resolve) => {
+		const img = new Image();
+		img.onload = () => resolve(true);
+		img.onerror = () => resolve(false);
+		img.src = url;
+		setTimeout(() => resolve(true), 4000);
+	});
+}
+function preloadIframe(url){
+	// Префетчим документ, затем разрешаем
+	return fetch(url, { cache: 'force-cache', credentials: 'same-origin' })
+		.then(() => true)
+		.catch(() => false);
 }
 
 function currentRoute(){
@@ -459,7 +498,7 @@ function renderSlide05(){
 	// Iframe на фоне справа
 	const frame = document.createElement('iframe');
 	frame.className = 'iframe-right';
-	frame.src = './mts/switch-iframe.html';
+	frame.src = './mts/switch-morph/switch-morph.html';
 	frame.setAttribute('title', 'Switch Iframe');
 	frame.setAttribute('allowtransparency', 'true');
 	frame.style.backgroundColor = 'transparent';
@@ -787,7 +826,7 @@ function renderRoute(){
 		root.className = 'view';
 		root.style.background = '#EDE8E1';
 		const bg = document.createElement('iframe');
-		bg.src = './mts/database.html';
+		bg.src = './mts/table/table.html';
 		bg.className = 'bg-iframe-fullheight-center';
 		bg.setAttribute('title', 'Database');
 		bg.setAttribute('loading', 'lazy');
@@ -796,7 +835,7 @@ function renderRoute(){
 		textWrap.style.position = 'relative';
 		textWrap.style.zIndex = '2';
 		textWrap.style.padding = 'var(--pad)';
-		textWrap.style.maxWidth = '70vw';
+		textWrap.style.maxWidth = '90vw';
 		textWrap.style.textAlign = 'left';
 		textWrap.style.fontWeight = '400';
 		textWrap.style.lineHeight = '140%';
@@ -1053,7 +1092,18 @@ function renderRoute(){
 		bg.src = bgIframeMap[route.index];
 		bg.className = 'bg-iframe-fullheight-center';
 		bg.setAttribute('title', 'Flow Iframe');
-		bg.setAttribute('loading', 'lazy');
+		bg.setAttribute('loading', 'eager');
+		// На некоторых страницах внутр. Lazy-контент догружается только при скролле –
+		// провоцируем короткий скролл после загрузки
+		bg.addEventListener('load', () => {
+			try {
+				const w = bg.contentWindow;
+				if (w && typeof w.scrollTo === 'function') {
+					w.scrollTo(0, 1);
+					setTimeout(() => w.scrollTo(0, 0), 40);
+				}
+			} catch(e){ /* cross-origin или иное — пропускаем */ }
+		}, { once:true });
 		applyFadeIn(bg, ['load']);
 		root.appendChild(bg);
 		// текст слева
@@ -1173,6 +1223,9 @@ async function boot(){
 	DATA.menuTitles = menuTxt.split(/\r?\n/).filter(Boolean);
 	DATA.slides = window.TextTyper.parseSlides(slidesTxt);
 
+	// Прелоадер
+	startPreloader();
+
 	// События
 	window.addEventListener('hashchange', renderRoute);
 	document.addEventListener('keydown', (e) => {
@@ -1191,5 +1244,65 @@ async function boot(){
 }
 
 boot().catch(console.error);
+
+/* =================== PRELOADER =================== */
+function startPreloader(){
+	const overlay = document.getElementById('preloader');
+	const bar = document.getElementById('preloaderProgress');
+	if (!overlay || !bar) return;
+
+	const assets = collectAssets();
+	let done = 0;
+	const total = assets.length || 1;
+
+	function setProgress(v){
+		const p = Math.max(0, Math.min(1, v));
+		bar.style.width = (p * 100).toFixed(1) + '%';
+	}
+	function completeOne(){ done++; setProgress(done/total); }
+
+	const jobs = assets.map(a => {
+		if (a.type === 'image') return preloadImage(a.url).then(completeOne);
+		if (a.type === 'video') return preloadVideo(a.url).then(completeOne);
+		return preloadIframe(a.url).then(completeOne);
+	});
+
+	// Максимум 7 секунд, затем скрываем
+	const timeout = new Promise(res => setTimeout(res, 7000));
+	Promise.race([Promise.allSettled(jobs), timeout]).finally(() => {
+		overlay.setAttribute('aria-hidden', 'true');
+		bar.setAttribute('aria-hidden', 'true');
+	});
+}
+
+function collectAssets(){
+	const list = [];
+	const push = (type, url) => { if (url) list.push({ type, url }); };
+	// Домашнее видео
+	push('video', './mts/start-home.mp4');
+	// Перебор слайдов 1..50
+	for (let i = 1; i <= 50; i++){
+		if (VIDEO_MAP[i]) push('video', VIDEO_MAP[i]);
+		if (IFRAME_MAP[i]) push('iframe', IFRAME_MAP[i]);
+		// Фоновые iframe (37–42 уже покрыты в bgIframeMap)
+	}
+	// Спец изображения/видео
+	push('image', './mts/font.svg');
+	push('image', './mts/icons-font.svg');
+	push('image', './mts/сalls-schedule.svg');
+	push('video', './mts/switches.mp4');
+	push('video', './mts/сonnection.mp4');
+	push('image', './mts/ui-test-cable/ui-test-cable.svg');
+	return dedupeAssets(list);
+}
+function dedupeAssets(arr){
+	const seen = new Set(); const out = [];
+	for (const a of arr){
+		const key = a.type + '|' + a.url;
+		if (seen.has(key)) continue;
+		seen.add(key); out.push(a);
+	}
+	return out;
+}
 
 

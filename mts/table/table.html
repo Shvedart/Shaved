@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SVG у низа экрана</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      /* background-color: black; */
+    }
+
+    /* Контейнер SVG, закреплённый у низа */
+    .svg-bottom {
+      position: fixed;
+      left: 55px;
+      right: 55px;
+      bottom: 130px;
+      display: block;
+      width: auto;
+      max-width: none;
+    }
+
+    /* Само изображение растягивается по ширине контейнера */
+    .svg-bottom img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Поддержка безопасных зон iOS */
+    @supports (padding: max(0px)) {
+      .svg-bottom {
+        left: max(55px, env(safe-area-inset-left));
+        right: max(55px, env(safe-area-inset-right));
+        bottom: calc(130px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+  </head>
+<body>
+  <div class="svg-bottom">
+    <img src="table.svg" alt="Speed Test" />
+  </div>
+
+  <script>
+    // JS не требуется. Оставлено для будущих действий.
+  </script>
+</body>
+</html>
+

@@ -1,6 +1,6 @@
-<svg width="1523" height="538" viewBox="0 0 1523 538" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Frame_1430101622">
-<rect width="1522" height="538" fill="black" style="fill:black;fill-opacity:1;"></rect>
+<svg width="1522" height="470" viewBox="0 0 1522 470" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="speed-test" clip-path="url(#clip0_1306_244267)">
+<rect width="1522" height="470" fill="black" style="fill:black;fill-opacity:1;"></rect>
 <g id="Frame_1430101617">
 <g id="Frame_1430101615">
 <path d="M217.429 0H216.929V538H217.429H217.929V0H217.429Z" fill="#5E5E5E" style="fill:#5E5E5E;fill:color(display-p3 0.3686 0.3686 0.3686);fill-opacity:1;"></path>
@@ -81,6 +81,11 @@
 </g>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_1306_244267">
+<rect width="1522" height="470" fill="white" style="fill:white;fill-opacity:1;"></rect>
+</clipPath>
+</defs>
 <style>
         @keyframes id_anim_stroke-property15{
         
