@@ -580,7 +580,8 @@ function renderSlide01(){
 		hoverDampness: 0.25,
 		rayCount: 0,
 		mixBlendMode: 'lighten',
-		colors: ['#D94A5A', '#52CDA4', '#ffffff']
+		colors: ['#9D0E1E', '#169168', '#B9B9B9']
+		// colors: ['#D94A5A', '#52CDA4', '#ffffff']
 	});
 
 	$app.appendChild(root);

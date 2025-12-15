@@ -22,6 +22,8 @@ export function mountPrismaticBurst(container, options = {}){
 	canvas.style.height = '100%';
 	canvas.style.pointerEvents = 'none';
 	canvas.style.mixBlendMode = opts.mixBlendMode && opts.mixBlendMode !== 'none' ? opts.mixBlendMode : '';
+	// Плавное появление
+	try { canvas.classList.add('media-fade'); } catch(e){}
 	container.appendChild(canvas);
 
 	const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true });
@@ -333,6 +335,8 @@ export function mountPrismaticBurst(container, options = {}){
 	ro.observe(container);
 	resize();
 	raf = requestAnimationFrame(loop);
+	// Отложенно помечаем как загруженный для мягкого появления
+	try { requestAnimationFrame(() => canvas.classList.add('loaded')); } catch(e){}
 
 	return {
 		detach(){

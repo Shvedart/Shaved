@@ -27,6 +27,8 @@ export function mountColorBends(container, opts = {}) {
 	canvas.style.display = 'block';
 	canvas.style.pointerEvents = 'none';
 	canvas.style.zIndex = '0';
+	// Плавное появление
+	try { canvas.classList.add('media-fade'); } catch(e){}
 	container.appendChild(canvas);
 
 	const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true });
@@ -265,6 +267,8 @@ export function mountColorBends(container, opts = {}) {
 	ro.observe(container);
 	resize();
 	raf = requestAnimationFrame(loop);
+	// Делегируем плавное появление после первого кадра
+	try { requestAnimationFrame(() => canvas.classList.add('loaded')); } catch(e){}
 
 	return {
 		detach(){
