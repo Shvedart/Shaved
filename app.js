@@ -608,7 +608,7 @@ function renderSlide01(){
 			tText = setTimeout(() => {
 				textWrap.classList.add('loaded');
 				typeInto(textWrap, body);
-			}, 600);
+			}, 2100); // 600ms (появление лого) + доп. 1500ms
 		}, 1500);
 	} catch(e){
 		try{ burstHandle?.canvas?.classList.add('loaded'); }catch(_){}
