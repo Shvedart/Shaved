@@ -54,31 +54,42 @@ function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
 function linkifyTelegram(container){
 	try{
-		const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-		const targets = [];
-		while (walker.nextNode()){
-			const node = walker.currentNode;
-			if (node.nodeValue && node.nodeValue.includes('@Shved_art')){
-				targets.push(node);
-			}
-		}
-		targets.forEach(node => {
-			const parts = node.nodeValue.split('@Shved_art');
-			const frag = document.createDocumentFragment();
-			for (let i = 0; i < parts.length; i++){
-				if (parts[i]) frag.appendChild(document.createTextNode(parts[i]));
-				if (i < parts.length - 1){
-					const a = document.createElement('a');
-					a.href = 'https://t.me/Shved_art';
-					a.textContent = '@Shved_art';
-					a.target = '_blank';
-					a.rel = 'noopener noreferrer';
-					a.style.textDecoration = 'underline';
-					frag.appendChild(a);
+		const username = '@Shved_art';
+		const href = 'https://t.me/Shved_art';
+		// 1) Попытка заменить в текстовых узлах
+		{
+			const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+			const targets = [];
+			while (walker.nextNode()){
+				const node = walker.currentNode;
+				if (node.nodeValue && node.nodeValue.includes(username)){
+					targets.push(node);
 				}
 			}
-			node.parentNode.replaceChild(frag, node);
-		});
+			targets.forEach(node => {
+				const parts = node.nodeValue.split(username);
+				const frag = document.createDocumentFragment();
+				for (let i = 0; i < parts.length; i++){
+					if (parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+					if (i < parts.length - 1){
+						const a = document.createElement('a');
+						a.href = href;
+						a.textContent = username;
+						a.target = '_blank';
+						a.rel = 'noopener noreferrer';
+						a.style.textDecoration = 'underline';
+						frag.appendChild(a);
+					}
+				}
+				if (node.parentNode) node.parentNode.replaceChild(frag, node);
+			});
+		}
+		// 2) Фолбэк: если ссылки всё ещё нет — заменим через innerHTML
+		if (!container.querySelector('a[href="https://t.me/Shved_art"]')){
+			const html = container.innerHTML;
+			const replaced = html.replace(/@Shved_art(?![^<]*?>)/g, '<a href="https://t.me/Shved_art" target="_blank" rel="noopener noreferrer">@Shved_art</a>');
+			if (replaced !== html) container.innerHTML = replaced;
+		}
 	}catch(e){}
 }
 
@@ -904,11 +915,14 @@ function renderRoute(){
 		$app.appendChild(root);
 		const slideObj = DATA.slides[index] || null;
 		const body = slideObj?.body || '';
-		typeInto(mainText, body).then(() => {
+		typeInto(mainText, body).then((tw) => {
 			// Гидрируем ссылки, напечатанные как текстовый <a ...>...</a>
 			hydrateAnchors(mainText);
 			// Поддержка старого варианта с @Shved_art
-			if (index === 50) linkifyTelegram(mainText);
+			if (index === 50){
+				// Предпочтительно работать по содержимому печатчика
+				try{ linkifyTelegram(tw?.content || mainText); }catch(e){ linkifyTelegram(mainText); }
+			}
 		});
 	}
 	// Слайды 09, 21, 36, 43, 49, 50 — центрированный текст
