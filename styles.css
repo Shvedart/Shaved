@@ -224,6 +224,7 @@ body{
 	z-index:2;
 	display:block;
 	width:45vw;
+	margin-top: 45px;
 	height:auto;
 	filter:drop-shadow(0 6px 20px rgba(0,0,0,0.5));
 }
@@ -522,6 +523,13 @@ body{
 	.slide-two-col .slide-right{width:100vw}
 	.slide-two-col .slide-right{min-height:50vh}
 	.footer{left:var(--pad); bottom:var(--pad)}
+}
+/* Мобильная типографика: уменьшаем основной размер текста */
+@media (max-width: 600px){
+	:root{
+		/* комфортный размер для телефонов */
+		--fz-main: clamp(16px, 4.6vw, 20px);
+	}
 }
 a {
     color: #24A1de;
