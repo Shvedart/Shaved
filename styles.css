@@ -532,3 +532,14 @@ a {
 a:hover {
     color: #1e8fc8;
 }
+
+/* Мобильные отступы */
+@media (max-width: 600px){
+	:root{
+		--pad:16px;
+	}
+	/* В сайд-меню padding был зафиксирован в 55px — переопределяем */
+	#sideMenu .side-menu__list{
+		padding:16px;
+	}
+}
