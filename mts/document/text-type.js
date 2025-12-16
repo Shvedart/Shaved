@@ -218,17 +218,29 @@
       opts || {}
     );
     const containerStack = [contentEl];
-    const typedUnits = []; // массив TextNode (по одному символу)
+    // Вместо создания DOM-узла на каждый символ,
+    // храним ссылки на общий текстовый узел и сокращаем/дополняем его значение.
+    const typedUnits = []; // массив ссылок на TextNode (по одному символу)
 
     function currentContainer() {
       return containerStack[containerStack.length - 1];
     }
 
     async function typeText(text) {
+      if (!text || text.length === 0) return;
+      // Берём последний текстовый узел в текущем контейнере, либо создаём новый
+      let node = null;
+      const cont = currentContainer();
+      if (cont && cont.lastChild && cont.lastChild.nodeType === Node.TEXT_NODE) {
+        node = cont.lastChild;
+      } else {
+        node = document.createTextNode('');
+        cont.appendChild(node);
+      }
       for (let i = 0; i < text.length; i++) {
         const ch = text[i];
-        const node = document.createTextNode(ch);
-        currentContainer().appendChild(node);
+        node.nodeValue += ch;
+        // Запоминаем ссылку на тот же узел для отката по одному символу
         typedUnits.push(node);
         await sleep(withJitter(options.typingSpeed, options.randomJitter));
       }
@@ -237,15 +249,20 @@
     async function deleteOneChar() {
       const node = typedUnits.pop();
       if (!node) return;
-      const parent = node.parentNode;
-      if (parent) {
-        parent.removeChild(node);
-        // Удаляем пустые <b>/<i>, двигаясь вверх
-        let p = parent;
-        while (p && p !== contentEl && p.childNodes.length === 0) {
-          const up = p.parentNode;
-          if (up) up.removeChild(p);
-          p = up;
+      if (node.nodeType === Node.TEXT_NODE) {
+        // Укорачиваем текст на один символ
+        node.nodeValue = node.nodeValue.slice(0, -1);
+        // Если узел опустел — удаляем его
+        if (node.nodeValue.length === 0 && node.parentNode) {
+          const parent = node.parentNode;
+          parent.removeChild(node);
+          // Удаляем пустые <b>/<i>/<span gray>, поднимаясь вверх
+          let p = parent;
+          while (p && p !== contentEl && p.childNodes.length === 0) {
+            const up = p.parentNode;
+            if (up) up.removeChild(p);
+            p = up;
+          }
         }
       }
       await sleep(withJitter(options.deletingSpeed, options.randomJitter * 0.6));
