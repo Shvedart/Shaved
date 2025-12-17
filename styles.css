@@ -442,8 +442,8 @@ body{
 }
 .controls__arrow:focus,
 .controls__arrow:focus-visible{
-	outline:none;
-	box-shadow:none;
+	/* outline:none; */
+	/* box-shadow:none; */
 	/* как hover */
 	background:rgba(255,255,255,0.08);
 	transform:translateY(-1px);
