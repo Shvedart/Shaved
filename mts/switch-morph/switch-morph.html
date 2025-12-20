@@ -101,6 +101,10 @@
       }
       return out;
     }
+    // Easing-функция для интро: плавное ускорение/замедление (ease-in-out cubic)
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
 
     /**
      * Строит интерполяторы для всех путей (path) между двумя SVG.
@@ -192,8 +196,13 @@
         let targetT = 0;
         let currentT = 0;
         let rafId = 0;
+        // Интро-анимация: первые 2 секунды автоматически слева направо
+        const INTRO_DURATION_MS = 2000;
+        let isIntro = true;
+        let introStart = performance.now();
 
         function onMove(clientX) {
+          if (isIntro) return; // во время интро игнорируем движения
           const w = window.innerWidth || 1;
           targetT = Math.min(1, Math.max(0, clientX / w));
           // старт анимации
@@ -202,6 +211,21 @@
 
         // Небольшое сглаживание, чтобы было плавнее
         function tick() {
+          // Во время интро двигаем напрямую от 0 к 1 за 2 секунды
+          if (isIntro) {
+            const elapsed = performance.now() - introStart;
+            const p = Math.min(1, elapsed / INTRO_DURATION_MS);
+            currentT = easeInOutCubic(p);
+            applyT(items, currentT);
+            if (p < 1) {
+              rafId = requestAnimationFrame(tick);
+            } else {
+              isIntro = false;
+              targetT = currentT; // зафиксируем конечное значение
+              rafId = 0;
+            }
+            return;
+          }
           const speed = 0.25; // чем больше, тем быстрее догоняет
           const dt = targetT - currentT;
           if (Math.abs(dt) < 0.001) {
@@ -224,6 +248,8 @@
 
         // Начальное применение (слева = состояние A)
         applyT(items, 0);
+        // Запуск интро-анимации
+        if (!rafId) rafId = requestAnimationFrame(tick);
       } catch (err) {
         console.error(err);
         const div = document.createElement('div');
