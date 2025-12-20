@@ -511,12 +511,12 @@ function renderSlide01(){
 	// Текст слайда 01
 	const slideObj = DATA.slides[1] || null;
 	const body = slideObj?.body || '';
-	// Последовательное появление: 1) канвас (1.5s), 2) лого, 3) старт печати
+	// Последовательное появление: 1) канвас (~0.8s), 2) лого, 3) старт печати (быстрее)
 	let tCanvas, tLogo, tText;
 	try {
 		if (burstHandle && burstHandle.canvas){
 			burstHandle.canvas.classList.add('media-fade');
-			burstHandle.canvas.style.transition = 'opacity 1.5s ease';
+			burstHandle.canvas.style.transition = 'opacity .8s ease';
 			tCanvas = setTimeout(() => {
 				burstHandle.canvas.classList.add('loaded');
 			}, 0);
@@ -526,8 +526,8 @@ function renderSlide01(){
 			tText = setTimeout(() => {
 				textWrap.classList.add('loaded');
 				typeInto(textWrap, body);
-			}, 1600); // 600ms (появление лого) + доп. 1500ms
-		}, 1500);
+			}, 400); // быстрее старт печати после лого
+		}, 700); // логотип появляется раньше
 	} catch(e){
 		try{ burstHandle?.canvas?.classList.add('loaded'); }catch(_){}
 		try{ logo.classList.add('loaded'); }catch(_){}
