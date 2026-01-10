@@ -237,7 +237,7 @@ body{
 	bottom:var(--pad);
 	display:flex;
 	align-items:center;
-	gap:var(--menu-gap);
+	gap: 45px;
 	z-index:50;
 	font-size:var(--menu-size);
 }
