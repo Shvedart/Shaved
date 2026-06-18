@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Depth Map 3D Viewer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px;
+}
+
+#upload-panel {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.drop-zone {
+  width: 200px; height: 140px;
+  border: 2px dashed #444;
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative; overflow: hidden;
+}
+.drop-zone:hover { border-color: #888; background: #ffffff08; }
+.drop-zone.has-image { border-color: #4a9eff88; }
+.drop-zone img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.55; border-radius: 10px;
+}
+.drop-zone span {
+  position: relative; font-size: 13px; color: #aaa;
+  text-align: center; padding: 0 10px; pointer-events: none;
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+/* ── main layout: canvas left, controls right ─────────────── */
+#main-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+/* ── control panels ─────────────────────────────────────── */
+#controls {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  flex-shrink: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ctrl-row {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ctrl-group {
+  background: #13131a;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+}
+.ctrl-group-title {
+  font-size: 10px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.sl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sl-row label {
+  font-size: 11px;
+  color: #888;
+  min-width: 76px;
+}
+.sl-row .val {
+  font-size: 11px;
+  color: #4a9eff;
+  min-width: 32px;
+  text-align: right;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  flex: 1; height: 4px;
+  background: #2a2a36;
+  border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: #4a9eff;
+  cursor: pointer;
+}
+
+/* toggle buttons */
+.toggle-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tog {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a24;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tog.active {
+  background: #1a3a5c;
+  border-color: #4a9eff88;
+  color: #4a9eff;
+}
+
+/* select */
+.sl-row select {
+  flex: 1;
+  background: #1a1a24;
+  border: 1px solid #333;
+  color: #ccc;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+#canvas-wrap {
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 0 60px #0008;
+  cursor: crosshair;
+}
+canvas { display: block; }
+
+/* ── size inputs ─────────────────────────────────────────── */
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.size-row label { font-size: 11px; color: #888; min-width: 16px; }
+.size-inp {
+  width: 70px;
+  background: #0a0a0f;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 12px;
+  padding: 4px 6px;
+  outline: none;
+  text-align: right;
+  font-family: monospace;
+}
+.size-inp:focus { border-color: #4a9eff66; }
+.lock-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a24;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+  user-select: none;
+}
+.lock-btn.active { background: #1a3a5c; border-color: #4a9eff88; color: #4a9eff; }
+.apply-btn {
+  width: 100%;
+  padding: 5px;
+  background: #1a1a24;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 2px;
+}
+.apply-btn:hover { background: #222230; color: #ccc; }
+
+#start-btn {
+  padding: 10px 28px;
+  background: #4a9eff; color: white; border: none;
+  border-radius: 8px; font-size: 14px; cursor: pointer;
+  transition: background 0.2s;
+}
+#start-btn:hover { background: #3a8eef; }
+#start-btn:disabled { background: #222; color: #555; cursor: default; }
+
+#hint { font-size: 11px; color: #444; }
+
+/* ── API key bar ─────────────────────────────────────────── */
+#api-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #13131a;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 460px;
+}
+#api-bar label { font-size: 11px; color: #666; white-space: nowrap; }
+#api-key {
+  flex: 1;
+  background: #0a0a0f;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  font-family: monospace;
+}
+#api-key:focus { border-color: #4a9eff66; }
+#api-key-save {
+  padding: 5px 12px;
+  background: #1a3a5c;
+  border: 1px solid #4a9eff44;
+  border-radius: 6px;
+  color: #4a9eff;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#api-key-save:hover { background: #1e4a72; }
+
+/* depth zone optional state */
+.drop-zone.optional { border-style: dashed; opacity: 0.7; }
+.drop-zone.optional:hover { opacity: 1; }
+.drop-zone.generating {
+  border-color: #f0a03088;
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+@keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+
+/* ── status overlay ─────────────────────────────────────── */
+#status-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: #000a;
+  align-items: center; justify-content: center;
+  z-index: 999;
+  flex-direction: column;
+  gap: 16px;
+}
+#status-overlay.show { display: flex; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid #333;
+  border-top-color: #4a9eff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#status-text { font-size: 14px; color: #aaa; }
+#status-error {
+  font-size: 12px; color: #ff6b6b;
+  max-width: 320px; text-align: center;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- API key -->
+<div id="api-bar">
+  <label>ArtificialStudio API Key</label>
+  <input type="password" id="api-key" placeholder="sk-…  (для авто-генерации depth map)">
+  <button id="api-key-save">Сохранить</button>
+</div>
+
+<div id="upload-panel">
+  <div class="drop-zone" id="zone-color">
+    <img id="prev-color" style="display:none">
+    <span>Фотография<br><small>PNG / JPG</small></span>
+    <input type="file" accept="image/*" id="input-color">
+  </div>
+  <div class="drop-zone optional" id="zone-depth">
+    <img id="prev-depth" style="display:none">
+    <span id="depth-zone-label">Карта глубины<br><small>необязательно — сгенерируем</small></span>
+    <input type="file" accept="image/*" id="input-depth">
+  </div>
+</div>
+
+<button id="start-btn" disabled>Построить 3D модель</button>
+
+<!-- loading overlay -->
+<div id="status-overlay">
+  <div class="spinner"></div>
+  <div id="status-text">Генерируем карту глубины…</div>
+  <div id="status-error"></div>
+  <button id="status-cancel" style="padding:6px 18px;background:#222;border:1px solid #444;border-radius:6px;color:#888;cursor:pointer;font-size:12px">Отмена</button>
+</div>
+
+<div id="main-layout">
+
+<div id="canvas-wrap" style="display:none">
+  <canvas id="gl-canvas" width="900" height="560" style="max-width:100%;"></canvas>
+</div>
+
+<!-- ═══════════════ CONTROLS ═══════════════ -->
+<div id="controls">
+
+  <div class="ctrl-row">
+
+    <!-- Геометрия -->
+    <div class="ctrl-group">
+      <div class="ctrl-group-title">Геометрия</div>
+      <div class="sl-row">
+        <label>Глубина</label>
+        <input type="range" id="sl-depth" min="0.02" max="2" step="0.01" value="0.4">
+        <span class="val" id="v-depth">0.40</span>
+      </div>
+      <div class="sl-row">
+        <label>Сетка</label>
+        <input type="range" id="sl-grid" min="50" max="500" step="10" value="250">
+        <span class="val" id="v-grid">250</span>
+      </div>
+    </div>
+
+    <!-- Камера -->
+    <div class="ctrl-group">
+      <div class="ctrl-group-title">Камера</div>
+      <div class="sl-row">
+        <label>FOV</label>
+        <input type="range" id="sl-fov" min="20" max="120" step="1" value="55">
+        <span class="val" id="v-fov">55°</span>
+      </div>
+      <div class="sl-row">
+        <label>Дистанция</label>
+        <input type="range" id="sl-dist" min="1.2" max="5" step="0.05" value="2.2">
+        <span class="val" id="v-dist">2.2</span>
+      </div>
+      <div class="sl-row">
+        <label>Сдвиг X</label>
+        <input type="range" id="sl-offx" min="-2" max="2" step="0.01" value="0">
+        <span class="val" id="v-offx">0.00</span>
+      </div>
+      <div class="sl-row">
+        <label>Сдвиг Y</label>
+        <input type="range" id="sl-offy" min="-2" max="2" step="0.01" value="0">
+        <span class="val" id="v-offy">0.00</span>
+      </div>
+      <div class="sl-row">
+        <label>Отступ от края</label>
+        <input type="range" id="sl-edge" min="0" max="5" step="0.01" value="0">
+        <span class="val" id="v-edge">0.000</span>
+      </div>
+    </div>
+
+    <!-- Размер -->
+    <div class="ctrl-group">
+      <div class="ctrl-group-title">Размер canvas</div>
+      <div class="size-row">
+        <label>W</label>
+        <input class="size-inp" id="inp-w" type="number" min="100" max="3840" step="1" value="960">
+        <label style="min-width:8px">px</label>
+        <button class="lock-btn active" id="lock-ratio" title="Сохранять пропорции">🔒</button>
+      </div>
+      <div class="size-row">
+        <label>H</label>
+        <input class="size-inp" id="inp-h" type="number" min="100" max="2160" step="1" value="640">
+        <label style="min-width:8px">px</label>
+      </div>
+      <button class="apply-btn" id="apply-size">Применить</button>
+      <div style="font-size:10px;color:#555;margin-top:2px;text-align:center" id="size-info">960 × 640</div>
+    </div>
+
+    <!-- Мышь -->
+    <div class="ctrl-group">
+      <div class="ctrl-group-title">Мышь</div>
+      <div class="sl-row">
+        <label>Сила</label>
+        <input type="range" id="sl-mouse" min="0" max="200" step="1" value="60">
+        <span class="val" id="v-mouse">60</span>
+      </div>
+      <div class="sl-row">
+        <label>Плавность</label>
+        <input type="range" id="sl-lerp" min="1" max="30" step="1" value="6">
+        <span class="val" id="v-lerp">6</span>
+      </div>
+      <div class="sl-row">
+        <label>Режим</label>
+        <select id="sel-mode">
+          <option value="rotate">Вращение</option>
+          <option value="parallax">Параллакс</option>
+          <option value="tilt">Перспективный наклон</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div class="tog" id="tog-ix" title="Инвертировать ось X">Инв X</div>
+        <div class="tog" id="tog-iy" title="Инвертировать ось Y">Инв Y</div>
+        <div class="tog" id="tog-return" title="Возврат в центр при уходе мыши" class="active">Возврат</div>
+      </div>
+    </div>
+
+    <!-- Авто -->
+    <div class="ctrl-group">
+      <div class="ctrl-group-title">Авто-анимация</div>
+      <div class="toggle-row">
+        <div class="tog active" id="tog-auto">Вкл</div>
+      </div>
+      <div class="sl-row">
+        <label>Скорость</label>
+        <input type="range" id="sl-aspeed" min="0.1" max="5" step="0.1" value="0.8">
+        <span class="val" id="v-aspeed">0.8</span>
+      </div>
+      <div class="sl-row">
+        <label>Амплитуда</label>
+        <input type="range" id="sl-aamp" min="1" max="30" step="1" value="8">
+        <span class="val" id="v-aamp">8</span>
+      </div>
+    </div>
+
+    <!-- Слои -->
+    <div class="ctrl-group" style="flex:0 0 100%; margin-top:4px;">
+      <div class="ctrl-group-title">Слои (плоские PNG)</div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <label style="font-size:12px;color:#888;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <input type="file" id="input-bg" accept="image/png,image/*" style="display:none">
+          <span id="btn-bg" style="padding:5px 12px;background:#1a1a2a;border:1px solid #333;border-radius:7px;color:#aaa;font-size:12px;cursor:pointer;">🖼 Фон (снизу)</span>
+        </label>
+        <span id="lbl-bg" style="font-size:11px;color:#555;">не загружен</span>
+        <button id="btn-bg-clear" style="display:none;background:none;border:none;color:#555;cursor:pointer;font-size:13px;" title="Убрать фон">✕</button>
+
+        <label style="font-size:12px;color:#888;cursor:pointer;display:flex;align-items:center;gap:6px; margin-left:16px;">
+          <input type="file" id="input-fg" accept="image/png,image/*" style="display:none">
+          <span id="btn-fg" style="padding:5px 12px;background:#1a1a2a;border:1px solid #333;border-radius:7px;color:#aaa;font-size:12px;cursor:pointer;">🖼 Передний план (сверху)</span>
+        </label>
+        <span id="lbl-fg" style="font-size:11px;color:#555;">не загружен</span>
+        <button id="btn-fg-clear" style="display:none;background:none;border:none;color:#555;cursor:pointer;font-size:13px;" title="Убрать передний план">✕</button>
+      </div>
+      <div class="sl-row">
+        <label>Масштаб фона</label>
+        <input type="range" id="sl-bgscale" min="0.5" max="3" step="0.01" value="1">
+        <span class="val" id="v-bgscale">1.00</span>
+      </div>
+      <div class="sl-row">
+        <label>Дальность фона</label>
+        <input type="range" id="sl-bgpar" min="0.5" max="5" step="0.05" value="1">
+        <span class="val" id="v-bgpar">1.0</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="export-row" style="display:none; flex-direction:column; align-items:center; gap:10px; margin-top:8px;">
+
+  <!-- Метаданные карточки -->
+  <div id="meta-box" style="
+    background:#111722; border:1px solid #222; border-radius:12px;
+    padding:12px 16px; width:100%; max-width:700px;
+    display:grid; grid-template-columns:1fr 1fr; gap:8px 16px;
+  ">
+    <div style="grid-column:1/-1;font-size:11px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;">Метаданные карточки (для карусели)</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <label style="font-size:11px;color:#666">Название</label>
+      <input id="meta-title" type="text" placeholder="Холоп 3" style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:7px;color:#e0e0e0;padding:6px 10px;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <label style="font-size:11px;color:#666">Жанр</label>
+      <input id="meta-genre" type="text" placeholder="Приключения" style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:7px;color:#e0e0e0;padding:6px 10px;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <label style="font-size:11px;color:#666">Год</label>
+      <input id="meta-year" type="text" placeholder="2026" style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:7px;color:#e0e0e0;padding:6px 10px;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <label style="font-size:11px;color:#666">Страна</label>
+      <input id="meta-country" type="text" placeholder="Россия" style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:7px;color:#e0e0e0;padding:6px 10px;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <label style="font-size:11px;color:#666">Рейтинг</label>
+      <input id="meta-rating" type="text" placeholder="15%" style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:7px;color:#e0e0e0;padding:6px 10px;font-size:13px;outline:none;">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+    <button id="export-card-btn" style="
+      padding: 9px 22px;
+      background: #1a1e2a;
+      border: 1px solid #3a5a9a88;
+      border-radius: 8px;
+      color: #6aaabf;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    ">🃏 Экспорт карточки (для карусели)</button>
+    <button id="export-btn" style="
+      padding: 9px 22px;
+      background: #1a2a1a;
+      border: 1px solid #3a7a3a88;
+      border-radius: 8px;
+      color: #6abf6a;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    ">⬇ Экспорт HTML (iframe)</button>
+  </div>
+</div>
+
+</div>
+
+<div id="hint">Двигайте мышью над моделью</div>
+
+<script>
+// ── state ──────────────────────────────────────────────────────────────────
+let colorImg = null, depthImg = null;
+let abortGeneration = false;
+let gl, program, vbo, ibo, indexCount;
+let texColor, texDepth;
+let mouseX = 0, mouseY = 0, mouseOver = false;
+let targetRotX = 0, targetRotY = 0;
+let curRotX = 0, curRotY = 0;
+let curShiftX = 0, curShiftY = 0;
+let invertX = false, invertY = false, autoReturn = true, autoAnim = true;
+let mouseInfluence = 0; // 0 = авто, 1 = мышь — плавный переход при входе/выходе
+let t = 0;
+let lastTs = 0;
+
+// ── helpers ────────────────────────────────────────────────────────────────
+function v(id)   { return document.getElementById(id); }
+function num(id) { return +v(id).value; }
+
+function tog(el, state) {
+  if (state === undefined) return el.classList.contains('active');
+  el.classList.toggle('active', state);
+}
+
+function bindSlider(id, valId, fmt) {
+  const el = v(id), vEl = v(valId);
+  const update = () => vEl.textContent = fmt ? fmt(+el.value) : el.value;
+  el.addEventListener('input', update);
+  update();
+}
+
+bindSlider('sl-depth',  'v-depth',  x => x.toFixed(2));
+bindSlider('sl-grid',   'v-grid');
+bindSlider('sl-fov',    'v-fov',    x => x + '°');
+bindSlider('sl-dist',   'v-dist',   x => (+x).toFixed(1));
+bindSlider('sl-offx',   'v-offx',   x => (+x).toFixed(2));
+bindSlider('sl-offy',   'v-offy',   x => (+x).toFixed(2));
+bindSlider('sl-edge',   'v-edge',   x => (+x).toFixed(3));
+bindSlider('sl-bgscale','v-bgscale',x => (+x).toFixed(2));
+bindSlider('sl-bgpar',  'v-bgpar',  x => (+x).toFixed(1));
+bindSlider('sl-mouse',  'v-mouse');
+bindSlider('sl-lerp',   'v-lerp');
+bindSlider('sl-aspeed', 'v-aspeed', x => (+x).toFixed(1));
+bindSlider('sl-aamp',   'v-aamp');
+
+v('sl-grid').addEventListener('input', rebuildMesh);
+
+// ── size controls ──────────────────────────────────────────────────────────
+let lockRatio = true;
+let customW = 0, customH = 0; // 0 = авто от изображения
+
+v('lock-ratio').addEventListener('click', () => {
+  lockRatio = !lockRatio;
+  v('lock-ratio').classList.toggle('active', lockRatio);
+  v('lock-ratio').textContent = lockRatio ? '🔒' : '🔓';
+});
+
+v('inp-w').addEventListener('input', () => {
+  if (!lockRatio) return;
+  const w = +v('inp-w').value;
+  if (!w) return;
+  const ratio = customH && customW ? customH / customW : (+v('gl-canvas').height / +v('gl-canvas').width);
+  v('inp-h').value = Math.round(w * ratio);
+});
+
+v('inp-h').addEventListener('input', () => {
+  if (!lockRatio) return;
+  const h = +v('inp-h').value;
+  if (!h) return;
+  const ratio = customW && customH ? customW / customH : (+v('gl-canvas').width / +v('gl-canvas').height);
+  v('inp-w').value = Math.round(h * ratio);
+});
+
+// ── bg / fg layer ─────────────────────────────────────────────────────────
+let bgImg = null, fgImg = null;
+
+function setupLayerInput(inputId, layerElId, lblId, clearBtnId, onLoad) {
+  const inp = v(inputId), lbl = v(lblId), clearBtn = v(clearBtnId);
+  v('btn-' + (inputId === 'input-bg' ? 'bg' : 'fg')).addEventListener('click', () => inp.click());
+  inp.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image(); img.onload = () => { onLoad(img); lbl.textContent = file.name; clearBtn.style.display = ''; };
+    img.src = url;
+  });
+  clearBtn.addEventListener('click', () => { onLoad(null); lbl.textContent = 'не загружен'; clearBtn.style.display = 'none'; inp.value = ''; });
+}
+
+setupLayerInput('input-bg', 'bg-layer', 'lbl-bg', 'btn-bg-clear', img => {
+  bgImg = img;
+  if (gl) uploadBgTex(img);
+});
+
+setupLayerInput('input-fg', 'fg-layer', 'lbl-fg', 'btn-fg-clear', img => {
+  fgImg = img;
+  if (gl) uploadFgTex(img);
+});
+
+v('apply-size').addEventListener('click', () => {
+  const w = Math.round(+v('inp-w').value);
+  const h = Math.round(+v('inp-h').value);
+  if (!w || !h || w < 100 || h < 100) return;
+  customW = w; customH = h;
+  const canvas = v('gl-canvas');
+  canvas.width = w; canvas.height = h;
+  v('size-info').textContent = `${w} × ${h}`;
+  if (gl) gl.viewport(0, 0, w, h);
+});
+
+['tog-ix','tog-iy','tog-return','tog-auto'].forEach(id => {
+  v(id).addEventListener('click', () => {
+    v(id).classList.toggle('active');
+    invertX   = tog(v('tog-ix'));
+    invertY   = tog(v('tog-iy'));
+    autoReturn = tog(v('tog-return'));
+    autoAnim  = tog(v('tog-auto'));
+  });
+});
+// init defaults
+tog(v('tog-return'), true);
+tog(v('tog-auto'), true);
+
+// ── upload ─────────────────────────────────────────────────────────────────
+function setupDrop(inputId, zoneId, previewId, cb) {
+  const input = v(inputId), zone = v(zoneId), prev = v(previewId);
+  input.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { cb(img); prev.src = url; prev.style.display = ''; zone.classList.add('has-image'); checkReady(); };
+    img.src = url;
+  });
+}
+function checkReady() {
+  // достаточно только цветного фото — depth сгенерируем
+  v('start-btn').disabled = !colorImg;
+}
+
+setupDrop('input-color', 'zone-color', 'prev-color', img => { colorImg = img; checkReady(); });
+
+// ── API key ────────────────────────────────────────────────────────────────
+const API_KEY_LS = 'artificialstudio_key';
+v('api-key').value = localStorage.getItem(API_KEY_LS) || '';
+v('api-key-save').addEventListener('click', () => {
+  const k = v('api-key').value.trim();
+  if (k) localStorage.setItem(API_KEY_LS, k);
+  v('api-key-save').textContent = '✓ Сохранено';
+  setTimeout(() => v('api-key-save').textContent = 'Сохранить', 1500);
+});
+
+// ── depth-zone appearance ──────────────────────────────────────────────────
+setupDrop('input-depth', 'zone-depth', 'prev-depth', img => {
+  depthImg = img;
+  v('zone-depth').classList.remove('optional');
+  v('depth-zone-label').innerHTML = 'Карта глубины<br><small>загружена вручную</small>';
+});
+
+// ── generate depth map via ArtificialStudio API ────────────────────────────
+async function generateDepthMap(imgEl) {
+  // 1. convert image → base64 JPEG
+  const canvas = document.createElement('canvas');
+  // cap resolution to 1024px to keep payload small
+  const MAX = 1024;
+  const scale = Math.min(1, MAX / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
+  canvas.width  = Math.round(imgEl.naturalWidth  * scale);
+  canvas.height = Math.round(imgEl.naturalHeight * scale);
+  canvas.getContext('2d').drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+  const apiKey = v('api-key').value.trim() || localStorage.getItem(API_KEY_LS) || '';
+  if (!apiKey) throw new Error('Введите API Key для авто-генерации карты глубины');
+
+  setStatus('Отправляем изображение…');
+  const resp = await fetch('https://api.artificialstudio.ai/api/run', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': apiKey
+    },
+    body: JSON.stringify({
+      tool: 'image-depth-map-generator',
+      input: { image_url: dataUrl }
+    })
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => resp.statusText);
+    throw new Error(`API error ${resp.status}: ${txt}`);
+  }
+
+  const data = await resp.json();
+
+  // ── find result image URL in response ─────────────────────────────────
+  // try common response shapes
+  const url = data?.output?.depth_map_url
+    || data?.output?.url
+    || data?.output?.image_url
+    || data?.result?.url
+    || data?.result
+    || (typeof data?.output === 'string' ? data.output : null);
+
+  if (!url) throw new Error('Не удалось найти URL карты глубины в ответе:\n' + JSON.stringify(data).slice(0, 300));
+
+  setStatus('Загружаем карту глубины…');
+  return await loadImageFromUrl(url);
+}
+
+function loadImageFromUrl(url) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => res(img);
+    img.onerror = () => rej(new Error('Не удалось загрузить изображение: ' + url));
+    img.src = url;
+  });
+}
+
+// ── overlay helpers ────────────────────────────────────────────────────────
+function setStatus(msg) {
+  v('status-text').textContent = msg;
+  v('status-error').style.display = 'none';
+}
+function showOverlay()  { v('status-overlay').classList.add('show'); }
+function hideOverlay()  { v('status-overlay').classList.remove('show'); }
+
+v('status-cancel').addEventListener('click', () => {
+  abortGeneration = true;
+  hideOverlay();
+});
+
+// ── start button ───────────────────────────────────────────────────────────
+v('start-btn').addEventListener('click', async () => {
+  if (!colorImg) return;
+
+  // if depth already loaded — go straight to render
+  if (depthImg) {
+    launchViewer();
+    return;
+  }
+
+  // need to generate depth map
+  abortGeneration = false;
+  showOverlay();
+  setStatus('Генерируем карту глубины…');
+  v('zone-depth').classList.add('generating');
+
+  try {
+    const generated = await generateDepthMap(colorImg);
+    if (abortGeneration) return;
+
+    depthImg = generated;
+    // show thumbnail in zone
+    v('prev-depth').src = (() => {
+      const c = document.createElement('canvas');
+      c.width = generated.naturalWidth; c.height = generated.naturalHeight;
+      c.getContext('2d').drawImage(generated, 0, 0);
+      return c.toDataURL();
+    })();
+    v('prev-depth').style.display = '';
+    v('zone-depth').classList.remove('optional', 'generating');
+    v('zone-depth').classList.add('has-image');
+    v('depth-zone-label').innerHTML = 'Карта глубины<br><small>сгенерирована AI</small>';
+
+    hideOverlay();
+    launchViewer();
+  } catch(err) {
+    v('zone-depth').classList.remove('generating');
+    v('status-text').textContent = 'Ошибка генерации';
+    v('status-error').textContent = err.message;
+    v('status-error').style.display = 'block';
+    // don't hide overlay — let user read error / cancel
+  }
+});
+
+function fitCanvas() {
+  if (!colorImg) return;
+  let w, h;
+  if (customW && customH) {
+    // пользователь задал конкретный размер
+    w = customW; h = customH;
+  } else {
+    const MAX_W = 960, MAX_H = 640;
+    const imgAspect = colorImg.naturalWidth / colorImg.naturalHeight;
+    w = MAX_W; h = Math.round(MAX_W / imgAspect);
+    if (h > MAX_H) { h = MAX_H; w = Math.round(MAX_H * imgAspect); }
+  }
+  const canvas = v('gl-canvas');
+  canvas.width = w; canvas.height = h;
+  // sync inputs
+  v('inp-w').value = w; v('inp-h').value = h;
+  v('size-info').textContent = `${w} × ${h}`;
+  if (gl && program) gl.viewport(0, 0, w, h);
+}
+
+function launchViewer() {
+  fitCanvas();
+  v('canvas-wrap').style.display = '';
+  v('controls').style.display = 'flex';
+  v('export-row').style.display = 'flex';
+  if (!gl) initGL();
+  rebuildMesh();
+  uploadTextures();
+}
+
+// ── export ─────────────────────────────────────────────────────────────────
+function imgToBase64(img, png) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  c.getContext('2d').drawImage(img, 0, 0);
+  return png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+}
+
+function collectCfg() {
+  const canvas = v('gl-canvas');
+  return {
+    depth:   +v('sl-depth').value,
+    grid:    +v('sl-grid').value,
+    fov:     +v('sl-fov').value,
+    dist:    +v('sl-dist').value,
+    mouse:   +v('sl-mouse').value,
+    lerp:    +v('sl-lerp').value,
+    offx:    +v('sl-offx').value,
+    offy:    +v('sl-offy').value,
+    edge:    +v('sl-edge').value,
+    bgScale: +v('sl-bgscale').value,
+    bgPar:   +v('sl-bgpar').value,
+    aspeed:  +v('sl-aspeed').value,
+    aamp:    +v('sl-aamp').value,
+    mode:    v('sel-mode').value,
+    invertX, invertY, autoReturn, autoAnim,
+    imgW: colorImg.naturalWidth,
+    imgH: colorImg.naturalHeight,
+    canvasW: canvas.width,
+    canvasH: canvas.height,
+  };
+}
+
+// Экспорт карточки для карусели
+v('export-card-btn').addEventListener('click', () => {
+  if (!colorImg || !depthImg) return;
+  const colorB64 = imgToBase64(colorImg, true);
+  const depthB64 = imgToBase64(depthImg);
+  const cfg = collectCfg();
+  const meta = {
+    title:   v('meta-title').value.trim(),
+    genre:   v('meta-genre').value.trim(),
+    year:    v('meta-year').value.trim(),
+    country: v('meta-country').value.trim(),
+    rating:  v('meta-rating').value.trim(),
+  };
+  const bgB64 = bgImg ? imgToBase64(bgImg, true) : null;
+  const fgB64 = fgImg ? imgToBase64(fgImg, true) : null;
+  const data = JSON.stringify({ color: colorB64, depth: depthB64, cfg, meta, bg: bgB64, fg: fgB64 });
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${meta.title || 'card'}</title></head><body>
+<script id="card-data" type="application/json">${data}<\/script>
+<p style="font-family:sans-serif;color:#666;padding:20px">Это карточка для 3D карусели. Загрузите её в carousel.html</p>
+</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (meta.title || 'card').replace(/\s+/g, '-').toLowerCase() + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// Экспорт standalone viewer
+v('export-btn').addEventListener('click', () => {
+  if (!colorImg || !depthImg) return;
+  const colorB64 = imgToBase64(colorImg, true);
+  const depthB64 = imgToBase64(depthImg);
+  const bgB64 = bgImg ? imgToBase64(bgImg, true) : null;
+  const fgB64 = fgImg ? imgToBase64(fgImg, true) : null;
+  const cfg = collectCfg();
+  const html = buildExportHTML(colorB64, depthB64, cfg, bgB64, fgB64);
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'depth3d-viewer.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+function buildExportHTML(colorB64, depthB64, cfg, bgB64, fgB64) {
+  const cW = cfg.canvasW, cH = cfg.canvasH;
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>3D Viewer</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:#0a0a0f; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+canvas { display:block; max-width:100%; max-height:100%; }
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c" width="${cW}" height="${cH}"></canvas>
+</div>
+<script>
+const COLOR_SRC = '${colorB64}';
+const DEPTH_SRC = '${depthB64}';
+const BG_SRC = ${bgB64 ? `'${bgB64}'` : 'null'};
+const FG_SRC = ${fgB64 ? `'${fgB64}'` : 'null'};
+const CFG = ${JSON.stringify(cfg)};
+
+const VS = \`#version 300 es
+precision highp float;
+in vec2 a_uv;
+uniform sampler2D u_depth;
+uniform sampler2D u_color;
+uniform mat4 u_mvp;
+uniform float u_displacement;
+uniform vec2 u_shift;
+uniform float u_aspect;
+uniform vec2 u_offset;
+uniform float u_edge_shrink;
+uniform float u_flat;
+uniform float u_bg_scale;     // масштаб плоского слоя (1.0 = заполнить)
+uniform float u_bg_parallax;  // множитель параллакса (1.0 = как d=0, >1 = дальше)
+out vec2 v_uv;
+void main(){
+  v_uv = a_uv;
+  if (u_flat > 0.5) {
+    // UV не трогаем — изображение не растягивается
+    // масштабируем позицию квада (геометрию), чтобы фон увеличивался целиком
+    vec2 pos = (a_uv - 0.5) * u_bg_scale;
+    float x = (pos.x * 2.0 + u_shift.x * u_bg_parallax) * u_aspect + u_offset.x;
+    float y = (-pos.y * 2.0 + u_shift.y * u_bg_parallax) + u_offset.y;
+    gl_Position = u_mvp * vec4(x, y, -0.01, 1.0);
+    return;
+  }
+  float d = texture(u_depth, a_uv).r;
+  float a0 = texture(u_color, a_uv).a;
+  if (u_edge_shrink > 0.0) {
+    float e = u_edge_shrink;
+    float d1 = texture(u_depth, a_uv + vec2( e, 0.0)).r;
+    float d2 = texture(u_depth, a_uv + vec2(-e, 0.0)).r;
+    float d3 = texture(u_depth, a_uv + vec2(0.0,  e)).r;
+    float d4 = texture(u_depth, a_uv + vec2(0.0, -e)).r;
+    float a1 = texture(u_color, a_uv + vec2( e, 0.0)).a;
+    float a2 = texture(u_color, a_uv + vec2(-e, 0.0)).a;
+    float a3 = texture(u_color, a_uv + vec2(0.0,  e)).a;
+    float a4 = texture(u_color, a_uv + vec2(0.0, -e)).a;
+    if (a0 < 0.5) {
+      // прозрачная вершина: берём максимальную глубину непрозрачных соседей
+      // → вершина уходит наружу вместе с краем объекта, растяжение исчезает
+      float maxD = 0.0;
+      if (a1 >= 0.5) maxD = max(maxD, d1);
+      if (a2 >= 0.5) maxD = max(maxD, d2);
+      if (a3 >= 0.5) maxD = max(maxD, d3);
+      if (a4 >= 0.5) maxD = max(maxD, d4);
+      d = maxD;
+    }
+    // непрозрачная вершина остаётся как есть
+  } else {
+    if (a0 < 0.5) d = 0.0;
+  }
+  float x = ((a_uv.x * 2.0 - 1.0) + u_shift.x * (1.0 - d)) * u_aspect + u_offset.x;
+  float y =  -(a_uv.y * 2.0 - 1.0) + u_shift.y * (1.0 - d) + u_offset.y;
+  float z = d * u_displacement;
+  gl_Position = u_mvp * vec4(x, y, z, 1.0);
+}\`;
+
+const FS = \`#version 300 es
+precision highp float;
+in vec2 v_uv;
+uniform sampler2D u_color;
+out vec4 fragColor;
+void main(){
+  vec4 col = texture(u_color, v_uv);
+  if (col.a < 0.5) discard;
+  fragColor = col;
+}\`;
+
+const canvas = document.getElementById('c');
+const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false });
+
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog); gl.useProgram(prog);
+gl.enable(gl.DEPTH_TEST);
+gl.clearColor(0, 0, 0, 0);
+
+// uniforms
+const uMvp    = gl.getUniformLocation(prog,'u_mvp');
+const uDisp   = gl.getUniformLocation(prog,'u_displacement');
+const uShift  = gl.getUniformLocation(prog,'u_shift');
+const uAspect = gl.getUniformLocation(prog,'u_aspect');
+const uOffset     = gl.getUniformLocation(prog,'u_offset');
+const uEdgeShrink = gl.getUniformLocation(prog,'u_edge_shrink');
+gl.uniform1i(gl.getUniformLocation(prog,'u_depth'),0);
+gl.uniform1i(gl.getUniformLocation(prog,'u_color'),1);
+gl.uniform2f(uOffset, CFG.offx, CFG.offy);
+gl.uniform1f(uEdgeShrink, CFG.edge || 0);
+gl.uniform1f(gl.getUniformLocation(prog,'u_flat'), 0);
+const uBgScale    = gl.getUniformLocation(prog,'u_bg_scale');
+const uBgParallax = gl.getUniformLocation(prog,'u_bg_parallax');
+gl.uniform1f(uBgScale,    CFG.bgScale    || 1.0);
+gl.uniform1f(uBgParallax, CFG.bgPar      || 1.0);
+
+// mesh
+const N = CFG.grid;
+const verts = new Float32Array((N+1)*(N+1)*2);
+let vi=0;
+for(let y=0;y<=N;y++) for(let x=0;x<=N;x++){verts[vi++]=x/N;verts[vi++]=y/N;}
+const ids = new Uint32Array(N*N*6); let ii=0;
+for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+  const tl=y*(N+1)+x,tr=tl+1,bl=tl+(N+1),br=bl+1;
+  ids[ii++]=tl;ids[ii++]=bl;ids[ii++]=tr;ids[ii++]=tr;ids[ii++]=bl;ids[ii++]=br;
+}
+const vbo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vbo); gl.bufferData(gl.ARRAY_BUFFER,verts,gl.STATIC_DRAW);
+const ibo=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,ids,gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(prog,'a_uv'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,8,0);
+
+// textures
+function makeTex(img){
+  const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  return t;
+}
+function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;})}
+
+// mat4
+const _rx=new Float32Array(16),_ry=new Float32Array(16);
+const _view=new Float32Array(16),_proj=new Float32Array(16);
+const _mv=new Float32Array(16),_mvp=new Float32Array(16),_tmp=new Float32Array(16);
+
+function mul(o,a,b){for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];}
+function persp(o,fov,asp,n,f){const t=1/Math.tan(fov*.5),nf=1/(n-f);o[0]=t/asp;o[1]=0;o[2]=0;o[3]=0;o[4]=0;o[5]=t;o[6]=0;o[7]=0;o[8]=0;o[9]=0;o[10]=(f+n)*nf;o[11]=-1;o[12]=0;o[13]=0;o[14]=2*f*n*nf;o[15]=0;}
+function rotX(o,a){const c=Math.cos(a),s=Math.sin(a);o[0]=1;o[1]=0;o[2]=0;o[3]=0;o[4]=0;o[5]=c;o[6]=s;o[7]=0;o[8]=0;o[9]=-s;o[10]=c;o[11]=0;o[12]=0;o[13]=0;o[14]=0;o[15]=1;}
+function rotY(o,a){const c=Math.cos(a),s=Math.sin(a);o[0]=c;o[1]=0;o[2]=-s;o[3]=0;o[4]=0;o[5]=1;o[6]=0;o[7]=0;o[8]=s;o[9]=0;o[10]=c;o[11]=0;o[12]=0;o[13]=0;o[14]=0;o[15]=1;}
+function transl(o,x,y,z){o[0]=1;o[1]=0;o[2]=0;o[3]=0;o[4]=0;o[5]=1;o[6]=0;o[7]=0;o[8]=0;o[9]=0;o[10]=1;o[11]=0;o[12]=x;o[13]=y;o[14]=z;o[15]=1;}
+
+function dtLerp(cur,tgt,base,dt){return cur+(tgt-cur)*(1-Math.pow(1-base,dt/16.667));}
+
+let mouseX=0,mouseY=0,mouseOver=false;
+let curRotX=0,curRotY=0,tRotX=0,tRotY=0,mInf=0;
+let t=0,lastTs=0;
+
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouseX=(e.clientX-r.left)/r.width*2-1;
+  mouseY=(e.clientY-r.top)/r.height*2-1;
+  mouseOver=true;
+});
+canvas.addEventListener('mouseleave',()=>{mouseOver=false;});
+
+const aspect    = ${cW}/${cH};
+const imgAspect = CFG.imgW / CFG.imgH;
+const fovRad = CFG.fov * Math.PI / 180;
+const dist   = CFG.dist;
+const lerpBase = CFG.lerp * 0.01;
+const sens   = CFG.mouse * 0.001;
+const invertX = CFG.invertX, invertY = CFG.invertY;
+const autoAnim = CFG.autoAnim;
+const aspeed = CFG.aspeed, aamp = CFG.aamp;
+const mode = CFG.mode;
+
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt = Math.min(ts-lastTs,100); lastTs=ts; t=ts*0.001;
+
+  let autoX=0,autoY=0;
+  if(autoAnim){autoX=Math.sin(t*aspeed*.7)*aamp;autoY=Math.sin(t*aspeed*.5)*aamp*.6;}
+
+  mInf = dtLerp(mInf, mouseOver?1:0, 0.08, dt);
+  const mx = invertX?-mouseX:mouseX, my = invertY?-mouseY:mouseY;
+  tRotX = autoX*.3+(my*sens*20 - autoX*.3)*mInf;
+  tRotY = autoY*.3+(mx*sens*30 - autoY*.3)*mInf;
+  curRotX = dtLerp(curRotX,tRotX,lerpBase,dt);
+  curRotY = dtLerp(curRotY,tRotY,lerpBase,dt);
+
+  let shiftX=0,shiftY=0;
+  if(mode==='rotate'){
+    persp(_proj,fovRad,aspect,.01,100); transl(_view,0,0,-dist);
+    rotX(_rx,curRotX*Math.PI/180); rotY(_ry,curRotY*Math.PI/180);
+    mul(_tmp,_rx,_ry); mul(_mv,_view,_tmp); mul(_mvp,_proj,_mv);
+  } else if(mode==='parallax'){
+    persp(_proj,fovRad,aspect,.01,100); transl(_view,0,0,-dist);
+    mul(_mvp,_proj,_view);
+    shiftX=(mouseOver?mx:Math.sin(t*aspeed*.7))*sens*.5;
+    shiftY=(mouseOver?-my:Math.sin(t*aspeed*.5)*.6)*sens*.5;
+  } else {
+    persp(_proj,fovRad,aspect,.01,100);
+    const tx=(mouseOver?mx:Math.sin(t*aspeed*.7))*sens*.3;
+    const ty=(mouseOver?my:Math.sin(t*aspeed*.5)*.6)*sens*.25;
+    _proj[8]=tx*2; _proj[9]=ty*2;
+    transl(_view,0,0,-dist); mul(_mvp,_proj,_view);
+  }
+
+  gl.uniform1f(uDisp, CFG.depth);
+  gl.uniform2f(uShift, shiftX, shiftY);
+  gl.uniform1f(uAspect, imgAspect);
+  gl.uniformMatrix4fv(uMvp, false, _mvp);
+  gl.viewport(0,0,${cW},${cH});
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+
+  function drawFlat(tex){
+    gl.uniform1f(uFlat,1.0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.bindBuffer(gl.ARRAY_BUFFER,fqVbo); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,fqIbo);
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,8,0);
+    gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_INT,0);
+    gl.uniform1f(uFlat,0.0);
+  }
+
+  if(texBg) drawFlat(texBg);
+
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texDepth);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texColor);
+  gl.bindBuffer(gl.ARRAY_BUFFER,vbo); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo);
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,8,0);
+  gl.drawElements(gl.TRIANGLES,ids.length,gl.UNSIGNED_INT,0);
+
+  if(texFg) drawFlat(texFg);
+}
+
+let texColor,texDepth,texBg=null,texFg=null;
+const uFlat=gl.getUniformLocation(prog,'u_flat');
+const fqVbo=gl.createBuffer(),fqIbo=gl.createBuffer();
+(()=>{const v=new Float32Array([0,0,1,0,0,1,1,1]);const i=new Uint32Array([0,2,1,1,2,3]);gl.bindBuffer(gl.ARRAY_BUFFER,fqVbo);gl.bufferData(gl.ARRAY_BUFFER,v,gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,fqIbo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,i,gl.STATIC_DRAW);})();
+
+const imgPromises=[loadImg(COLOR_SRC),loadImg(DEPTH_SRC)];
+if(BG_SRC) imgPromises.push(loadImg(BG_SRC));
+if(FG_SRC) imgPromises.push(loadImg(FG_SRC));
+Promise.all(imgPromises).then(imgs=>{
+  const [ci,di]=imgs;
+  gl.activeTexture(gl.TEXTURE0); texDepth=makeTex(di);
+  gl.activeTexture(gl.TEXTURE1); texColor=makeTex(ci);
+  if(BG_SRC){gl.activeTexture(gl.TEXTURE2); texBg=makeTex(imgs[2]);}
+  if(FG_SRC){gl.activeTexture(gl.TEXTURE3); texFg=makeTex(imgs[BG_SRC?3:2]);}
+  requestAnimationFrame(loop);
+});
+<\/script>
+</body>
+</html>`;
+}
+
+// ── mouse ──────────────────────────────────────────────────────────────────
+v('gl-canvas').addEventListener('mousemove', e => {
+  const r = e.target.getBoundingClientRect();
+  mouseX = (e.clientX - r.left) / r.width  * 2 - 1;
+  mouseY = (e.clientY - r.top)  / r.height * 2 - 1;
+  mouseOver = true;
+});
+v('gl-canvas').addEventListener('mouseleave', () => { mouseOver = false; });
+
+// ── WebGL ──────────────────────────────────────────────────────────────────
+const VS = `#version 300 es
+precision highp float;
+in vec2 a_uv;
+uniform sampler2D u_depth;
+uniform sampler2D u_color;
+uniform mat4 u_mvp;
+uniform float u_displacement;
+uniform vec2 u_shift;
+uniform float u_aspect; // imgW/imgH — растягивает меш по X чтобы сохранить пропорции
+uniform vec2 u_offset;
+uniform float u_edge_shrink;
+uniform float u_flat;
+uniform float u_bg_scale;     // масштаб плоского слоя (1.0 = заполнить)
+uniform float u_bg_parallax;  // множитель параллакса (1.0 = как d=0, >1 = дальше)
+out vec2 v_uv;
+void main(){
+  v_uv = a_uv;
+  if (u_flat > 0.5) {
+    // UV не трогаем — изображение не растягивается
+    // масштабируем позицию квада (геометрию), чтобы фон увеличивался целиком
+    vec2 pos = (a_uv - 0.5) * u_bg_scale;
+    float x = (pos.x * 2.0 + u_shift.x * u_bg_parallax) * u_aspect + u_offset.x;
+    float y = (-pos.y * 2.0 + u_shift.y * u_bg_parallax) + u_offset.y;
+    gl_Position = u_mvp * vec4(x, y, -0.01, 1.0);
+    return;
+  }
+  float d = texture(u_depth, a_uv).r;
+  float a0 = texture(u_color, a_uv).a;
+  if (u_edge_shrink > 0.0) {
+    float e = u_edge_shrink;
+    float d1 = texture(u_depth, a_uv + vec2( e, 0.0)).r;
+    float d2 = texture(u_depth, a_uv + vec2(-e, 0.0)).r;
+    float d3 = texture(u_depth, a_uv + vec2(0.0,  e)).r;
+    float d4 = texture(u_depth, a_uv + vec2(0.0, -e)).r;
+    float a1 = texture(u_color, a_uv + vec2( e, 0.0)).a;
+    float a2 = texture(u_color, a_uv + vec2(-e, 0.0)).a;
+    float a3 = texture(u_color, a_uv + vec2(0.0,  e)).a;
+    float a4 = texture(u_color, a_uv + vec2(0.0, -e)).a;
+    if (a0 < 0.5) {
+      // прозрачная вершина: берём максимальную глубину непрозрачных соседей
+      // → вершина уходит наружу вместе с краем объекта, растяжение исчезает
+      float maxD = 0.0;
+      if (a1 >= 0.5) maxD = max(maxD, d1);
+      if (a2 >= 0.5) maxD = max(maxD, d2);
+      if (a3 >= 0.5) maxD = max(maxD, d3);
+      if (a4 >= 0.5) maxD = max(maxD, d4);
+      d = maxD;
+    }
+    // непрозрачная вершина остаётся как есть
+  } else {
+    if (a0 < 0.5) d = 0.0;
+  }
+  float x = ((a_uv.x * 2.0 - 1.0) + u_shift.x * (1.0 - d)) * u_aspect + u_offset.x;
+  float y =  -(a_uv.y * 2.0 - 1.0) + u_shift.y * (1.0 - d) + u_offset.y;
+  float z = d * u_displacement;
+  gl_Position = u_mvp * vec4(x, y, z, 1.0);
+}`;
+
+const FS = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+uniform sampler2D u_color;
+out vec4 fragColor;
+void main(){
+  vec4 col = texture(u_color, v_uv);
+  if (col.a < 0.5) discard;
+  fragColor = col;
+}`;
+
+function initGL() {
+  const canvas = v('gl-canvas');
+  gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false });
+  if (!gl) { alert('WebGL2 не поддерживается'); return; }
+  const vert = compile(gl.VERTEX_SHADER, VS);
+  const frag = compile(gl.FRAGMENT_SHADER, FS);
+  program = gl.createProgram();
+  gl.attachShader(program, vert);
+  gl.attachShader(program, frag);
+  gl.linkProgram(program);
+  gl.useProgram(program);
+  gl.enable(gl.DEPTH_TEST);
+  gl.clearColor(0, 0, 0, 0); // прозрачный фон — bg-layer виден сзади
+  gl.uniform1i(gl.getUniformLocation(program, 'u_depth'), 0);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_color'), 1);
+  cacheUniforms();
+  // если bg/fg уже загружены до initGL — загружаем текстуры
+  if (bgImg) uploadBgTex(bgImg);
+  if (fgImg) uploadFgTex(fgImg);
+  cacheEls();
+  requestAnimationFrame(loop);
+}
+
+function compile(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s);
+  return s;
+}
+
+// ── mesh ───────────────────────────────────────────────────────────────────
+function rebuildMesh() {
+  if (!gl) return;
+  const N = num('sl-grid');
+  const verts = new Float32Array((N+1)*(N+1)*2);
+  let vi = 0;
+  for (let y = 0; y <= N; y++) for (let x = 0; x <= N; x++) { verts[vi++]=x/N; verts[vi++]=y/N; }
+  const ids = new Uint32Array(N*N*6);
+  let ii = 0;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const tl=y*(N+1)+x, tr=tl+1, bl=tl+(N+1), br=bl+1;
+    ids[ii++]=tl; ids[ii++]=bl; ids[ii++]=tr;
+    ids[ii++]=tr; ids[ii++]=bl; ids[ii++]=br;
+  }
+  indexCount = ids.length;
+  if (!vbo) vbo = gl.createBuffer();
+  if (!ibo) ibo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ids, gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(program, 'a_uv');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 8, 0);
+}
+
+// ── textures ───────────────────────────────────────────────────────────────
+function makeTexture(img) {
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function uploadTextures() {
+  if (texDepth) gl.deleteTexture(texDepth);
+  if (texColor) gl.deleteTexture(texColor);
+  gl.activeTexture(gl.TEXTURE0); texDepth = makeTexture(depthImg); gl.bindTexture(gl.TEXTURE_2D, texDepth);
+  gl.activeTexture(gl.TEXTURE1); texColor = makeTexture(colorImg); gl.bindTexture(gl.TEXTURE_2D, texColor);
+}
+
+let texBg = null, texFg = null, bgQuadVbo = null, bgQuadIbo = null;
+
+function uploadBgTex(img) {
+  if (texBg) { gl.deleteTexture(texBg); texBg = null; }
+  if (img && gl) { gl.activeTexture(gl.TEXTURE2); texBg = makeTexture(img); gl.bindTexture(gl.TEXTURE_2D, texBg); }
+}
+function uploadFgTex(img) {
+  if (texFg) { gl.deleteTexture(texFg); texFg = null; }
+  if (img && gl) { gl.activeTexture(gl.TEXTURE3); texFg = makeTexture(img); gl.bindTexture(gl.TEXTURE_2D, texFg); }
+}
+
+function ensureFlatQuad() {
+  if (bgQuadVbo) return;
+  // простой quad 0..1 UV, 2 треугольника
+  const v = new Float32Array([0,0, 1,0, 0,1, 1,1]);
+  const i = new Uint32Array([0,2,1, 1,2,3]);
+  bgQuadVbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bgQuadVbo); gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+  bgQuadIbo = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bgQuadIbo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, i, gl.STATIC_DRAW);
+}
+
+function drawFlatLayer(texUnit, zDepth) {
+  ensureFlatQuad();
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texUnit === 2 ? texBg : texFg);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texDepth); // keep depth bound to unit0
+  gl.uniform1f(uFlat, 1.0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bgQuadVbo);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bgQuadIbo);
+  const loc = gl.getAttribLocation(program, 'a_uv');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 8, 0);
+  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, 0);
+  gl.uniform1f(uFlat, 0.0);
+}
+
+// ── math (pre-allocated buffers — no GC pressure) ─────────────────────────
+const _tmp  = new Float32Array(16);
+const _rx   = new Float32Array(16);
+const _ry   = new Float32Array(16);
+const _view = new Float32Array(16);
+const _proj = new Float32Array(16);
+const _mv   = new Float32Array(16);
+const _mvp  = new Float32Array(16);
+
+function mat4Mul(o, a, b) {
+  for (let col = 0; col < 4; col++)
+    for (let row = 0; row < 4; row++)
+      o[col*4+row] = a[row]*b[col*4] + a[4+row]*b[col*4+1]
+                   + a[8+row]*b[col*4+2] + a[12+row]*b[col*4+3];
+}
+
+function setPerspective(o, fov, aspect, near, far) {
+  const f = 1/Math.tan(fov*0.5), nf = 1/(near-far);
+  o[0]=f/aspect; o[1]=0; o[2]=0;  o[3]=0;
+  o[4]=0; o[5]=f; o[6]=0;  o[7]=0;
+  o[8]=0; o[9]=0; o[10]=(far+near)*nf; o[11]=-1;
+  o[12]=0; o[13]=0; o[14]=2*far*near*nf; o[15]=0;
+}
+
+function setRotX(o, a) {
+  const c=Math.cos(a), s=Math.sin(a);
+  o[0]=1; o[1]=0; o[2]=0;  o[3]=0;
+  o[4]=0; o[5]=c; o[6]=s;  o[7]=0;
+  o[8]=0; o[9]=-s;o[10]=c; o[11]=0;
+  o[12]=0;o[13]=0;o[14]=0; o[15]=1;
+}
+
+function setRotY(o, a) {
+  const c=Math.cos(a), s=Math.sin(a);
+  o[0]=c;  o[1]=0; o[2]=-s; o[3]=0;
+  o[4]=0;  o[5]=1; o[6]=0;  o[7]=0;
+  o[8]=s;  o[9]=0; o[10]=c; o[11]=0;
+  o[12]=0; o[13]=0;o[14]=0; o[15]=1;
+}
+
+function setTranslate(o, x, y, z) {
+  o[0]=1; o[1]=0; o[2]=0; o[3]=0;
+  o[4]=0; o[5]=1; o[6]=0; o[7]=0;
+  o[8]=0; o[9]=0; o[10]=1;o[11]=0;
+  o[12]=x;o[13]=y;o[14]=z;o[15]=1;
+}
+
+// ── cached uniform locations (set after program links) ─────────────────────
+let uMvp, uDisp, uShift, uAspect, uOffset, uEdgeShrink, uFlat, uBgScale, uBgParallax;
+function cacheUniforms() {
+  uMvp         = gl.getUniformLocation(program, 'u_mvp');
+  uDisp        = gl.getUniformLocation(program, 'u_displacement');
+  uShift       = gl.getUniformLocation(program, 'u_shift');
+  uAspect      = gl.getUniformLocation(program, 'u_aspect');
+  uOffset      = gl.getUniformLocation(program, 'u_offset');
+  uEdgeShrink  = gl.getUniformLocation(program, 'u_edge_shrink');
+  uFlat        = gl.getUniformLocation(program, 'u_flat');
+  uBgScale     = gl.getUniformLocation(program, 'u_bg_scale');
+  uBgParallax  = gl.getUniformLocation(program, 'u_bg_parallax');
+}
+
+// ── cached slider element refs ─────────────────────────────────────────────
+let elDepth, elFov, elDist, elMouse, elLerp, elAspeed, elAamp, elMode;
+function cacheEls() {
+  elDepth  = v('sl-depth');
+  elFov    = v('sl-fov');
+  elDist   = v('sl-dist');
+  elMouse  = v('sl-mouse');
+  elLerp   = v('sl-lerp');
+  elAspeed = v('sl-aspeed');
+  elAamp   = v('sl-aamp');
+  elMode   = v('sel-mode');
+}
+
+// ── perspective-tilt (oblique projection shift) ────────────────────────────
+function setTiltProj(o, fov, aspect, near, far, tx, ty) {
+  setPerspective(o, fov, aspect, near, far);
+  o[8] = tx * 2;
+  o[9] = ty * 2;
+}
+
+// ── frame-rate independent lerp ─────────────────────────────────────────────
+// base — скорость при 60fps (например 0.06), dt — реальная дельта в мс
+function dtLerp(cur, target, base, dt) {
+  // 1 - (1-base)^(dt/16.67) — одинаковый результат при любом fps
+  const alpha = 1 - Math.pow(1 - base, dt / 16.667);
+  return cur + (target - cur) * alpha;
+}
+
+// ── render loop ────────────────────────────────────────────────────────────
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (!program || !indexCount) return;
+
+  // delta time: cap на 100мс чтобы вкладка-в-фоне не давала прыжков
+  const dt = Math.min(ts - lastTs, 100);
+  lastTs = ts;
+  t = ts * 0.001;
+
+  const sens    = +elMouse.value  * 0.001;
+  const lerpBase = +elLerp.value  * 0.01;   // скорость при 60fps
+  const mode    = elMode.value;
+  const aspeed  = +elAspeed.value;
+  const aamp    = +elAamp.value;
+
+  // ── auto-animation offset (idle drift) ─────────────────────────────────
+  let autoX = 0, autoY = 0;
+  if (autoAnim) {
+    autoX = Math.sin(t * aspeed * 0.7) * aamp;
+    autoY = Math.sin(t * aspeed * 0.5) * aamp * 0.6;
+  }
+
+  // ── плавный переход мышь ↔ авто (тоже dt-independent) ─────────────────
+  const targetInfluence = mouseOver ? 1 : 0;
+  mouseInfluence = dtLerp(mouseInfluence, targetInfluence, 0.08, dt);
+
+  const mx = (invertX ? -mouseX : mouseX);
+  const my = (invertY ? -mouseY : mouseY);
+
+  const mouseTargetX = my * sens * 20;
+  const mouseTargetY = mx * sens * 30;
+  const autoTargetX  = autoAnim ? autoX * 0.3 : 0;
+  const autoTargetY  = autoAnim ? autoY * 0.3 : 0;
+
+  targetRotX = autoTargetX + (mouseTargetX - autoTargetX) * mouseInfluence;
+  targetRotY = autoTargetY + (mouseTargetY - autoTargetY) * mouseInfluence;
+
+  curRotX = dtLerp(curRotX, targetRotX, lerpBase, dt);
+  curRotY = dtLerp(curRotY, targetRotY, lerpBase, dt);
+
+  const disp   = +elDepth.value;
+  const fovRad = +elFov.value * Math.PI / 180;
+  const dist   = +elDist.value;
+  const cW = v('gl-canvas').width, cH = v('gl-canvas').height;
+  const aspect    = cW / cH;  // пропорции canvas — для матрицы проекции
+  const imgAspect = colorImg ? colorImg.naturalWidth / colorImg.naturalHeight : aspect; // пропорции изображения — для меша
+
+  let shiftX = 0, shiftY = 0;
+
+  if (mode === 'rotate') {
+    const rx = curRotX * Math.PI / 180;
+    const ry = curRotY * Math.PI / 180;
+    setPerspective(_proj, fovRad, aspect, 0.01, 100);
+    setTranslate(_view, 0, 0, -dist);
+    setRotX(_rx, rx);
+    setRotY(_ry, ry);
+    mat4Mul(_tmp, _rx, _ry);       // model = rotX * rotY
+    mat4Mul(_mv,  _view, _tmp);    // mv    = view * model
+    mat4Mul(_mvp, _proj, _mv);     // mvp   = proj * mv
+
+  } else if (mode === 'parallax') {
+    setPerspective(_proj, fovRad, aspect, 0.01, 100);
+    setTranslate(_view, 0, 0, -dist);
+    mat4Mul(_mvp, _proj, _view);
+    const autoSX =  Math.sin(t*aspeed*0.7)       * sens * 0.5;
+    const autoSY =  Math.sin(t*aspeed*0.5)*0.6   * sens * 0.5;
+    shiftX = autoSX + (mx  * sens * 0.5  - autoSX) * mouseInfluence;
+    shiftY = autoSY + (-my * sens * 0.5  - autoSY) * mouseInfluence;
+
+  } else { // tilt
+    const autoTX = Math.sin(t*aspeed*0.7)       * sens * 0.3;
+    const autoTY = Math.sin(t*aspeed*0.5)*0.6   * sens * 0.25;
+    const tx = autoTX + (mx  * sens * 0.3  - autoTX) * mouseInfluence;
+    const ty = autoTY + (my  * sens * 0.25 - autoTY) * mouseInfluence;
+    setTiltProj(_proj, fovRad, aspect, 0.01, 100, tx, -ty);
+    setTranslate(_view, 0, 0, -dist);
+    mat4Mul(_mvp, _proj, _view);
+  }
+
+  gl.uniform1f(uDisp, disp);
+  gl.uniform2f(uShift, shiftX, shiftY);
+  gl.uniform2f(uOffset, +v('sl-offx').value, +v('sl-offy').value);
+  gl.uniform1f(uEdgeShrink, +v('sl-edge').value);
+  gl.uniform1f(uBgScale,    +v('sl-bgscale').value);
+  gl.uniform1f(uBgParallax, +v('sl-bgpar').value);
+  gl.uniform1f(uFlat, 0.0);
+  gl.uniform1f(uAspect, imgAspect); // всегда пропорции картинки, не canvas
+  gl.uniformMatrix4fv(uMvp, false, _mvp);
+
+  gl.viewport(0, 0, cW, cH);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // ── фоновый слой (рисуем первым, плоский, z=-0.01) ────────────────────────
+  if (texBg) drawFlatLayer(2);
+
+  // ── основной 3D меш ────────────────────────────────────────────────────────
+  gl.uniform1f(uFlat, 0.0);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texDepth);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texColor);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  const loc = gl.getAttribLocation(program, 'a_uv');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 8, 0);
+  gl.drawElements(gl.TRIANGLES, indexCount, gl.UNSIGNED_INT, 0);
+
+  // ── передний план (рисуем последним, поверх всего) ─────────────────────────
+  if (texFg) drawFlatLayer(3);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 84" fill="none">
+  <text x="100" y="31" text-anchor="middle"
+    font-family="system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif"
+    font-size="21" font-weight="800" fill="#16161a" fill-opacity="0.85">A gift is</text>
+  <text x="100" y="57" text-anchor="middle"
+    font-family="system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif"
+    font-size="21" font-weight="800" fill="#16161a" fill-opacity="0.85">hidden here</text>
+  <line x1="10" y1="43" x2="62" y2="43" stroke="#16161a" stroke-opacity="0.18" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="138" y1="43" x2="190" y2="43" stroke="#16161a" stroke-opacity="0.18" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

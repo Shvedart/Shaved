@@ -1,0 +1,392 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ───── Fixed header — transparent, glass only on city pill ───── */
+.app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px 8px;
+  z-index: 100;
+}
+
+.app-header__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: url('images/ava.png') center/cover no-repeat;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.app-header__city {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: #16161a;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.52);
+  -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.06);
+  backdrop-filter: blur(36px) saturate(200%) brightness(1.06);
+  border: 0.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 100px;
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.9),
+    0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@keyframes avatar-bump {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+.avatar--bump { animation: avatar-bump 0.42s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* ───── Page shell — 16 px sides, no max-width clamp ───── */
+.screen {
+  padding: 28px 16px 100px;
+  padding-top: 72px; /* 56px header + 16px gap */
+}
+
+/* ───── Feed grid ───── */
+.feed {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.feed__title {
+  grid-column: 1 / -1;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: #16161a;
+  margin-bottom: 6px;
+  line-height: 1.15;
+}
+
+/* ───── Product card ───── */
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  /* no padding — inset is handled by margin on card__top */
+}
+
+/* gray image zone, inset 8 px from card edges */
+.card__top {
+  position: relative;
+  background: #f3f3f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* portrait rectangle, not square */
+.card__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  padding: 12px;
+  mix-blend-mode: multiply;
+}
+
+/* store badge — top-left */
+.card__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #16161a;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  letter-spacing: -0.2px;
+  z-index: 2;
+}
+
+.card__badge--elago  { background: #3ec6b5; color: #052c28; }
+.card__badge--rugged { background: #8c8f98; color: #fff; }
+.card__badge--apple  { background: #1d1d1f; color: #fff; font-size: 16px; }
+
+/* heart — top-right */
+.card__heart {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.card__heart svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #adadb8;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+/* text zone — 8 px side padding aligns with the inset image */
+.card__info {
+  padding: 8px 8px 12px;
+}
+
+/* price + badge always on one line */
+.card__price {
+  font-size: 17px;
+  font-weight: 800;
+  color: #16161a;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* cashback pill  👑 750 ₽ */
+.card__cashback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0px;
+  background: #ffdd2d;
+  color: #2c1800;
+  border-radius: 100px;
+  padding: 0px 8px 0px 3px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: -0.1px;
+  flex-shrink: 0;
+}
+
+.card__cashback .crown {
+  width: 21px;
+  height: 21px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.card__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #16161a;
+  margin-top: 5px;
+  letter-spacing: -0.15px;
+  line-height: 1.25;
+}
+
+.card__desc {
+  font-size: 12px;
+  color: #8e8e96;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ───── "See all" row ───── */
+.card--more {
+  grid-column: 1 / -1;
+  background: #f3f3f5;
+  border-radius: 20px;
+  text-align: center;
+  padding: 18px;
+  color: #2f6bff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ───── Scratch card ───── */
+
+/* Canvas fills the full card — absolute positioning avoids flex height issues */
+.card--scratch {
+  position: relative;
+}
+
+.card--scratch .card__top {
+  position: absolute;
+  inset: 0;
+  background: none; /* foil canvas draws its own bg; prize inherits card white */
+}
+
+/* Prize revealed underneath canvas */
+.scratch__prize {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  background: none;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+}
+
+.scratch__prize-logo {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.scratch__prize-percent {
+  font-size: 52px;
+  font-weight: 800;
+  color: #16161a;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+/* Checkmark circle — hidden under foil, revealed on scratch */
+.scratch__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(200, 200, 210, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0);
+  pointer-events: none;
+}
+
+.scratch--revealed .scratch__check {
+  background: rgba(48, 209, 88, 0.92);
+  color: #fff;
+  animation: check-pop 0.45s cubic-bezier(.34,1.56,.64,1) 0.2s both;
+}
+
+@keyframes check-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.scratch__prize-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #16161a;
+  margin-top: 6px;
+  letter-spacing: -0.2px;
+}
+
+.scratch__prize-sub {
+  font-size: 11px;
+  color: #5a4400;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Holographic foil canvas — covers card__top */
+.scratch__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  transition: opacity .5s ease;
+}
+
+/* hint text */
+.scratch__hint {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(40, 40, 50, 0.6);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+/* Revealed state — class applied to card__top (#scratchZone) */
+.scratch--revealed .scratch__canvas { opacity: 0; pointer-events: none; }
+.scratch--revealed .scratch__hint   { opacity: 0; }
+.scratch--revealed .scratch__prize  {}
+
+@keyframes prize-pop {
+  from { transform: scale(.9); }
+  to   { transform: scale(1); }
+}
+
+/* ───── Gold scratch card ───── */
+.card--scratch--gold {}
+
+.scratch__prize-star {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 6px;
+  color: #b8860b;
+}
+
+/* Gold prize gradient overrides the regular green one */
+.card--scratch--gold .scratch--prize-glow .scratch__prize {
+  background: radial-gradient(circle at center, #ffffff 42%, rgba(201,165,42,0.14) 100%);
+}
+
+/* Card pop + gradient on prize reveal */
+@keyframes card-pop-reveal {
+  0%   { transform: scale(1); }
+  55%  { transform: scale(1.038); }
+  100% { transform: scale(1); }
+}
+
+.card--scratch.scratch--card-pop {
+  animation: card-pop-reveal 0.45s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes prize-glow-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.scratch--prize-glow .scratch__prize {
+  background: radial-gradient(circle at center, #ffffff 42%, #00b92d1a 100%);
+  animation: prize-glow-in 0.4s ease both;
+}

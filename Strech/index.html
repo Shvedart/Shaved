@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лента — скретч-карточка</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-header__avatar" id="profileAvatar"></div>
+  <button class="app-header__city">
+    Москва
+    <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+</header>
+<div class="screen">
+  <div class="feed" id="feed">
+
+    <h1 class="feed__title">Гаджеты<br>с кэшбэком 10%</h1>
+
+    <!-- 1 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/case-leather.png" alt="">
+        <div class="card__badge">КЕЙС</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">3 490 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 260 ₽</span></div>
+        <div class="card__name">Leather Keychain</div>
+        <div class="card__desc">Кожаный чехол для AirPods Pro</div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/case-icecream.png" alt="">
+        <div class="card__badge card__badge--elago">E</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 290 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 95 ₽</span></div>
+        <div class="card__name">Elago Ice Cream</div>
+        <div class="card__desc">Силиконовый чехол для AirPods</div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/airpods-max.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">59 990 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 4 500 ₽</span></div>
+        <div class="card__name">AirPods Max</div>
+        <div class="card__desc">Накладные наушники</div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/airpods-classic.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">14 990 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 1 100 ₽</span></div>
+        <div class="card__name">AirPods (3-е поколение)</div>
+        <div class="card__desc">Беспроводные наушники</div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/case-rugged.png" alt="">
+        <div class="card__badge card__badge--rugged">G</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 590 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 120 ₽</span></div>
+        <div class="card__name">Rugged Armor</div>
+        <div class="card__desc">Защитный чехол для AirPods Pro</div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 13.png" alt="">
+        <div class="card__badge">КЕЙС</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">3 290 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 240 ₽</span></div>
+        <div class="card__name">Leather Mini</div>
+        <div class="card__desc">Кожаный чехол для AirPods 3</div>
+      </div>
+    </div>
+
+    <!-- scratch card 2 — chess pattern -->
+    <div class="card card--scratch" id="scratchCard2">
+      <div class="card__top" id="scratchZone2">
+        <div class="scratch__prize">
+          <video class="scratch__prize-logo" src="images/crowen _smaller.mp4" loop muted playsinline></video>
+          <div class="scratch__prize-percent">+15%</div>
+          <div class="scratch__prize-title">Кэшбэк повышен!</div>
+          <div class="scratch__prize-sub">на «Гаджеты» до конца недели</div>
+        </div>
+        <div class="scratch__check">✓</div>
+        <canvas class="scratch__canvas" id="scratchCanvas2"></canvas>
+        <div class="scratch__hint" id="scratchHint2"></div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 14.png" alt="">
+        <div class="card__badge card__badge--elago">E</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 390 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 100 ₽</span></div>
+        <div class="card__name">Elago Splash</div>
+        <div class="card__desc">Силиконовый чехол для AirPods Pro</div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 15.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">61 990 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 4 700 ₽</span></div>
+        <div class="card__name">AirPods Max Sky Blue</div>
+        <div class="card__desc">Накладные наушники</div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 16.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">13 990 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 1 000 ₽</span></div>
+        <div class="card__name">AirPods Lite</div>
+        <div class="card__desc">Беспроводные наушники</div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 17.png" alt="">
+        <div class="card__badge card__badge--rugged">G</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 690 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 130 ₽</span></div>
+        <div class="card__name">Rugged Armor X</div>
+        <div class="card__desc">Защитный чехол для AirPods Max</div>
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/image 18.png" alt="">
+        <div class="card__badge">КЕЙС</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">3 690 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 280 ₽</span></div>
+        <div class="card__name">Leather Cognac</div>
+        <div class="card__desc">Кожаный чехол для AirPods Pro 2</div>
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/case-icecream.png" alt="">
+        <div class="card__badge card__badge--elago">E</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 190 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 90 ₽</span></div>
+        <div class="card__name">Elago Ice Cream Mint</div>
+        <div class="card__desc">Силиконовый чехол для AirPods</div>
+      </div>
+    </div>
+
+    <!-- 13 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/airpods-max.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">57 990 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 4 300 ₽</span></div>
+        <div class="card__name">AirPods Max Limited</div>
+        <div class="card__desc">Накладные наушники</div>
+      </div>
+    </div>
+
+    <!-- 14 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/airpods-classic.png" alt="">
+        <div class="card__badge card__badge--apple">✦</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">15 490 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 1 150 ₽</span></div>
+        <div class="card__name">AirPods White</div>
+        <div class="card__desc">Беспроводные наушники</div>
+      </div>
+    </div>
+
+    <!-- 15 -->
+    <div class="card">
+      <div class="card__top">
+        <img class="card__img" src="images/case-rugged.png" alt="">
+        <div class="card__badge card__badge--rugged">G</div>
+        <button class="card__heart"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21 8.5C21 14.5 12 21 12 21Z"/></svg></button>
+      </div>
+      <div class="card__info">
+        <div class="card__price">1 490 ₽ <span class="card__cashback"><img class="crown" src="icons/crwon.svg"> 110 ₽</span></div>
+        <div class="card__name">Rugged Armor Pro</div>
+        <div class="card__desc">Защитный чехол для AirPods 3</div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
