@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Концерты</title>
+<style>
+  :root {
+    /* Токены из макета Figma (карточка афиши) */
+    --bg: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #8e8e93; /* цена и даты из скриншота */
+    --text-badge: #333333;
+    --accent-link: #428bf9;
+    --badge-bg: #ffdd3d;
+    --chip-bg: rgba(0, 0, 0, 0.22);
+    --poster-placeholder: #d9d9d9;
+
+    --card-w: 230px;
+    --poster-h: 345px;
+    --radius-poster: 20px;
+    --gap-cards: 12px;
+    --pad-screen: 16px;
+
+    /* Параллакс: на сколько px картинка может уехать внутри карточки */
+    --parallax-shift: 42px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .screen {
+    max-width: 100%;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding-top: 201px; /* позиция секции в макете */
+  }
+
+  /* ── Шапка секции ─────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad-screen);
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: normal;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .section-header .all-link {
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.41px;
+    color: var(--accent-link);
+    text-decoration: none;
+  }
+
+  /* ── Карусель ─────────────────────────────────── */
+  .carousel {
+    display: flex;
+    gap: var(--gap-cards);
+    padding: 0 var(--pad-screen);
+    margin-top: -6px; /* gap 10 в макете против 16 паддинга шапки */
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .carousel::-webkit-scrollbar { display: none; }
+
+  .card {
+    flex: 0 0 var(--card-w);
+    width: var(--card-w);
+    scroll-snap-align: start;
+    scroll-margin-left: var(--pad-screen);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Афиша с параллаксом ──────────────────────── */
+  .poster {
+    position: relative;
+    height: var(--poster-h);
+    border-radius: var(--radius-poster);
+    background: var(--poster-placeholder);
+    overflow: hidden;
+    /* обрезка по скруглению работает и во время transform */
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    isolation: isolate;
+  }
+
+  .poster img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* запас по ширине под параллакс-сдвиг */
+    left: calc(-1 * var(--parallax-shift));
+    width: calc(100% + var(--parallax-shift) * 2);
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  /* Чип категории */
+  .chip-genre {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 1.5px 6px 2.5px;
+    border-radius: 20px;
+    background: var(--chip-bg);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.08px;
+    line-height: normal;
+    white-space: nowrap;
+  }
+
+  /* Бейдж кэшбэка */
+  .badge-cashback {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px 0 4px;
+    border-radius: 20px;
+    background: var(--badge-bg);
+  }
+  .badge-cashback svg { width: 12px; height: 12px; display: block; }
+  .badge-cashback span {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    color: var(--text-badge);
+    padding-bottom: 1px;
+    white-space: nowrap;
+  }
+
+  /* ── Информация под афишей ────────────────────── */
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 4px;
+    font-size: 13px;
+    letter-spacing: -0.08px;
+    line-height: normal;
+  }
+  .card-info .price {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .card-info .artist {
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-info .venue {
+    font-weight: 400;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-info .dates {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <section>
+    <div class="section-header">
+      <h2>Концерты</h2>
+      <a class="all-link" href="#">Все</a>
+    </div>
+    <div class="carousel" id="carousel"></div>
+  </section>
+</div>
+
+<!-- SVG-иконка короны из макета Figma -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="icon-crown" viewBox="0 0 12 12">
+      <path d="M6 1.50075L7.71375 5.4735L11.25 3.381L9.759 9.00525C9.70561 9.22018 9.58097 9.41068 9.40539 9.54567C9.22982 9.68065 9.01368 9.75215 8.79225 9.7485H3.20775C2.98719 9.7486 2.77279 9.67577 2.59794 9.54134C2.42308 9.4069 2.29759 9.21843 2.241 9.00525L0.75 3.38025L4.284 5.47275L6 1.50075Z" fill="#333333"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+const EVENTS = [
+  { img: 'img music/250314185425918.webp',                  category: 'Концерт',    price: 'от 5 500 ₽', artist: 'Юлия Савичева',    venue: 'Petter',            dates: '11 июля – 12 декабря', cashback: 'до 20%' },
+  { img: 'img music/402bf6a6fb1e766c8508294f1c543abc.webp', category: 'Концерт',    price: 'от 3 000 ₽', artist: 'Баста',            venue: 'Лужники',           dates: '12 сентября',          cashback: 'до 15%' },
+  { img: 'img music/69e2587d2388360f404442b1.webp',         category: 'Концерт',    price: 'от 4 200 ₽', artist: 'Иван Дорн',        venue: 'A2 Green Concert',  dates: '24 октября',           cashback: 'до 20%' },
+  { img: 'img music/260508173236153.webp',                  category: 'Концерт',    price: 'от 2 500 ₽', artist: 'Сироткин',         venue: 'ГлавClub',          dates: '7 ноября',             cashback: 'до 10%' },
+  { img: 'img music/6a2194fe4a84c424d3df5852.webp',         category: 'Фестиваль',  price: 'от 1 500 ₽', artist: 'Летний фест',      venue: 'Дизайн-завод',      dates: '26 – 27 июля',         cashback: 'до 20%' },
+  { img: 'img music/240305165407341.webp',                  category: 'Стендап',    price: 'от 1 200 ₽', artist: 'Большой стендап',  venue: 'Standup Club №1',   dates: 'каждую пятницу',       cashback: 'до 10%' },
+  { img: 'img music/260508104046735.webp',                  category: 'Спектакль',  price: 'от 1 800 ₽', artist: 'Семейный ужин',    venue: 'Театр Эстрады',     dates: '15 июля – 30 августа', cashback: 'до 15%' },
+  { img: 'img music/843b875dc1415f503866f0a8271b967a.webp', category: 'Концерт',    price: 'от 2 800 ₽', artist: 'Легенды 2000-х',   venue: 'ВТБ Арена',         dates: '20 декабря',           cashback: 'до 20%' },
+  { img: 'img music/a1954999d0fdca5d1a834067b526c07c.webp', category: 'Шоу',        price: 'от 3 500 ₽', artist: 'Рыцарь',           venue: 'Live Арена',        dates: '3 – 5 октября',        cashback: 'до 15%' },
+  { img: 'img music/260122133052389.webp',                  category: 'Концерт',    price: 'от 1 000 ₽', artist: 'Квартирник',       venue: '16 Тонн',           dates: '9 августа',            cashback: 'до 10%' },
+];
+
+const carousel = document.getElementById('carousel');
+
+carousel.innerHTML = EVENTS.map(e => `
+  <article class="card">
+    <div class="poster">
+      <img src="${e.img}" alt="${e.artist}" loading="lazy">
+      <div class="chip-genre">${e.category}</div>
+      <div class="badge-cashback">
+        <svg><use href="#icon-crown"/></svg>
+        <span>${e.cashback}</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="price">${e.price}</div>
+      <div class="artist">${e.artist}</div>
+      <div class="venue">${e.venue}</div>
+      <div class="dates">${e.dates}</div>
+    </div>
+  </article>
+`).join('');
+
+/* ── Параллакс ────────────────────────────────────
+   Картинка внутри карточки смещается против движения
+   карточки, поэтому визуально едет медленнее неё. */
+const SHIFT = parseFloat(
+  getComputedStyle(document.documentElement).getPropertyValue('--parallax-shift')
+);
+const posters = Array.from(carousel.querySelectorAll('.poster'));
+
+let ticking = false;
+
+function updateParallax() {
+  ticking = false;
+  const viewRect = carousel.getBoundingClientRect();
+  const viewCenter = viewRect.left + viewRect.width / 2;
+  const halfSpan = (viewRect.width + posters[0].offsetWidth) / 2;
+
+  for (const poster of posters) {
+    const r = poster.getBoundingClientRect();
+    // -1 (карточка слева за экраном) … 0 (в центре) … 1 (справа)
+    let rel = (r.left + r.width / 2 - viewCenter) / halfSpan;
+    rel = Math.max(-1, Math.min(1, rel));
+    // картинка отстаёт от карточки → сдвиг в противоположную сторону
+    poster.firstElementChild.style.transform = `translateX(${(-rel * SHIFT).toFixed(2)}px)`;
+  }
+}
+
+function onScroll() {
+  // в фоновой вкладке rAF заморожен — считаем сразу
+  if (document.hidden) {
+    updateParallax();
+    return;
+  }
+  if (!ticking) {
+    ticking = true;
+    requestAnimationFrame(updateParallax);
+  }
+}
+
+carousel.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+document.addEventListener('visibilitychange', updateParallax);
+window.addEventListener('pageshow', updateParallax);
+updateParallax();
+</script>
+
+</body>
+</html>

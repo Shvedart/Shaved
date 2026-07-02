@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Сегодня в кино</title>
+<style>
+  :root {
+    /* Токены из макета Figma (Frame 3 / «Сегодня в кино») */
+    --bg: #ffffff;
+    --text-primary: #000000;
+    --text-badge: #333333;
+    --accent-link: #428bf9;
+    --badge-bg: #ffdd3d;
+    --chip-bg: rgba(0, 0, 0, 0.22);
+    --poster-placeholder: #d9d9d9;
+
+    --card-w: 230px;
+    --poster-h: 345px;
+    --radius-poster: 20px;
+    --gap-cards: 12px;
+    --pad-screen: 16px;
+
+    /* Параллакс: на сколько px картинка может уехать внутри карточки */
+    --parallax-shift: 42px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .screen {
+    max-width: 100%;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding-top: 201px; /* позиция секции в макете */
+  }
+
+  /* ── Шапка секции ─────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad-screen);
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: normal;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .section-header .all-link {
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.41px;
+    color: var(--accent-link);
+    text-decoration: none;
+  }
+
+  /* ── Карусель ─────────────────────────────────── */
+  .carousel {
+    display: flex;
+    gap: var(--gap-cards);
+    padding: 0 var(--pad-screen);
+    margin-top: -6px; /* gap 10 в макете против 16 паддинга шапки */
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .carousel::-webkit-scrollbar { display: none; }
+
+  .card {
+    flex: 0 0 var(--card-w);
+    width: var(--card-w);
+    scroll-snap-align: start;
+    scroll-margin-left: var(--pad-screen);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Постер с параллаксом ─────────────────────── */
+  .poster {
+    position: relative;
+    height: var(--poster-h);
+    border-radius: var(--radius-poster);
+    background: var(--poster-placeholder);
+    overflow: hidden;
+    /* обрезка по скруглению работает и во время transform */
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    isolation: isolate;
+  }
+
+  .poster img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* запас по ширине под параллакс-сдвиг */
+    left: calc(-1 * var(--parallax-shift));
+    width: calc(100% + var(--parallax-shift) * 2);
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  /* Чип жанра */
+  .chip-genre {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 1.5px 6px 2.5px;
+    border-radius: 20px;
+    background: var(--chip-bg);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.08px;
+    line-height: normal;
+    white-space: nowrap;
+  }
+
+  /* Бейдж кэшбэка */
+  .badge-cashback {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px 0 4px;
+    border-radius: 20px;
+    background: var(--badge-bg);
+  }
+  .badge-cashback svg { width: 12px; height: 12px; display: block; }
+  .badge-cashback span {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    color: var(--text-badge);
+    padding-bottom: 1px;
+  }
+
+  /* ── Информация под постером ──────────────────── */
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 4px;
+  }
+  .card-info .title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.08px;
+    line-height: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-info .meta {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: -0.08px;
+    line-height: normal;
+  }
+  .card-info .rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    letter-spacing: -0.08px;
+  }
+  .card-info .rating svg { width: 16px; height: 16px; display: block; flex: 0 0 16px; }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <section>
+    <div class="section-header">
+      <h2>Сегодня в кино</h2>
+      <a class="all-link" href="#">Все</a>
+    </div>
+    <div class="carousel" id="carousel"></div>
+  </section>
+</div>
+
+<!-- SVG-иконки из макета Figma -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Корона (бейдж кэшбэка) -->
+    <symbol id="icon-crown" viewBox="0 0 12 12">
+      <path d="M6 1.50075L7.71375 5.4735L11.25 3.381L9.759 9.00525C9.70561 9.22018 9.58097 9.41068 9.40539 9.54567C9.22982 9.68065 9.01368 9.75215 8.79225 9.7485H3.20775C2.98719 9.7486 2.77279 9.67577 2.59794 9.54134C2.42308 9.4069 2.29759 9.21843 2.241 9.00525L0.75 3.38025L4.284 5.47275L6 1.50075Z" fill="#333333"/>
+    </symbol>
+    <!-- Звезда (рейтинг) -->
+    <symbol id="icon-star" viewBox="0 0 16 16">
+      <path d="M3.684 14.275L4.82317 9.36451L1.0105 6.05901L6.04166 5.62651L8 0.994507L9.95833 5.62651L14.9895 6.05901L11.1768 9.36451L12.316 14.275L8 11.6682L3.684 14.275Z" fill="#000000"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+const MOVIES = [
+  { img: 'img kino/260320215742640.webp', genre: 'Комедия',     title: 'Распаковка',                 meta: '2026, Россия', rating: '4,9 • 361 оценка',    cashback: '10%' },
+  { img: 'img kino/260610233655331.webp', genre: 'Комедия',     title: 'Холоп 3',                    meta: '2026, Россия', rating: '4,8 • 2 154 оценки',  cashback: '10%' },
+  { img: 'img kino/260427144321694.webp', genre: 'Биография',   title: 'Майкл',                      meta: '2026, США',    rating: '4,7 • 532 оценки',    cashback: '15%' },
+  { img: 'img kino/260526155515759.webp', genre: 'Мультфильм',  title: 'Папа, купи пёсика',          meta: '2026, Россия', rating: '4,6 • 294 оценки',    cashback: '20%' },
+  { img: 'img kino/260407175715451.webp', genre: 'Мультфильм',  title: 'Три богатыря 3',             meta: '2026, Россия', rating: '4,7 • 1 208 оценок',  cashback: '10%' },
+  { img: 'img kino/260604135421943.webp', genre: 'Комедия',     title: 'Касса невест',               meta: '2026, Россия', rating: '4,5 • 208 оценок',    cashback: '15%' },
+  { img: 'img kino/260602173131587.webp', genre: 'Ужасы',       title: 'Рейс 298',                   meta: '2026, Россия', rating: '4,3 • 156 оценок',    cashback: '10%' },
+  { img: 'img kino/260526152756112.webp', genre: 'Ужасы',       title: 'Оно приходит снизу',         meta: '2026, Россия', rating: '4,2 • 187 оценок',    cashback: '10%' },
+];
+
+const carousel = document.getElementById('carousel');
+
+carousel.innerHTML = MOVIES.map(m => `
+  <article class="card">
+    <div class="poster">
+      <img src="${m.img}" alt="${m.title}" loading="lazy">
+      <div class="chip-genre">${m.genre}</div>
+      <div class="badge-cashback">
+        <svg><use href="#icon-crown"/></svg>
+        <span>${m.cashback}</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="title">${m.title}</div>
+      <div class="meta">${m.meta}</div>
+      <div class="rating">
+        <svg><use href="#icon-star"/></svg>
+        <span>${m.rating}</span>
+      </div>
+    </div>
+  </article>
+`).join('');
+
+/* ── Параллакс ────────────────────────────────────
+   Картинка внутри карточки смещается против движения
+   карточки, поэтому визуально едет медленнее неё. */
+const SHIFT = parseFloat(
+  getComputedStyle(document.documentElement).getPropertyValue('--parallax-shift')
+);
+const posters = Array.from(carousel.querySelectorAll('.poster'));
+
+let ticking = false;
+
+function updateParallax() {
+  ticking = false;
+  const viewRect = carousel.getBoundingClientRect();
+  const viewCenter = viewRect.left + viewRect.width / 2;
+  const halfSpan = (viewRect.width + posters[0].offsetWidth) / 2;
+
+  for (const poster of posters) {
+    const r = poster.getBoundingClientRect();
+    // -1 (карточка слева за экраном) … 0 (в центре) … 1 (справа)
+    let rel = (r.left + r.width / 2 - viewCenter) / halfSpan;
+    rel = Math.max(-1, Math.min(1, rel));
+    // картинка отстаёт от карточки → сдвиг в противоположную сторону
+    poster.firstElementChild.style.transform = `translateX(${(-rel * SHIFT).toFixed(2)}px)`;
+  }
+}
+
+function onScroll() {
+  // в фоновой вкладке rAF заморожен — считаем сразу
+  if (document.hidden) {
+    updateParallax();
+    return;
+  }
+  if (!ticking) {
+    ticking = true;
+    requestAnimationFrame(updateParallax);
+  }
+}
+
+carousel.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+document.addEventListener('visibilitychange', updateParallax);
+window.addEventListener('pageshow', updateParallax);
+updateParallax();
+</script>
+
+</body>
+</html>
