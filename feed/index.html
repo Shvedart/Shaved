@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Лента</title>
+<link rel="stylesheet" href="components.css">
+</head>
+<body>
+
+<div class="feed" id="feed"></div>
+
+<script src="components.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   Конфиг ленты — порядок и содержимое блоков.
+   Меняйте порядок элементов массива, добавляйте и
+   убирайте блоки — вёрстка соберётся сама.
+   Доступные типы: offer, activities, heroCarousel,
+   posterCarousel, productGrid.
+   ═══════════════════════════════════════════════════ */
+const FEED = [
+  {
+    type: 'offer',
+    color: '#2b0c91',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#910c41',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'activities',
+    header: 'Яндекс Плюс',
+    subheader: 'Подписка на сервисы',
+    avatar: 'yandex/yandex-logo.png',
+    cards: [
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/Phone_gradient-front_RGB 1--723632988.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+    ],
+  },
+  {
+    type: 'heroCarousel',
+    header: 'Концерты',
+    items: [
+      {
+        img: 'img music/250314185425918.webp',
+        category: 'Концерт',
+        title: 'Юлия Савичева\nбольшой сольный концерт',
+        desc: 'Любимые хиты и новые песни в сопровождении живого бэнда',
+        cashback: 'до 20%',
+      },
+      {
+        img: 'img music/402bf6a6fb1e766c8508294f1c543abc.webp',
+        category: 'Концерт',
+        title: 'Баста\nстадионное шоу в Лужниках',
+        desc: 'Главные песни за 20 лет карьеры на самой большой сцене страны',
+        cashback: 'до 15%',
+      },
+      {
+        img: 'img music/69e2587d2388360f404442b1.webp',
+        category: 'Концерт',
+        title: 'Иван Дорн\nвозвращение на сцену',
+        desc: 'Фанк, диско и неповторимая энергия в A2 Green Concert',
+        cashback: 'до 20%',
+      },
+      {
+        img: 'img music/260508173236153.webp',
+        category: 'Концерт',
+        title: 'Сироткин\nосенний тур',
+        desc: 'Мечтательный инди-рок и песни нового альбома вживую',
+        cashback: 'до 10%',
+      },
+      {
+        img: 'img music/843b875dc1415f503866f0a8271b967a.webp',
+        category: 'Концерт',
+        title: 'Легенды 2000-х\nбольшой гала-концерт',
+        desc: 'Песни, под которые выросло целое поколение — вживую на ВТБ Арене',
+        cashback: 'до 20%',
+      },
+    ],
+  },
+  {
+    type: 'productGrid',
+    caption: 'Товары для дома',
+    header: 'Хиты Hoff',
+    avatar: 'assets/brand-avatar.png',
+    moreButton: 'Посмотреть все',
+    products: [
+      {
+        img: 'shop/image 2.png',
+        oldPrice: '27 990 ₽', discount: '−11%',
+        price: '24 990 ₽', cashback: '1 250 ₽',
+        name: 'Кресло Леон', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 3.png',
+        oldPrice: '9 990 ₽', discount: '−15%',
+        price: '8 490 ₽', cashback: '420 ₽',
+        name: 'Кресло Корфу', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 4.png',
+        oldPrice: '7 990 ₽', discount: '−13%',
+        price: '6 990 ₽', cashback: '350 ₽',
+        name: 'Кресло Акапулько', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 5.png',
+        oldPrice: '16 990 ₽', discount: '−6%',
+        price: '15 990 ₽', cashback: '800 ₽',
+        name: 'Кресло Папасан', kind: 'Садовая мебель',
+      },
+    ],
+  },
+  {
+    type: 'offer',
+    color: '#4fbbb7',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#3d74af',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+];
+
+Feed.mount(FEED, document.getElementById('feed'));
+</script>
+
+</body>
+</html>
