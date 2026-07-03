@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Концерты</title>
+<style>
+  :root {
+    /* Токены из макета Figma (node 14:235) */
+    --bg: #ffffff;
+    --text-badge: #333333;
+    --accent-link: #428bf9;
+    --badge-bg: #ffdd3d;
+    --chip-bg: rgba(0, 0, 0, 0.22);
+    --poster-placeholder: #d9d9d9;
+
+    --card-w: 343px;
+    --card-h: 428px;
+    --radius-card: 20px;
+    --gap-cards: 12px;
+    --pad-screen: 16px;
+
+    /* Параллакс: на сколько px картинка может уехать внутри карточки */
+    --parallax-shift: 42px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    color: #000;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .screen {
+    max-width: 100%;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding-top: 144px; /* позиция секции в макете */
+  }
+
+  /* ── Шапка секции ─────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad-screen);
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: normal;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .section-header .all-link {
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.41px;
+    color: var(--accent-link);
+    text-decoration: none;
+  }
+
+  /* ── Карусель ─────────────────────────────────── */
+  .carousel {
+    display: flex;
+    gap: var(--gap-cards);
+    padding: 0 var(--pad-screen);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .carousel::-webkit-scrollbar { display: none; }
+
+  /* ── Карточка: картинка на всю площадь ────────── */
+  .card {
+    position: relative;
+    flex: 0 0 var(--card-w);
+    width: var(--card-w);
+    height: var(--card-h);
+    scroll-snap-align: start;
+    scroll-margin-left: var(--pad-screen);
+    border-radius: var(--radius-card);
+    background: var(--poster-placeholder);
+    overflow: hidden;
+    /* обрезка по скруглению работает и во время transform */
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    isolation: isolate;
+  }
+
+  .card > img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* запас по ширине под параллакс-сдвиг */
+    left: calc(-1 * var(--parallax-shift));
+    width: calc(100% + var(--parallax-shift) * 2);
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  /* Градиент затемнения снизу — не двигается вместе с картинкой */
+  .card .shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.8) 80%);
+    pointer-events: none;
+  }
+
+  /* Чип категории */
+  .chip-genre {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 1.5px 6px 2.5px;
+    border-radius: 20px;
+    background: var(--chip-bg);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.08px;
+    line-height: normal;
+    white-space: nowrap;
+  }
+
+  /* ── Контент поверх картинки ──────────────────── */
+  .card-content {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: #fff;
+    letter-spacing: -0.08px;
+  }
+
+  .card-content .texts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card-content .title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-content .desc {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-content .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-buy {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border: none;
+    border-radius: 20px;
+    background: #fff;
+    color: var(--text-badge);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    cursor: pointer;
+  }
+
+  .badge-cashback {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px 0 6px;
+    border-radius: 20px;
+    background: var(--badge-bg);
+  }
+  .badge-cashback svg { width: 16px; height: 16px; display: block; }
+  .badge-cashback span {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    color: var(--text-badge);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <section>
+    <div class="section-header">
+      <h2>Концерты</h2>
+      <a class="all-link" href="#">Все</a>
+    </div>
+    <div class="carousel" id="carousel"></div>
+  </section>
+</div>
+
+<!-- SVG-иконка короны из макета Figma -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="icon-crown" viewBox="0 0 16 16">
+      <path d="M8 2.001L10.285 7.298L15 4.508L13.012 12.007C12.9408 12.2936 12.7746 12.5476 12.5405 12.7276C12.3064 12.9075 12.0182 13.0029 11.723 12.998H4.277C3.98292 12.9981 3.69705 12.901 3.46391 12.7218C3.23077 12.5425 3.06345 12.2912 2.988 12.007L1 4.507L5.712 7.297L8 2.001Z" fill="#333333"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+const EVENTS = [
+  {
+    img: 'img music/250314185425918.webp',
+    category: 'Концерт',
+    title: 'Юлия Савичева\nбольшой сольный концерт',
+    desc: 'Любимые хиты и новые песни в сопровождении живого бэнда',
+    cashback: 'до 20%',
+  },
+  {
+    img: 'img music/402bf6a6fb1e766c8508294f1c543abc.webp',
+    category: 'Концерт',
+    title: 'Баста\nстадионное шоу в Лужниках',
+    desc: 'Главные песни за 20 лет карьеры на самой большой сцене страны',
+    cashback: 'до 15%',
+  },
+  {
+    img: 'img music/69e2587d2388360f404442b1.webp',
+    category: 'Концерт',
+    title: 'Иван Дорн\nвозвращение на сцену',
+    desc: 'Фанк, диско и неповторимая энергия в A2 Green Concert',
+    cashback: 'до 20%',
+  },
+  {
+    img: 'img music/260508173236153.webp',
+    category: 'Концерт',
+    title: 'Сироткин\nосенний тур',
+    desc: 'Мечтательный инди-рок и песни нового альбома вживую',
+    cashback: 'до 10%',
+  },
+  {
+    img: 'img music/6a2194fe4a84c424d3df5852.webp',
+    category: 'Фестиваль',
+    title: 'Летний фест\nдва дня музыки',
+    desc: 'Двадцать артистов на трёх сценах под открытым небом',
+    cashback: 'до 20%',
+  },
+  {
+    img: 'img music/240305165407341.webp',
+    category: 'Стендап',
+    title: 'Большой стендап\nоткрытый микрофон',
+    desc: 'Лучшие комики города каждую пятницу в Standup Club №1',
+    cashback: 'до 10%',
+  },
+  {
+    img: 'img music/260508104046735.webp',
+    category: 'Спектакль',
+    title: 'Семейный ужин\nпремьера сезона',
+    desc: 'Тёплая комедия о большой семье в Театре Эстрады',
+    cashback: 'до 15%',
+  },
+  {
+    img: 'img music/843b875dc1415f503866f0a8271b967a.webp',
+    category: 'Концерт',
+    title: 'Легенды 2000-х\nбольшой гала-концерт',
+    desc: 'Песни, под которые выросло целое поколение — вживую на ВТБ Арене',
+    cashback: 'до 20%',
+  },
+  {
+    img: 'img music/a1954999d0fdca5d1a834067b526c07c.webp',
+    category: 'Шоу',
+    title: 'Рыцарь\nмузыкальное шоу',
+    desc: 'Средневековая легенда в современном прочтении на Live Арене',
+    cashback: 'до 15%',
+  },
+  {
+    img: 'img music/260122133052389.webp',
+    category: 'Концерт',
+    title: 'Квартирник\nакустический вечер',
+    desc: 'Камерный концерт при свечах в клубе 16 Тонн',
+    cashback: 'до 10%',
+  },
+];
+
+const carousel = document.getElementById('carousel');
+
+carousel.innerHTML = EVENTS.map(e => `
+  <article class="card">
+    <img src="${e.img}" alt="${e.title.split('\n')[0]}" loading="lazy">
+    <div class="shade"></div>
+    <div class="chip-genre">${e.category}</div>
+    <div class="card-content">
+      <div class="texts">
+        <div class="title">${e.title.replace('\n', '<br>')}</div>
+        <div class="desc">${e.desc}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-buy" type="button">Купить билет</button>
+        <div class="badge-cashback">
+          <svg><use href="#icon-crown"/></svg>
+          <span>${e.cashback}</span>
+        </div>
+      </div>
+    </div>
+  </article>
+`).join('');
+
+/* ── Параллакс ────────────────────────────────────
+   Картинка внутри карточки смещается против движения
+   карточки, поэтому визуально едет медленнее неё.
+   Градиент, тексты и кнопки остаются на месте. */
+const SHIFT = parseFloat(
+  getComputedStyle(document.documentElement).getPropertyValue('--parallax-shift')
+);
+const cards = Array.from(carousel.querySelectorAll('.card'));
+
+let ticking = false;
+
+function updateParallax() {
+  ticking = false;
+  const viewRect = carousel.getBoundingClientRect();
+  const viewCenter = viewRect.left + viewRect.width / 2;
+  const halfSpan = (viewRect.width + cards[0].offsetWidth) / 2;
+
+  for (const card of cards) {
+    const r = card.getBoundingClientRect();
+    // -1 (карточка слева за экраном) … 0 (в центре) … 1 (справа)
+    let rel = (r.left + r.width / 2 - viewCenter) / halfSpan;
+    rel = Math.max(-1, Math.min(1, rel));
+    // картинка отстаёт от карточки → сдвиг в противоположную сторону
+    card.firstElementChild.style.transform = `translateX(${(-rel * SHIFT).toFixed(2)}px)`;
+  }
+}
+
+function onScroll() {
+  // в фоновой вкладке rAF заморожен — считаем сразу
+  if (document.hidden) {
+    updateParallax();
+    return;
+  }
+  if (!ticking) {
+    ticking = true;
+    requestAnimationFrame(updateParallax);
+  }
+}
+
+carousel.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+document.addEventListener('visibilitychange', updateParallax);
+window.addEventListener('pageshow', updateParallax);
+updateParallax();
+</script>
+
+</body>
+</html>
