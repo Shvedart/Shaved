@@ -96,7 +96,7 @@ const Feed = (() => {
   register('heroCarousel', b => el(`
     <section class="fc-hero">
       ${sectionHeader(b)}
-      <div class="fc-scroller" data-parallax>
+      <div class="fc-scroller fc-scroller--center" data-parallax data-start-index="${b.startIndex ?? 1}">
         ${(b.items || []).map(m => `
           <article class="fc-hero-card fc-par-box">
             <img src="${esc(m.img)}" alt="${esc(m.title)}" loading="lazy">
@@ -188,20 +188,54 @@ const Feed = (() => {
       const boxes = Array.from(scroller.querySelectorAll('.fc-par-box'));
       if (!boxes.length) return;
 
+      // в режиме «центр» боковые карточки чуть меньше центральной
+      const centerMode = scroller.classList.contains('fc-scroller--center');
+      const SIDE_SHRINK = 0.06;
+
       let ticking = false;
+
+      // позиции карточек в контенте скроллера до применения transform
+      const scrollerRect0 = scroller.getBoundingClientRect();
+      const layoutCenters = boxes.map(box => {
+        const r = box.getBoundingClientRect();
+        return r.left + r.width / 2 - scrollerRect0.left + scroller.scrollLeft;
+      });
 
       function update() {
         ticking = false;
-        const viewRect = scroller.getBoundingClientRect();
-        const viewCenter = viewRect.left + viewRect.width / 2;
-        const halfSpan = (viewRect.width + boxes[0].offsetWidth) / 2;
+        const viewW = scroller.clientWidth;
+        const boxW = boxes[0].offsetWidth;
+        const halfSpan = (viewW + boxW) / 2;
+        // шаг сетки карточек (ширина + gap) — для компенсации зазоров
+        const step = boxes.length > 1 ? layoutCenters[1] - layoutCenters[0] : boxW;
 
-        for (const box of boxes) {
-          const r = box.getBoundingClientRect();
-          let rel = (r.left + r.width / 2 - viewCenter) / halfSpan;
+        const maxScroll = scroller.scrollWidth - viewW;
+
+        boxes.forEach((box, i) => {
+          // rel — удаление от снап-позиции карточки; позиция зажата
+          // границами скролла, поэтому первая и последняя карточки
+          // у края считаются «в фокусе» (rel = 0) и стоят в полный размер
+          const snap = Math.max(0, Math.min(maxScroll, layoutCenters[i] - viewW / 2));
+          let rel = (snap - scroller.scrollLeft) / halfSpan;
           rel = Math.max(-1, Math.min(1, rel));
           box.firstElementChild.style.transform = `translateX(${(-rel * SHIFT).toFixed(2)}px)`;
-        }
+          if (centerMode) {
+            const scale = 1 - SIDE_SHRINK * Math.abs(rel);
+            // сдвиг к центру: держит визуальный зазор между карточками = gap
+            const shift = -Math.sign(rel) * SIDE_SHRINK * boxW * halfSpan * rel * rel / (2 * step);
+            box.style.transform = `translateX(${shift.toFixed(2)}px) scale(${scale.toFixed(4)})`;
+          }
+        });
+      }
+
+      // стартовая карточка — по центру экрана, без анимации
+      function scrollToStart() {
+        const idx = parseInt(scroller.dataset.startIndex || '0', 10);
+        const target = boxes[idx];
+        if (!target) return;
+        const tr = target.getBoundingClientRect();
+        const sr = scroller.getBoundingClientRect();
+        scroller.scrollLeft += (tr.left + tr.width / 2) - (sr.left + sr.width / 2);
       }
 
       function onScroll() {
@@ -214,6 +248,7 @@ const Feed = (() => {
       window.addEventListener('resize', onScroll);
       document.addEventListener('visibilitychange', update);
       window.addEventListener('pageshow', update);
+      if (scroller.dataset.startIndex) scrollToStart();
       update();
     });
   }

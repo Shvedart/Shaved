@@ -61,6 +61,17 @@ html, body {
   flex-shrink: 0;
 }
 
+/* Режим «карточка в фокусе по центру экрана».
+   Отступ по краям 16px: первая и последняя карточки встают
+   ровно у края, промежуточные снапятся по центру экрана. */
+.fc-scroller--center {
+  padding: 0 var(--pad-screen);
+}
+.fc-scroller--center > * {
+  scroll-snap-align: center;
+  scroll-margin-left: 0;
+}
+
 /* Картинка с параллаксом внутри карточки */
 .fc-par-box {
   position: relative;
@@ -285,6 +296,7 @@ html, body {
   width: 343px;
   height: 428px;
   border-radius: 20px;
+  transform-origin: center;
 }
 .fc-hero-card .fc-shade {
   position: absolute;
