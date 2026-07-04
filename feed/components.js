@@ -92,9 +92,20 @@ const Feed = (() => {
       </div>
     </section>`));
 
+  /* Позиции аватаров CTA-карточки «Идеи на выходные» (макет 38:762):
+     смещения центров кружков 56px от центра карточки 343×428 */
+  const CTA_AVA_POS = [
+    [-0.95, -139.88], [89.04, -107.13], [136.92, -24.19], [120.29, 70.12],
+    [46.93, 131.68], [-48.84, 131.68], [-122.2, 70.12], [-138.83, -24.19],
+    [-90.94, -107.13],
+    [-0.95, -224.65], [85.15, -207.52], [158.14, -158.75], [158.14, 159.45],
+    [85.15, 208.22], [-0.95, 225.35], [-87.06, 208.22], [-160.05, 159.45],
+    [-160.05, -158.75], [-87.06, -207.52],
+  ];
+
   /* ═══ heroCarousel — большие карточки 343×428 с параллаксом ═══ */
   register('heroCarousel', b => el(`
-    <section class="fc-hero">
+    <section class="fc-hero${b.scrollDrift ? ' fc-hero--drift' : ''}">
       ${sectionHeader(b)}
       <div class="fc-scroller fc-scroller--center" data-parallax data-start-index="${b.startIndex ?? 1}">
         ${(b.items || []).map(m => `
@@ -118,6 +129,10 @@ const Feed = (() => {
         ${b.moreCard ? `
           <div class="fc-snap fc-snap--under">
             <article class="fc-cta-card">
+              ${(b.moreCard.avatars || []).map((src, i) => {
+                const p = CTA_AVA_POS[i % CTA_AVA_POS.length];
+                return `<img class="fc-cta-ava" data-dx="${p[0]}" data-dy="${p[1]}" style="left:calc(50% + ${p[0]}px);top:calc(50% + ${p[1]}px)" src="${esc(src)}" alt="" loading="lazy">`;
+              }).join('')}
               <div class="fc-cta-content">
                 <div class="fc-cta-texts">
                   <div class="fc-cta-title">${b.moreCard.title.split('\n').map(esc).join('<br>')}</div>
@@ -218,6 +233,11 @@ const Feed = (() => {
 
       // CTA-карточка прячется под последней и остаётся на месте при свайпе
       const cta = scroller.querySelector('.fc-cta-card');
+      const ctaAvas = cta ? Array.from(cta.querySelectorAll('.fc-cta-ava')) : [];
+      // раскрытие CTA: масштаб карточки 90% → 100%,
+      // аватары слегка съезжаются к центру и встают на места
+      const CTA_SCALE_FROM = 0.9;
+      const CTA_AVA_PULL = 0.18; // доля пути от центра в свёрнутом состоянии
 
       function update() {
         ticking = false;
@@ -256,6 +276,17 @@ const Feed = (() => {
           const lastCenter = layoutCenters[layoutCenters.length - 1];
           const lastSnap = Math.max(0, Math.min(maxScroll, lastCenter + boxW / 2 + 16 - viewW));
           cta.style.visibility = scroller.scrollLeft >= lastSnap - 40 ? '' : 'hidden';
+
+          // прогресс раскрытия: 0 — последняя карточка на месте, 1 — смахнута
+          const span = maxScroll - lastSnap;
+          let p = span > 0 ? (scroller.scrollLeft - lastSnap) / span : 1;
+          p = Math.max(0, Math.min(1, p));
+          cta.style.transform = `scale(${(CTA_SCALE_FROM + (1 - CTA_SCALE_FROM) * p).toFixed(4)})`;
+          const pull = CTA_AVA_PULL * (1 - p);
+          for (const ava of ctaAvas) {
+            ava.style.transform =
+              `translate(${(-ava.dataset.dx * pull).toFixed(2)}px, ${(-ava.dataset.dy * pull).toFixed(2)}px)`;
+          }
         }
       }
 
@@ -281,6 +312,60 @@ const Feed = (() => {
       window.addEventListener('pageshow', update);
       if (scroller.dataset.startIndex) scrollToStart();
       update();
+
+      /* ── Режим drift: страница скроллится как обычно, а карусель
+         слегка подъезжает горизонтально — намёк, что её можно листать ── */
+      const driftSection = scroller.closest('.fc-hero--drift');
+      if (driftSection) {
+        const DRIFT = 0.5; // px карусели на px скролла страницы
+
+        const maxScrollX = () => scroller.scrollWidth - scroller.clientWidth;
+
+        // снап-позиции карточек (те же, что в расчёте rel) + конец (CTA)
+        function snapPoints() {
+          const viewW = scroller.clientWidth;
+          const boxW = boxes[0].offsetWidth;
+          const max = maxScrollX();
+          const pts = layoutCenters.map((c, i) => {
+            const target = (cta && i === boxes.length - 1)
+              ? c + boxW / 2 + 16 - viewW
+              : c - viewW / 2;
+            return Math.max(0, Math.min(max, target));
+          });
+          if (cta) pts.push(max);
+          return pts;
+        }
+
+        let lastY = window.scrollY;
+        let idleTimer = 0;
+
+        function settle() {
+          // плавная доводка к ближайшему снапу, потом вернуть нативный снап
+          const p = scroller.scrollLeft;
+          const nearest = snapPoints()
+            .reduce((a, b) => Math.abs(b - p) < Math.abs(a - p) ? b : a);
+          if (Math.abs(nearest - p) > 1) {
+            scroller.scrollTo({ left: nearest, behavior: 'smooth' });
+          }
+          setTimeout(() => { scroller.style.scrollSnapType = ''; }, 400);
+        }
+
+        function onPageScroll() {
+          const y = window.scrollY;
+          const dy = y - lastY;
+          lastY = y;
+          const rect = driftSection.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > window.innerHeight || dy === 0) return;
+          // на время дрейфа отключаем нативный снап, иначе он съест сдвиг
+          scroller.style.scrollSnapType = 'none';
+          scroller.scrollLeft = Math.max(0, Math.min(maxScrollX(),
+            scroller.scrollLeft + dy * DRIFT));
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(settle, 160);
+        }
+
+        window.addEventListener('scroll', onPageScroll, { passive: true });
+      }
     });
   }
 

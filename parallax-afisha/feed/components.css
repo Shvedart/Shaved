@@ -291,6 +291,7 @@ html, body {
 }
 
 /* ═══ Блок: Hero-карусель с параллаксом ══════════════ */
+
 /* Обёртка-снап: браузер равняется по ней, а трансформации
    (scale/shift) живут на внутренней карточке и снап не сбивают */
 .fc-snap {
@@ -334,26 +335,38 @@ html, body {
   transform-origin: center;
 }
 
-/* Карточка-переход «Больше событий» */
+/* Карточка-переход «Идеи на выходные» (макет 38:762) */
 .fc-cta-card {
   position: relative;
   width: 343px;
   height: 428px;
   border-radius: 32px;
-  background: rgba(212, 93, 140, 0.1);
+  /* радиальный градиент из макета: прозрачный центр → #ececec к краям */
+  background: radial-gradient(267px 333px at center, rgba(246, 247, 248, 0) 0%, #ececec 100%);
   overflow: hidden;
+}
+/* Кружки-аватары вокруг текста; позиция задаётся инлайном из JS */
+.fc-cta-ava {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px; /* центр кружка в точке left/top */
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
 }
 .fc-cta-content {
   position: absolute;
-  bottom: 16px;
+  top: calc(50% - 5.2px);
   left: 16px;
   right: 16px;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   text-align: center;
-  color: var(--text-primary);
+  color: #333;
   letter-spacing: -0.08px;
 }
 .fc-cta-texts {
@@ -364,6 +377,7 @@ html, body {
 .fc-cta-title {
   font-size: 20px;
   font-weight: 600;
+  letter-spacing: -0.38px;
   line-height: normal;
 }
 .fc-cta-desc {
@@ -372,7 +386,6 @@ html, body {
   line-height: normal;
 }
 .fc-cta-button {
-  width: 100%;
   height: 44px;
   padding: 0 18px;
   border: none;

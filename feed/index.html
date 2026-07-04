@@ -54,6 +54,7 @@ const FEED = [
   {
     type: 'heroCarousel',
     header: 'Концерты',
+    scrollDrift: false, // намёк на горизонтальный скролл: карусель подъезжает при скролле страницы (true — включить)
     items: [
       {
         img: 'img music/250314185425918.webp',
@@ -134,10 +135,11 @@ const FEED = [
       },
     ],
     moreCard: {
-      title: 'Больше\nсобытий в Афише',
-      desc: 'Концерты, кино, выставки и идеи\nна выходные — выберите, куда сходить',
-      button: 'Самые выгодные билеты',
-      img: 'assets/tickets.png',
+      title: 'Идеи\nна выходные',
+      desc: 'Выберите, куда сходить',
+      button: 'Выгодные билеты',
+      avatars: Array.from({ length: 19 }, (_, i) =>
+        `assets/cta/av-${String(i + 1).padStart(2, '0')}.png`),
     },
   },
   {
