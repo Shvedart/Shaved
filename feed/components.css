@@ -21,7 +21,7 @@
   --gap-cards: 12px;
 
   /* Параллакс: на сколько px картинка может уехать внутри карточки */
-  --parallax-shift: 42px;
+  --parallax-shift: 84px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -330,7 +330,7 @@ html, body {
   position: relative;
   width: 343px;
   height: 428px;
-  border-radius: 20px;
+  border-radius: 32px;
   transform-origin: center;
 }
 
@@ -339,7 +339,7 @@ html, body {
   position: relative;
   width: 343px;
   height: 428px;
-  border-radius: 38px;
+  border-radius: 32px;
   background: rgba(212, 93, 140, 0.1);
   overflow: hidden;
 }
