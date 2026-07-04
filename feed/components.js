@@ -98,21 +98,36 @@ const Feed = (() => {
       ${sectionHeader(b)}
       <div class="fc-scroller fc-scroller--center" data-parallax data-start-index="${b.startIndex ?? 1}">
         ${(b.items || []).map(m => `
-          <article class="fc-hero-card fc-par-box">
-            <img src="${esc(m.img)}" alt="${esc(m.title)}" loading="lazy">
-            <div class="fc-shade"></div>
-            <div class="fc-chip">${esc(m.category)}</div>
-            <div class="fc-content">
-              <div class="fc-texts">
-                <div class="fc-title">${m.title.split('\n').map(esc).join('<br>')}</div>
-                <div class="fc-desc">${esc(m.desc)}</div>
+          <div class="fc-snap">
+            <article class="fc-hero-card fc-par-box">
+              <img src="${esc(m.img)}" alt="${esc(m.title)}" loading="lazy">
+              <div class="fc-shade"></div>
+              <div class="fc-chip">${esc(m.category)}</div>
+              <div class="fc-content">
+                <div class="fc-texts">
+                  <div class="fc-title">${m.title.split('\n').map(esc).join('<br>')}</div>
+                  <div class="fc-desc">${esc(m.desc)}</div>
+                </div>
+                <div class="fc-actions">
+                  <button class="fc-btn-buy" type="button">${esc(m.button || 'Купить билет')}</button>
+                  <div class="fc-cashback">${ICONS.crown16}<span>${esc(m.cashback)}</span></div>
+                </div>
               </div>
-              <div class="fc-actions">
-                <button class="fc-btn-buy" type="button">${esc(m.button || 'Купить билет')}</button>
-                <div class="fc-cashback">${ICONS.crown16}<span>${esc(m.cashback)}</span></div>
+            </article>
+          </div>`).join('')}
+        ${b.moreCard ? `
+          <div class="fc-snap fc-snap--under">
+            <article class="fc-cta-card">
+              <div class="fc-cta-content">
+                <div class="fc-cta-texts">
+                  <div class="fc-cta-title">${b.moreCard.title.split('\n').map(esc).join('<br>')}</div>
+                  <div class="fc-cta-desc">${b.moreCard.desc.split('\n').map(esc).join('<br>')}</div>
+                </div>
+                <button class="fc-cta-button" type="button">${esc(b.moreCard.button || 'Все события')}</button>
               </div>
-            </div>
-          </article>`).join('')}
+              ${b.moreCard.img ? `<img class="fc-cta-img" src="${esc(b.moreCard.img)}" alt="">` : ''}
+            </article>
+          </div>` : ''}
       </div>
     </section>`));
 
@@ -201,6 +216,9 @@ const Feed = (() => {
         return r.left + r.width / 2 - scrollerRect0.left + scroller.scrollLeft;
       });
 
+      // CTA-карточка прячется под последней и остаётся на месте при свайпе
+      const cta = scroller.querySelector('.fc-cta-card');
+
       function update() {
         ticking = false;
         const viewW = scroller.clientWidth;
@@ -215,7 +233,11 @@ const Feed = (() => {
           // rel — удаление от снап-позиции карточки; позиция зажата
           // границами скролла, поэтому первая и последняя карточки
           // у края считаются «в фокусе» (rel = 0) и стоят в полный размер
-          const snap = Math.max(0, Math.min(maxScroll, layoutCenters[i] - viewW / 2));
+          // последняя карточка перед CTA снапится к правому краю (16px)
+          const snapTarget = (cta && i === boxes.length - 1)
+            ? layoutCenters[i] + boxW / 2 + 16 - viewW
+            : layoutCenters[i] - viewW / 2;
+          const snap = Math.max(0, Math.min(maxScroll, snapTarget));
           let rel = (snap - scroller.scrollLeft) / halfSpan;
           rel = Math.max(-1, Math.min(1, rel));
           box.firstElementChild.style.transform = `translateX(${(-rel * SHIFT).toFixed(2)}px)`;
@@ -226,6 +248,15 @@ const Feed = (() => {
             box.style.transform = `translateX(${shift.toFixed(2)}px) scale(${scale.toFixed(4)})`;
           }
         });
+
+        if (cta) {
+          // позиционирование CTA целиком на position: sticky;
+          // JS только прячет её, пока последняя карточка сверху
+          // (иначе CTA выглядывала бы из-под уменьшенной карточки)
+          const lastCenter = layoutCenters[layoutCenters.length - 1];
+          const lastSnap = Math.max(0, Math.min(maxScroll, lastCenter + boxW / 2 + 16 - viewW));
+          cta.style.visibility = scroller.scrollLeft >= lastSnap - 40 ? '' : 'hidden';
+        }
       }
 
       // стартовая карточка — по центру экрана, без анимации

@@ -291,12 +291,111 @@ html, body {
 }
 
 /* ═══ Блок: Hero-карусель с параллаксом ══════════════ */
+/* Обёртка-снап: браузер равняется по ней, а трансформации
+   (scale/shift) живут на внутренней карточке и снап не сбивают */
+.fc-snap {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+/* CTA-карточка лежит под остальными и открывается свайпом.
+   Обёртка наезжает на слот последней карточки (margin -355 = 343+12),
+   а запас ширины +355 даёт диапазон скролла для раскрытия. */
+.fc-snap--under {
+  z-index: 0;
+  width: calc(343px + 355px);
+  margin-left: -355px;
+  scroll-snap-align: end;
+}
+/* Последняя контентная карточка (перед CTA) снапится к правому
+   краю с отступом 16px — CTA прячется ровно под ней там же.
+   scroll-margin-right компенсирует правый паддинг скроллера:
+   без него конечная снап-точка на 16px не доезжает до конца,
+   и карточка оставалась чуть наехавшей на CTA */
+.fc-snap:has(+ .fc-snap--under),
+.fc-snap--under {
+  scroll-snap-align: end;
+  scroll-margin-right: var(--pad-screen);
+}
+/* Sticky: едет в потоке под последней карточкой, у линии
+   «правый край минус 16px» прилипает и стоит как вкопанная —
+   позицию держит композитор, синхронно со скроллом */
+.fc-snap--under .fc-cta-card {
+  position: sticky;
+  /* 100% здесь — скроллпорт минус паддинги скроллера (по 16 с боков),
+     итог: карточка липнет в 16px от правого края экрана */
+  left: calc(100% - 343px);
+}
 .fc-hero-card {
   position: relative;
   width: 343px;
   height: 428px;
   border-radius: 20px;
   transform-origin: center;
+}
+
+/* Карточка-переход «Больше событий» */
+.fc-cta-card {
+  position: relative;
+  width: 343px;
+  height: 428px;
+  border-radius: 38px;
+  background: rgba(212, 93, 140, 0.1);
+  overflow: hidden;
+}
+.fc-cta-content {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+  color: var(--text-primary);
+  letter-spacing: -0.08px;
+}
+.fc-cta-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-cta-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: normal;
+}
+.fc-cta-desc {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: normal;
+}
+.fc-cta-button {
+  width: 100%;
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 30px;
+  background: #ffdd2d;
+  color: #000;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: normal;
+  cursor: pointer;
+}
+.fc-cta-img {
+  position: absolute;
+  left: 50%;
+  top: 131px;
+  width: 208px;
+  height: 224px;
+  object-fit: cover;
+  border-radius: 4px;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  pointer-events: none;
 }
 .fc-hero-card .fc-shade {
   position: absolute;
@@ -468,9 +567,9 @@ html, body {
 }
 .fc-product-card .fc-photo > img.fc-product-img {
   position: absolute;
-  inset: 10%;
-  width: 80%;
-  height: 80%;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
   object-fit: contain;
   mix-blend-mode: darken;
 }
