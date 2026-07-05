@@ -348,9 +348,9 @@ html, body {
 /* Кружки-аватары вокруг текста; позиция задаётся инлайном из JS */
 .fc-cta-ava {
   position: absolute;
-  width: 56px;
-  height: 56px;
-  margin: -28px 0 0 -28px; /* центр кружка в точке left/top */
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px; /* центр кружка в точке left/top */
   border-radius: 50%;
   object-fit: cover;
   pointer-events: none;
