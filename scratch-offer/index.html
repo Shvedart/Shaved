@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Скретч-карточка M.Видео</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #ffffff;
+  --card:   #ffffff;
+  --text:   #333333;
+  --sub:    #9299a2;
+  --blue:   #428bf9;
+  --yellow: #ffdd2d;
+  --red:    #e8001c;
+  --green:  #00b92d;
+  --font: -apple-system,'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--font);
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.phone {
+  width: 500px;
+  background: var(--bg);
+  overflow-x: hidden;
+  padding-bottom: 60px;
+}
+
+/* ── Header ──────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 54px 16px 12px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(to bottom,rgba(255,255,255,1) 65%,rgba(255,255,255,0));
+}
+.header__city {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 0.5px solid rgba(255,255,255,0.8);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.header__ava {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #c0c0c8 url('images/ava.png') center/cover no-repeat;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Feed ────────────────────────────────── */
+.feed { padding: 0 16px; display: flex; flex-direction: column; gap: 32px; }
+
+/* Header + its offers, grouped as one "major block" for the 32px feed gap */
+.section-block { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Section label+title ─────────────────── */
+.sec-header { padding: 0; }
+.sec-header__label { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+.sec-header__title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; line-height: 1.2; }
+.sec-header__sub   { font-size: 15px; color: var(--sub); margin-top: 2px; }
+
+/* ── Offers group: 24px between cards, 20px from cards to the button ── */
+.offers-group { display: flex; flex-direction: column; gap: 20px; }
+.offers-list  { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Offer card ──────────────────────────── */
+.offer-card {
+  background: var(--card);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 6px 34px 0 rgba(0,0,0,0.12);
+}
+.offer-card__top {
+  position: relative;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+.offer-card__text {
+  position: absolute;
+  top: 20px; left: 20px; right: 20px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.offer-card__title { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.2; }
+.offer-card__sub   { font-size: 15px; color: #fff; line-height: 1.2; }
+.offer-card__cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  min-height: 88px;
+}
+.offer-card__ava {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.offer-card__name { font-size: 17px; font-weight: 600; color: var(--text); }
+.offer-card__desc {
+  font-size: 13px; color: var(--sub); margin-top: 2px; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ── Dark button ──────────────────────────── */
+.btn-dark {
+  background: rgba(0,18,40,0.03);
+  border-radius: 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--blue);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Yellow button ────────────────────────── */
+.btn-yellow {
+  background: var(--yellow);
+  border-radius: 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  margin: 20px 16px 16px;
+  display: none;
+}
+.btn-yellow.show { display: flex; }
+
+/* ── Editorial section: 16px header→cards, 20px cards→button ── */
+.editorial     { display: flex; flex-direction: column; gap: 20px; }
+.editorial__top { display: flex; flex-direction: column; gap: 16px; }
+.editorial__header { display: flex; flex-direction: column; gap: 4px; padding: 0 4px; }
+
+.mini-scroll {
+  display: flex; gap: 12px;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+.mini-scroll::-webkit-scrollbar { display: none; }
+.mini-card {
+  flex-shrink: 0; width: 140px;
+  background: var(--card); border-radius: 20px; overflow: hidden;
+}
+.mini-card__img {
+  height: 182px; background: rgb(246,247,248);
+  background-size: cover; background-position: center;
+  position: relative;
+}
+.mini-card__fav {
+  position: absolute; top: 8px; right: 8px;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-card__fav img { width: 24px; height: 24px; }
+.mini-card__body { padding: 8px 10px 10px; }
+.mini-card__price-row { display: flex; align-items: center; gap: 4px; }
+.mini-card__price { font-size: 17px; font-weight: 700; color: var(--text); }
+.mini-card__cb {
+  background: var(--yellow); color: var(--text);
+  font-size: 11px; font-weight: 700;
+  border-radius: 100px; padding: 2px 6px 2px 4px;
+  display: flex; align-items: center; gap: 2px;
+}
+.mini-card__cb img { width: 10px; height: 10px; }
+.mini-card__name { font-size: 13px; color: var(--sub); margin-top: 4px; line-height: 1.3; }
+
+/* ══════════════════════════════════════════
+   SCRATCH CARD  (step 1 → 2 → 3)
+══════════════════════════════════════════ */
+.scratch-wrapper {
+  background: var(--card);
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(51,51,51,0.1);
+  box-shadow: 0 6px 34px 0 rgba(0,0,0,0);
+  transition: box-shadow 0.5s ease, border-color 0.5s ease;
+}
+.scratch-wrapper.elevated {
+  border-color: rgba(51,51,51,0);
+  box-shadow: 0 6px 34px 0 rgba(0,0,0,0.12);
+}
+
+/* Foil zone — full card height 268px. Prize sits underneath, canvas scratches away on top. */
+.scratch-zone {
+  position: relative;
+  width: 100%;
+  height: 268px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 24px;
+  transition: height 0.45s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.3s ease;
+}
+.scratch-zone.collapsed {
+  height: 0 !important;
+  opacity: 0;
+}
+.scratch-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  touch-action: none; cursor: grab;
+  border-radius: inherit;
+  transition: opacity 0.5s ease;
+  z-index: 2;
+}
+.scratch-particles {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Step 2: prize — always rendered UNDER the foil, revealed as it's scratched away ── */
+.scratch-prize {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 28px;
+  background: var(--card);
+  z-index: 1;
+}
+
+.prize-logo {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+.prize-eyebrow { font-size: 13px; font-weight: 500; color: var(--sub); margin-bottom: 4px; text-transform: uppercase; }
+.prize-amount  { font-size: 30px; font-weight: 700; color: var(--text); letter-spacing: -0.6px; line-height: 1; margin-bottom: 4px; }
+.prize-sub     { font-size: 15px; color: var(--sub); font-weight: 500; text-align: center; line-height: 1.4; }
+
+/* ── Step 3: expanded ─────────────────────── */
+.expanded-header {
+  display: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 20px 12px;
+}
+.expanded-header.show { display: flex; }
+.exp-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.exp-logo { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+.exp-eyebrow { font-size: 13px; font-weight: 500; color: var(--sub); text-transform: uppercase; }
+.exp-amount  { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.exp-sub     { font-size: 15px; color: var(--sub); font-weight: 500; line-height: 1.3; }
+
+/* Product grid 2-col — 12px column gap, 24px row gap */
+.product-grid {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 12px;
+  padding: 4px 16px 0;
+}
+.product-grid.show { display: grid; }
+
+.pcard {
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  opacity: 0; transform: translateY(10px);
+}
+.pcard.animate { animation: fadeUp 0.35s ease forwards; }
+@keyframes fadeUp { to { opacity: 1; transform: none; } }
+
+/* Background sits only behind the photo, not the whole card */
+.pcard__img {
+  width: 100%; height: 245px;
+  background: rgb(244,242,240);
+  background-size: cover;
+  background-position: center;
+  border-radius: 20px;
+  position: relative;
+}
+.pcard__fav {
+  position: absolute; top: 6px; right: 6px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pcard__fav img { width: 20px; height: 20px; }
+.pcard__dots {
+  position: absolute; left: 12px; bottom: 12px;
+  display: flex; gap: 4px;
+}
+.pcard__dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(0,16,36,0.24); }
+.pcard__dot.active { background: rgba(0,0,0,0.9); }
+
+.pcard__body { padding: 6px 10px 0; }
+.pcard__old-row { display: flex; justify-content: flex-start; align-items: center; gap: 4px; margin-bottom: 2px; }
+.pcard__old  { font-size: 13px; color: var(--sub); text-decoration: line-through; }
+.pcard__disc { font-size: 13px; color: var(--green); font-weight: 400; }
+.pcard__price-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
+.pcard__price { font-size: 17px; font-weight: 700; color: var(--text); }
+.pcard__cb {
+  background: var(--yellow); color: var(--text);
+  font-size: 11px; font-weight: 700;
+  border-radius: 100px; padding: 2px 7px 2px 5px;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 2px;
+}
+.pcard__cb img { width: 11px; height: 11px; }
+.pcard__brand { font-size: 13px; font-weight: 600; color: var(--text); }
+.pcard__cat   { font-size: 13px; color: var(--text); font-weight: 400; }
+
+/* Noise canvas (hidden) */
+#noise-el { display: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="header">
+    <div class="header__city">Москва</div>
+    <div class="header__ava"></div>
+  </div>
+
+  <div class="feed">
+
+    <!-- ── Section 1: Позаботиться о себе ── -->
+    <div class="section-block">
+      <div class="sec-header">
+        <div class="sec-header__title">Позаботиться о себе</div>
+        <div class="sec-header__sub">Успейте заказать до 31 марта</div>
+      </div>
+
+      <div class="offers-group">
+        <div class="offers-list">
+          <!-- Offer card 1 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('images/offer1.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(100,106,47)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Offer card 2 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('images/offer2.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(241,209,150)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Offer card 3 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('images/offer3.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(143,207,151)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-dark">Посмотреть все</div>
+      </div>
+    </div>
+
+    <!-- ── Section 2: Editorial TWS ── -->
+    <div class="editorial">
+      <div class="editorial__top">
+        <div class="editorial__header">
+          <div class="sec-header__label">Выбор Т—Ж</div>
+          <div class="sec-header__title">Лучшие беспроводные TWS‑наушники</div>
+        </div>
+
+        <div class="mini-scroll">
+          <div class="mini-card">
+            <div class="mini-card__img" style="background-image:url('images/editorial1.png')">
+              <div class="mini-card__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            </div>
+            <div class="mini-card__body">
+              <div class="mini-card__price-row">
+                <span class="mini-card__price">10 217 ₽</span>
+                <span class="mini-card__cb"><img src="headphones/medium/crown.svg" alt="">102 ₽</span>
+              </div>
+              <div class="mini-card__name">Наушники True Wireless HUAWEI Free</div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card__img" style="background-image:url('images/editorial2.png')">
+              <div class="mini-card__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            </div>
+            <div class="mini-card__body">
+              <div class="mini-card__price-row">
+                <span class="mini-card__price">10 217 ₽</span>
+                <span class="mini-card__cb"><img src="headphones/medium/crown.svg" alt="">102 ₽</span>
+              </div>
+              <div class="mini-card__name">Наушники True Wireless HUAWEI Free</div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card__img" style="background-image:url('images/editorial3.png')">
+              <div class="mini-card__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            </div>
+            <div class="mini-card__body">
+              <div class="mini-card__price-row">
+                <span class="mini-card__price">10 217 ₽</span>
+                <span class="mini-card__cb"><img src="headphones/medium/crown.svg" alt="">102 ₽</span>
+              </div>
+              <div class="mini-card__name">Наушники True Wireless HUAWEI Free</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-dark">Читать обзор</div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SCRATCH CARD
+    ══════════════════════════════════ -->
+    <div class="scratch-wrapper" id="scratchWrapper">
+
+      <!-- Foil zone: prize sits underneath (step 2), canvas scratches away on top (step 1) -->
+      <div class="scratch-zone" id="scratchZone">
+        <div class="scratch-prize" id="scratchPrize">
+          <img class="prize-logo" id="prizeLogo" src="images/mvideo_logo.png" alt="">
+          <div class="prize-eyebrow" id="prizeEyebrow">Вам выпал</div>
+          <div class="prize-amount" id="prizeAmount">15% кэшбэк</div>
+          <div class="prize-sub" id="prizeSub">На одну покупку в М.Видео<br>до 16 февраля</div>
+        </div>
+        <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
+        <canvas class="scratch-particles" id="scratchParticles"></canvas>
+      </div>
+
+      <!-- Step 3: expanded header — logo/text fly in here from the prize block above (FLIP) -->
+      <div class="expanded-header" id="expandedHeader">
+        <div class="exp-info" id="expInfo"></div>
+      </div>
+
+      <!-- Step 3: product grid -->
+      <div class="product-grid" id="productGrid">
+
+        <div class="pcard">
+          <div class="pcard__img" style="background-image:url('headphones/img-01.png')">
+            <div class="pcard__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            <div class="pcard__dots">
+              <span class="pcard__dot active"></span><span class="pcard__dot"></span><span class="pcard__dot"></span>
+            </div>
+          </div>
+          <div class="pcard__body">
+            <div class="pcard__old-row">
+              <span class="pcard__old">26 656 ₽</span>
+              <span class="pcard__disc">−15%</span>
+            </div>
+            <div class="pcard__price-row">
+              <span class="pcard__price">22 658 ₽</span>
+              <span class="pcard__cb"><img src="headphones/medium/crown.svg" alt="">3 998 ₽</span>
+            </div>
+            <div class="pcard__brand">Sony WH-1000XM5</div>
+            <div class="pcard__cat">Беспроводные наушники</div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <div class="pcard__img" style="background-image:url('headphones/img-02.png')">
+            <div class="pcard__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            <div class="pcard__dots">
+              <span class="pcard__dot active"></span><span class="pcard__dot"></span><span class="pcard__dot"></span>
+            </div>
+          </div>
+          <div class="pcard__body">
+            <div class="pcard__old-row">
+              <span class="pcard__old">4 896 ₽</span>
+              <span class="pcard__disc">−15%</span>
+            </div>
+            <div class="pcard__price-row">
+              <span class="pcard__price">4 162 ₽</span>
+              <span class="pcard__cb"><img src="headphones/medium/crown.svg" alt="">734 ₽</span>
+            </div>
+            <div class="pcard__brand">Sony WH-CH520</div>
+            <div class="pcard__cat">Беспроводные наушники</div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <div class="pcard__img" style="background-image:url('headphones/img-03.png')">
+            <div class="pcard__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            <div class="pcard__dots">
+              <span class="pcard__dot active"></span><span class="pcard__dot"></span><span class="pcard__dot"></span>
+            </div>
+          </div>
+          <div class="pcard__body">
+            <div class="pcard__old-row">
+              <span class="pcard__old">47 047 ₽</span>
+              <span class="pcard__disc">−15%</span>
+            </div>
+            <div class="pcard__price-row">
+              <span class="pcard__price">39 990 ₽</span>
+              <span class="pcard__cb"><img src="headphones/medium/crown.svg" alt="">5 000 ₽</span>
+            </div>
+            <div class="pcard__brand">Apple AirPods Max</div>
+            <div class="pcard__cat">Беспроводные наушники</div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <div class="pcard__img" style="background-image:url('headphones/img-04.png')">
+            <div class="pcard__fav"><img src="headphones/medium/heart.svg" alt=""></div>
+            <div class="pcard__dots">
+              <span class="pcard__dot active"></span><span class="pcard__dot"></span><span class="pcard__dot"></span>
+            </div>
+          </div>
+          <div class="pcard__body">
+            <div class="pcard__old-row">
+              <span class="pcard__old">27 102 ₽</span>
+              <span class="pcard__disc">−15%</span>
+            </div>
+            <div class="pcard__price-row">
+              <span class="pcard__price">23 037 ₽</span>
+              <span class="pcard__cb"><img src="headphones/medium/crown.svg" alt="">4 065 ₽</span>
+            </div>
+            <div class="pcard__brand">BVLGARI pour homme</div>
+            <div class="pcard__cat">Беспроводные наушники</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="btn-yellow" id="btnSeeAll">Посомтреть все</div>
+
+    </div>
+    <!-- /scratch-wrapper -->
+
+    <!-- ── Section 3: Идеи для развлечений ── -->
+    <div class="section-block">
+      <div class="sec-header">
+        <div class="sec-header__title">Идеи для развлечений</div>
+        <div class="sec-header__sub">Успейте заказать до 31 марта</div>
+      </div>
+
+      <div class="offers-group">
+        <div class="offers-list">
+          <!-- Offer card 4 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('offer/offer1 4.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(100,106,47)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Offer card 5 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('offer/offer1 5.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(241,209,150)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Offer card 6 -->
+          <div class="offer-card">
+            <div class="offer-card__top" style="background-image:url('offer/offer1 6.png')">
+              <div class="offer-card__text">
+                <div class="offer-card__title">Кэшбэк 500 ₽</div>
+                <div class="offer-card__sub">На покупки онлайн</div>
+                <div class="offer-card__sub">До 31 декабря</div>
+              </div>
+            </div>
+            <div class="offer-card__cell">
+              <div class="offer-card__ava" style="background:rgb(143,207,151)"></div>
+              <div>
+                <div class="offer-card__name">Lipton</div>
+                <div class="offer-card__desc">Краткий текст про ценностное предложение максимум на две</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-dark">Посмотреть все</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<canvas id="noise-el" width="180" height="180"></canvas>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Identical to app.js: original crown paths (viewBox 0 0 24 24) ── */
+  const CROWN_PATH  = new Path2D('M6 9.5L9 18.5H17.5L20 9.5L15.5 13L13 7.5L10.5 13L6 9.5Z');
+  const CROWN_BODY  = new Path2D('M12.001 3.00195L18.9018 19.002C18.5465 19.313 18.0829 19.497 17.585 19.4971H12.001H6.41504C5.50802 19.4969 4.71487 18.8865 4.48242 18.0098L1.5 6.76172L8.56836 10.9463L8.57324 10.9482L11.999 3.00195L12 3L12.001 3.00195Z');
+  const CROWN_SHADE = new Path2D('M19.5176 18.0098C19.4127 18.4054 19.1925 18.7454 18.9004 19.001L15.4277 10.9473L22.5 6.76172L19.5176 18.0098Z');
+
+  const BRUSH_RADIUS      = 12;   // CSS px
+  const SCRATCH_THRESHOLD = 0.40; // this card opens at 40% (per spec)
+  const FONT_STACK = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif";
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+  const wrapper   = document.getElementById('scratchWrapper');
+  const zone      = document.getElementById('scratchZone');
+  const canvas    = document.getElementById('scratchCanvas');
+  const ctx       = canvas.getContext('2d');
+  const pCanvas   = document.getElementById('scratchParticles');
+  const pCtx      = pCanvas.getContext('2d');
+  const prizeEl   = document.getElementById('scratchPrize');
+  const exHeader  = document.getElementById('expandedHeader');
+  const expInfo   = document.getElementById('expInfo');
+  const prizeLogo    = document.getElementById('prizeLogo');
+  const prizeEyebrow = document.getElementById('prizeEyebrow');
+  const prizeAmount  = document.getElementById('prizeAmount');
+  const prizeSub     = document.getElementById('prizeSub');
+  const grid      = document.getElementById('productGrid');
+  const btnAll    = document.getElementById('btnSeeAll');
+
+  /* Static grain texture — generated once, reused every drawFoil() */
+  const NOISE_SIZE = 180;
+  const noiseEl = document.getElementById('noise-el');
+  const nImgData = noiseEl.getContext('2d').createImageData(NOISE_SIZE, NOISE_SIZE);
+  for (let i = 0; i < nImgData.data.length; i += 4) {
+    const v = Math.random() * 255 | 0;
+    nImgData.data[i] = nImgData.data[i+1] = nImgData.data[i+2] = v;
+    nImgData.data[i+3] = 255;
+  }
+  noiseEl.getContext('2d').putImageData(nImgData, 0, 0);
+
+  /* Mask canvas */
+  const mask    = document.createElement('canvas');
+  const maskCtx = mask.getContext('2d');
+
+  const DEBRIS_COLORS = ['#b8b8c0', '#c4c4cc', '#d0d0d8', '#c0c0c8', '#d8d8de'];
+
+  let crowns      = [];
+  let revealed    = false;
+  let pointerDown = false;
+  let lastPoint   = null;
+  let particles   = [];
+  let pRafId      = null;
+
+  /* ── Global shimmer state — driven by scroll + idle drift, identical to app.js ── */
+  let globalShimmer = 0;
+  let waveTime       = 0;
+
+  function buildCrowns() {
+    crowns = [];
+    for (let i = 0; i < 120; i++) {
+      crowns.push({
+        hueBase: Math.random() * 360,
+        phase:   Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function drawCrownAt(cx, cy, size) {
+    const sc = size / 14;
+    ctx.save();
+    ctx.translate(cx - 13 * sc, cy - 13 * sc);
+    ctx.scale(sc, sc);
+    ctx.fill(CROWN_PATH);
+    ctx.restore();
+  }
+
+  function resize() {
+    const rect = zone.getBoundingClientRect();
+    const w = Math.round(rect.width  * dpr);
+    const h = Math.round(rect.height * dpr);
+    if (canvas.width === w && canvas.height === h) return;
+    canvas.width  = w; canvas.height = h;
+    pCanvas.width = w; pCanvas.height = h;
+    mask.width = w; mask.height = h;
+    maskCtx.fillStyle = '#fff';
+    maskCtx.fillRect(0, 0, w, h);
+    buildCrowns();
+    drawFoil();
+  }
+
+  function drawFoil() {
+    const w = canvas.width, h = canvas.height;
+    if (!w || !h) return;
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+
+    /* Base — #e8e8ea (silver), identical to app.js */
+    ctx.fillStyle = '#e8e8ea';
+    ctx.fillRect(0, 0, w, h);
+
+    const gloss = ctx.createLinearGradient(0, 0, 0, h * 0.3);
+    gloss.addColorStop(0, 'rgba(255,255,255,0.32)');
+    gloss.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gloss;
+    ctx.fillRect(0, 0, w, h * 0.3);
+
+    /* Chess-pattern crown grid — identical formula to app.js 'chess' pattern */
+    const ROT       = 10 * Math.PI / 180;
+    const crownSize = w * 0.14 / 1.5 / 1.3;
+    const cellSize  = w * 0.16 / 1.5 / 1.3;
+    const numCols   = Math.ceil(w / cellSize) + 4;
+    const numRows   = Math.ceil(h / cellSize) + 4;
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(ROT);
+    ctx.globalCompositeOperation = 'screen';
+
+    let idx = 0;
+    for (let row = -numRows; row <= numRows; row++) {
+      for (let col = -numCols; col <= numCols; col++) {
+        if ((row + col) % 2 !== 0) continue;
+        const c = crowns[idx++ % crowns.length];
+        const wavePhase  = (col + row) * 0.13;
+        const brightness = Math.pow(Math.abs(Math.sin(waveTime * Math.PI * 2 * 1.3 - wavePhase)), 3);
+        const hue = (c.hueBase + globalShimmer * 140) % 360;
+        ctx.globalAlpha = brightness * 0.85;
+        ctx.fillStyle   = `hsl(${hue}, 95%, 68%)`;
+        drawCrownAt(col * cellSize, row * cellSize, crownSize);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    /* Text overlay — block starts 60px from card top, per Figma:
+       icon (40px) → 16px gap → title (2 lines) → 4px gap → subtitle
+    */
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+
+    const blockTop = Math.round(60 * dpr);
+    const iconSz   = Math.round(40 * dpr);
+    const iconSc   = iconSz / 21;
+    const iconCX   = Math.round(w / 2);
+
+    ctx.save();
+    ctx.translate(iconCX - iconSz / 2, blockTop);
+    ctx.scale(iconSc, iconSc);
+    ctx.fillStyle = '#333333';
+    ctx.fill(CROWN_BODY);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fill(CROWN_SHADE);
+    ctx.restore();
+
+    const titleTop = blockTop + iconSz + Math.round(16 * dpr);
+    const lineH    = Math.round(26 * dpr);
+
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'top';
+    try { ctx.letterSpacing = '-0.3px'; } catch (_) {}
+    ctx.fillStyle = 'rgba(51,51,51,0.92)';
+    ctx.font = `700 ${Math.round(20 * dpr)}px ${FONT_STACK}`;
+    ctx.fillText('Для вас',      iconCX, titleTop);
+    ctx.fillText('кое-что есть', iconCX, titleTop + lineH);
+
+    const subTop = titleTop + lineH * 2 + Math.round(4 * dpr);
+    try { ctx.letterSpacing = '0px'; } catch (_) {}
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.font = `500 ${Math.round(15 * dpr)}px ${FONT_STACK}`;
+    ctx.fillText('Сотрите, чтобы открыть', iconCX, subTop);
+
+    /* Fine grain texture */
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.09;
+    ctx.drawImage(noiseEl, 0, 0, w, h);
+    ctx.globalAlpha = 1;
+
+    /* Apply scratch mask */
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(mask, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ── Erase — identical to app.js: circular stamps interpolated along the stroke ── */
+  function eraseAt(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) * (mask.width  / rect.width);
+    const y = (clientY - rect.top)  * (mask.height / rect.height);
+    maskCtx.globalCompositeOperation = 'destination-out';
+    maskCtx.beginPath();
+    maskCtx.arc(x, y, BRUSH_RADIUS * dpr, 0, Math.PI * 2);
+    maskCtx.fill();
+  }
+
+  function pointToSegment(x0, y0, x1, y1) {
+    const dist  = Math.hypot(x1 - x0, y1 - y0);
+    const steps = Math.max(1, Math.ceil(dist / (BRUSH_RADIUS * 0.5)));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      eraseAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+    }
+  }
+
+  function scratchedRatio() {
+    const step = 4;
+    const { data } = maskCtx.getImageData(0, 0, mask.width, mask.height);
+    let total = 0, cleared = 0;
+    for (let i = 3; i < data.length; i += 4 * step) {
+      total++;
+      if (data[i] < 40) cleared++;
+    }
+    return total ? cleared / total : 0;
+  }
+
+  /* ── Flying debris particles — identical physics to app.js ── */
+  function spawnParticles(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const px = (clientX - rect.left) * dpr;
+    const py = (clientY - rect.top)  * dpr;
+    if (Math.random() > 0.5 && particles.length < 80) {
+      particles.push({
+        x:        px + (Math.random() - 0.5) * BRUSH_RADIUS * dpr * 1.2,
+        y:        py + (Math.random() - 0.5) * BRUSH_RADIUS * dpr * 0.4,
+        vx:       (Math.random() - 0.5) * 3.5 * dpr,
+        vy:       -(0.8 + Math.random() * 2.5) * dpr,
+        w:        (1.5 + Math.random() * 3) * dpr,
+        h:        (0.6 + Math.random() * 1.0) * dpr,
+        rot:      Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.3,
+        opacity:  0.65 + Math.random() * 0.35,
+        color:    DEBRIS_COLORS[Math.floor(Math.random() * DEBRIS_COLORS.length)],
+      });
+    }
+    if (!pRafId) pRafId = requestAnimationFrame(tickParticles);
+  }
+
+  function tickParticles() {
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+    particles = particles.filter(p => p.opacity > 0.02);
+    particles.forEach(p => {
+      p.vy      += 0.3 * dpr;
+      p.x       += p.vx;
+      p.y       += p.vy;
+      p.rot     += p.rotSpeed;
+      p.opacity -= 0.028;
+      pCtx.save();
+      pCtx.globalAlpha = Math.max(0, p.opacity);
+      pCtx.translate(p.x, p.y);
+      pCtx.rotate(p.rot);
+      pCtx.fillStyle = p.color;
+      pCtx.beginPath();
+      pCtx.ellipse(0, 0, p.w, p.h, 0, 0, Math.PI * 2);
+      pCtx.fill();
+      pCtx.restore();
+    });
+    pRafId = particles.length > 0 ? requestAnimationFrame(tickParticles) : null;
+  }
+
+  /* ── Reveal: fade the canvas away (prize is already visible underneath) ── */
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    canvas.style.opacity = '0';
+    canvas.style.pointerEvents = 'none';
+    if (navigator.vibrate) navigator.vibrate([60, 80, 120]);
+    setTimeout(expandCard, 900);
+  }
+
+  /* FLIP for a whole group of elements moving together: every element's
+     "first" rect MUST be measured before ANY of them mutate — moving one
+     element out of the stack reflows the others in real layout, which would
+     corrupt their "first" rect if measured one-by-one interleaved with
+     mutations. So: measure all → mutate all → measure all → animate all. */
+  /* No transform:scale() on text — scaling a rendered glyph raster instead of
+     re-rendering it at a new font-size stretches letters unevenly (sx≠sy from
+     rounding/letter-spacing) and looks distorted/blurry. Position is FLIPped
+     via translate only; any font-size change is driven by an actual CSS
+     transition on font-size, which the browser re-rasterizes crisply every
+     frame. */
+  function flipGroup(items, duration) {
+    const firsts = items.map(({ el }) => ({
+      rect:     el.getBoundingClientRect(),
+      fontSize: parseFloat(getComputedStyle(el).fontSize),
+    }));
+
+    items.forEach(({ el, from, to, parent }) => {
+      el.classList.replace(from, to);
+      parent.appendChild(el);
+    });
+
+    items.forEach(({ el }, i) => {
+      const first = firsts[i];
+      const last  = el.getBoundingClientRect();
+      const lastFontSize = parseFloat(getComputedStyle(el).fontSize);
+
+      el.style.transition = 'none';
+      el.style.transformOrigin = 'top left';
+      el.style.transform = `translate(${first.rect.left - last.left}px,${first.rect.top - last.top}px)`;
+      if (Math.abs(first.fontSize - lastFontSize) > 0.5) {
+        el.style.fontSize = first.fontSize + 'px'; // freeze at the old, crisp size
+      }
+    });
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      items.forEach(({ el }) => {
+        el.style.transition = `transform ${duration}ms cubic-bezier(0.4,0,0.2,1), font-size ${duration}ms cubic-bezier(0.4,0,0.2,1)`;
+        el.style.transform  = 'none';
+        el.style.fontSize   = '';
+      });
+    }));
+  }
+
+  function expandCard() {
+    exHeader.classList.add('show');
+    wrapper.classList.add('elevated');
+
+    const DUR = 500;
+    flipGroup([
+      { el: prizeEyebrow, from: 'prize-eyebrow', to: 'exp-eyebrow', parent: expInfo  },
+      { el: prizeAmount,  from: 'prize-amount',  to: 'exp-amount',  parent: expInfo  },
+      { el: prizeSub,     from: 'prize-sub',     to: 'exp-sub',     parent: expInfo  },
+      { el: prizeLogo,    from: 'prize-logo',    to: 'exp-logo',    parent: exHeader },
+    ], DUR);
+
+    zone.classList.add('collapsed');
+
+    /* Grow the snippet block's height in sync with the text starting to fly,
+       instead of popping it in after the text has already landed. */
+    grid.classList.add('show');
+    const targetH = grid.scrollHeight;
+    grid.style.height = '0px';
+    grid.style.overflow = 'hidden';
+    grid.style.transition = 'none';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      grid.style.transition = `height ${DUR}ms cubic-bezier(0.4,0,0.2,1)`;
+      grid.style.height = targetH + 'px';
+    }));
+
+    document.querySelectorAll('.pcard').forEach((c, i) => {
+      setTimeout(() => c.classList.add('animate'), 120 + i * 80);
+    });
+
+    setTimeout(() => {
+      grid.style.height = '';
+      grid.style.overflow = '';
+      grid.style.transition = '';
+      btnAll.classList.add('show');
+    }, DUR);
+  }
+
+  function pointFromEvent(e) {
+    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function handleStart(e) {
+    if (revealed) return;
+    pointerDown = true;
+    const p = pointFromEvent(e);
+    lastPoint = p;
+    eraseAt(p.x, p.y);
+    drawFoil();
+  }
+
+  function handleMove(e) {
+    if (!pointerDown || revealed) return;
+    if (e.cancelable) e.preventDefault();
+    const p = pointFromEvent(e);
+    if (lastPoint) pointToSegment(lastPoint.x, lastPoint.y, p.x, p.y);
+    else eraseAt(p.x, p.y);
+    spawnParticles(p.x, p.y);
+    lastPoint = p;
+    drawFoil();
+    if (scratchedRatio() > SCRATCH_THRESHOLD) reveal();
+  }
+
+  function handleEnd() {
+    pointerDown = false;
+    lastPoint = null;
+  }
+
+  canvas.addEventListener('mousedown',  handleStart);
+  window.addEventListener('mousemove',  handleMove);
+  window.addEventListener('mouseup',    handleEnd);
+  canvas.addEventListener('touchstart', handleStart, { passive: true });
+  canvas.addEventListener('touchmove',  handleMove,  { passive: false });
+  canvas.addEventListener('touchend',   handleEnd);
+
+  window.addEventListener('resize', () => { if (!revealed) resize(); });
+
+  /* ── Global scroll → shimmer (identical driver to app.js) ── */
+  let ticking     = false;
+  let prevScrollY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    if (ticking || revealed) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const delta   = window.scrollY - prevScrollY;
+      prevScrollY   = window.scrollY;
+      globalShimmer = (window.scrollY * 0.0009) % 1;
+      waveTime     += delta * 0.0009;
+      drawFoil();
+      ticking = false;
+    });
+  }, { passive: true });
+
+  /* ── Idle drift (~10 fps), identical to app.js ── */
+  let lastIdleTs = 0;
+  function idleLoop(ts) {
+    if (!revealed && ts - lastIdleTs >= 100) {
+      globalShimmer = (globalShimmer + 0.003) % 1;
+      waveTime     += 0.003;
+      drawFoil();
+      lastIdleTs = ts;
+    }
+    requestAnimationFrame(idleLoop);
+  }
+
+  buildCrowns();
+  resize();
+  requestAnimationFrame(idleLoop);
+})();
+</script>
+</body>
+</html>
