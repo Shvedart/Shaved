@@ -35,37 +35,8 @@ body {
   padding-bottom: 60px;
 }
 
-/* ── Header ──────────────────────────────── */
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 54px 16px 12px;
-  display: flex;
-  align-items: center;
-  background: linear-gradient(to bottom,rgba(255,255,255,1) 65%,rgba(255,255,255,0));
-}
-.header__city {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(12px) saturate(1.4);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  border: 0.5px solid rgba(255,255,255,0.8);
-  border-radius: 100px;
-  padding: 7px 14px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-}
-.header__ava {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: #c0c0c8 url('images/ava.png') center/cover no-repeat;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
 /* ── Feed ────────────────────────────────── */
-.feed { padding: 0 16px; display: flex; flex-direction: column; gap: 32px; }
+.feed { padding: 54px 16px 0; display: flex; flex-direction: column; gap: 32px; }
 
 /* Header + its offers, grouped as one "major block" for the 32px feed gap */
 .section-block { display: flex; flex-direction: column; gap: 16px; }
@@ -230,7 +201,7 @@ body {
   width: 100%; height: 100%;
   touch-action: none; cursor: grab;
   border-radius: inherit;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.65s ease;
   z-index: 2;
 }
 .scratch-particles {
@@ -339,11 +310,6 @@ body {
 </head>
 <body>
 <div class="phone">
-
-  <div class="header">
-    <div class="header__city">Москва</div>
-    <div class="header__ava"></div>
-  </div>
 
   <div class="feed">
 
@@ -704,6 +670,8 @@ body {
 
   let crowns      = [];
   let revealed    = false;
+  let hasScratched = false; // stop drawing the hint text the moment scratching starts, so it
+                             // can't visually clash/jump against the real prize text underneath
   let pointerDown = false;
   let lastPoint   = null;
   let particles   = [];
@@ -791,42 +759,45 @@ body {
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    /* Text overlay — block starts 60px from card top, per Figma:
-       icon (40px) → 16px gap → title (2 lines) → 4px gap → subtitle
-    */
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 1;
+    /* Text overlay — icon (40px) → 16px gap → title (2 lines) → 4px gap → subtitle.
+       Only drawn on the pristine, untouched foil: the instant scratching starts
+       we stop redrawing it, so it can never crossfade-clash against the real
+       (differently laid out) prize text sitting underneath the foil. */
+    if (!hasScratched) {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
 
-    const blockTop = Math.round(45 * dpr);
-    const iconSz   = Math.round(40 * dpr);
-    const iconSc   = iconSz / 21;
-    const iconCX   = Math.round(w / 2);
+      const blockTop = Math.round(45 * dpr);
+      const iconSz   = Math.round(40 * dpr);
+      const iconSc   = iconSz / 21;
+      const iconCX   = Math.round(w / 2);
 
-    ctx.save();
-    ctx.translate(iconCX - iconSz / 2, blockTop);
-    ctx.scale(iconSc, iconSc);
-    ctx.fillStyle = '#333333';
-    ctx.fill(CROWN_BODY);
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fill(CROWN_SHADE);
-    ctx.restore();
+      ctx.save();
+      ctx.translate(iconCX - iconSz / 2, blockTop);
+      ctx.scale(iconSc, iconSc);
+      ctx.fillStyle = '#333333';
+      ctx.fill(CROWN_BODY);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fill(CROWN_SHADE);
+      ctx.restore();
 
-    const titleTop = blockTop + iconSz + Math.round(16 * dpr);
-    const lineH    = Math.round(26 * dpr);
+      const titleTop = blockTop + iconSz + Math.round(16 * dpr);
+      const lineH    = Math.round(26 * dpr);
 
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'top';
-    try { ctx.letterSpacing = '-0.3px'; } catch (_) {}
-    ctx.fillStyle = 'rgba(51,51,51,0.92)';
-    ctx.font = `700 ${Math.round(20 * dpr)}px ${FONT_STACK}`;
-    ctx.fillText('Для вас',      iconCX, titleTop);
-    ctx.fillText('кое-что есть', iconCX, titleTop + lineH);
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'top';
+      try { ctx.letterSpacing = '-0.3px'; } catch (_) {}
+      ctx.fillStyle = 'rgba(51,51,51,0.92)';
+      ctx.font = `700 ${Math.round(20 * dpr)}px ${FONT_STACK}`;
+      ctx.fillText('Для вас',      iconCX, titleTop);
+      ctx.fillText('кое-что есть', iconCX, titleTop + lineH);
 
-    const subTop = titleTop + lineH * 2 + Math.round(4 * dpr);
-    try { ctx.letterSpacing = '0px'; } catch (_) {}
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.font = `500 ${Math.round(15 * dpr)}px ${FONT_STACK}`;
-    ctx.fillText('Сотрите, чтобы открыть', iconCX, subTop);
+      const subTop = titleTop + lineH * 2 + Math.round(4 * dpr);
+      try { ctx.letterSpacing = '0px'; } catch (_) {}
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.font = `500 ${Math.round(15 * dpr)}px ${FONT_STACK}`;
+      ctx.fillText('Сотрите, чтобы открыть', iconCX, subTop);
+    }
 
     /* Fine grain texture */
     ctx.globalCompositeOperation = 'overlay';
@@ -915,10 +886,16 @@ body {
     pRafId = particles.length > 0 ? requestAnimationFrame(tickParticles) : null;
   }
 
-  /* ── Reveal: fade the canvas away (prize is already visible underneath) ── */
+  /* ── Reveal: fade the canvas away (prize is already visible underneath) ──
+     The hint text erases naturally with the mask while scratching (real
+     scratch-card feel). Only right here, one frame before the fade starts, we
+     redraw without it — so the frozen frame that's about to cross-fade into
+     the real prize text underneath can't clash/jump against it. */
   function reveal() {
     if (revealed) return;
     revealed = true;
+    hasScratched = true;
+    drawFoil();
     canvas.style.opacity = '0';
     canvas.style.pointerEvents = 'none';
     if (navigator.vibrate) navigator.vibrate([60, 80, 120]);
