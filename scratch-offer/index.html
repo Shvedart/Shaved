@@ -101,6 +101,8 @@ body {
 }
 .offer-card__title { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.2; }
 .offer-card__sub   { font-size: 15px; color: #fff; line-height: 1.2; }
+.offer-card__top--dark .offer-card__title,
+.offer-card__top--dark .offer-card__sub { color: var(--text); }
 .offer-card__cell {
   display: flex;
   align-items: center;
@@ -212,7 +214,7 @@ body {
 .scratch-zone {
   position: relative;
   width: 100%;
-  height: 268px;
+  height: 220px;
   overflow: hidden;
   flex-shrink: 0;
   border-radius: 24px;
@@ -285,7 +287,6 @@ body {
 .product-grid.show { display: grid; }
 
 .pcard {
-  border-radius: 20px;
   overflow: hidden;
   position: relative;
   opacity: 0; transform: translateY(10px);
@@ -295,7 +296,7 @@ body {
 
 /* Background sits only behind the photo, not the whole card */
 .pcard__img {
-  width: 100%; height: 245px;
+  width: 100%; height: 235px;
   background: rgb(244,242,240);
   background-size: cover;
   background-position: center;
@@ -576,7 +577,7 @@ body {
 
       </div>
 
-      <div class="btn-yellow" id="btnSeeAll">Посомтреть все</div>
+      <div class="btn-yellow" id="btnSeeAll">Посмотреть все</div>
 
     </div>
     <!-- /scratch-wrapper -->
@@ -610,7 +611,7 @@ body {
 
           <!-- Offer card 5 -->
           <div class="offer-card">
-            <div class="offer-card__top" style="background-image:url('offer/offer1 5.png')">
+            <div class="offer-card__top offer-card__top--dark" style="background-image:url('offer/offer1 5.png')">
               <div class="offer-card__text">
                 <div class="offer-card__title">Кэшбэк 500 ₽</div>
                 <div class="offer-card__sub">На покупки онлайн</div>
@@ -628,7 +629,7 @@ body {
 
           <!-- Offer card 6 -->
           <div class="offer-card">
-            <div class="offer-card__top" style="background-image:url('offer/offer1 6.png')">
+            <div class="offer-card__top offer-card__top--dark" style="background-image:url('offer/offer1 6.png')">
               <div class="offer-card__text">
                 <div class="offer-card__title">Кэшбэк 500 ₽</div>
                 <div class="offer-card__sub">На покупки онлайн</div>
@@ -796,7 +797,7 @@ body {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
 
-    const blockTop = Math.round(60 * dpr);
+    const blockTop = Math.round(45 * dpr);
     const iconSz   = Math.round(40 * dpr);
     const iconSc   = iconSz / 21;
     const iconCX   = Math.round(w / 2);
