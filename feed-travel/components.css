@@ -1065,9 +1065,9 @@ html, body {
   .fc-trip-bgwrap {
     animation: linear both;
     animation-timeline: --fc-trip;
-    /* старт — когда блок прошёл 20% экрана снизу, длина пути равна
+    /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
        раскрывающейся высоте: тогда компенсация точная */
-    animation-range: cover 20vh calc(20vh + 328px);
+    animation-range: cover 15vh calc(15vh + 328px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
   .fc-trip-below    { animation-name: fc-trip-below; }

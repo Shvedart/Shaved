@@ -680,7 +680,7 @@ const Feed = (() => {
         // и его rect дал бы обратную связь на расчёт раскрытия
         const vh = window.innerHeight;
         const top = section.getBoundingClientRect().top;
-        const startTop = vh * 0.8;              // поднялся на 20% снизу
+        const startTop = vh * 0.85;             // поднялся на 15% снизу
         const e = Math.min(1, Math.max(0, (startTop - top) / REVEAL_SPAN));
         // целые пиксели: дробные дают субпиксельное дрожание
         const h = Math.round(H_CLOSED + (H_OPEN - H_CLOSED) * e);
