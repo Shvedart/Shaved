@@ -559,6 +559,11 @@ html, body {
 .fc-poster-card .fc-rating svg { width: 16px; height: 16px; flex: 0 0 16px; display: block; }
 
 /* ═══ Блок: Product grid (товарная сетка) ════════════ */
+/* Шапка прижата к сетке: к её падингу добавляется ещё 24px
+   отступа между блоками ленты, и вместе выходило слишком много */
+.fc-products .fc-tui-header {
+  padding-top: 4px;
+}
 .fc-products .fc-grid {
   display: flex;
   flex-wrap: wrap;
@@ -715,4 +720,357 @@ html, body {
   line-height: normal;
   text-align: center;
   cursor: pointer;
+}
+
+/* ═══ travelTicket — «посадочный талон» (макет 65:871) ═══ */
+/* Блок всегда занимает свои 360px, а раскрытие рисует маска.
+   overflow-anchor выключен: иначе браузер подкручивает скролл сам */
+.fc-trip-band {
+  position: relative;
+  height: 360px;
+  overflow: hidden;
+  overflow-anchor: none;
+}
+/* Соседние блоки рисуются поверх билета: у его кромок 34px сейв-зоны,
+   которая иначе накрыла бы их заголовки. Зубцы при этом в
+   безопасности — они внутри билета, а соседи в 24px от края */
+.feed > section {
+  position: relative;
+  z-index: 1;
+}
+.feed > section.fc-trip {
+  overflow-anchor: none;
+  z-index: 0;
+}
+/* Лента под блоком: поднята ровно на скрытую часть билета */
+.fc-trip-below {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+}
+/* Канва на пиксель выше блока и приподнята: край фотографии не
+   должен совпадать с краем маски, иначе на ретине между ними
+   остаётся полупрозрачный ряд пикселей — тонкая светлая линия */
+.fc-trip-canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 362px;
+  overflow: hidden;
+}
+.fc-trip-hero { position: absolute; inset: 0; }
+/* Обёртка фона: на ней живёт зум раскрытия, а на самой картинке —
+   горизонтальный параллакс. Два разных слоя, чтобы трансформы
+   не конфликтовали */
+.fc-trip-bgwrap { position: absolute; inset: 0; }
+/* Фото не должно перехватывать жест как перетаскивание картинки */
+.fc-trip img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+.fc-trip-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* уезжает влево и подрастает от левого края (параллакс) */
+  transform-origin: left center;
+  will-change: transform;
+}
+.fc-trip-hero .fc-trip-shade {
+  transform-origin: left center;
+  will-change: transform;
+}
+/* Затемнение снизу (166px, как в макете) */
+.fc-trip-shade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 166px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+.fc-trip-shade--card { height: 126px; }
+
+/* Колонка контента: чип сверху, тексты снизу.
+   Рамка 232×280 на отметке 40px от верха блока — одна и та же
+   у героя и у компактной карточки, поэтому бейджи и текст всегда
+   стоят на одной линии (макет 65:871). */
+.fc-trip-col {
+  position: absolute;
+  left: 0;
+  top: 40px;
+  width: 232px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 16px;
+  color: #fff;
+  transition: none;
+}
+.fc-trip-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px 0 5px;
+  border-radius: 20px;
+  background: #ffdd3d;
+}
+.fc-trip-chip svg { width: 14px; height: 14px; display: block; }
+.fc-trip-chip span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  color: #333;
+  line-height: normal;
+}
+.fc-trip-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.fc-trip-hot {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  padding: 0 6px 0 4px;
+  border-radius: 20px;
+  background: #ffdd3d;
+}
+.fc-trip-hot svg { width: 10px; height: 12px; display: block; }
+.fc-trip-hot span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  color: #333;
+  line-height: normal;
+}
+.fc-trip-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  /* только одна строка: перенос сдвигал бы заголовок вверх
+     и ломал общую линию контента у всех карточек */
+  align-self: stretch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fc-trip-price-col { display: flex; flex-direction: column; gap: 4px; }
+.fc-trip-price-row { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.fc-trip-price {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+}
+.fc-trip-old {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  text-decoration: line-through;
+  line-height: normal;
+}
+.fc-trip-meta {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+
+/* Компактная карточка следующего направления (232×280, r26) —
+   позиция и размер интерполируются в JS при свайпе */
+.fc-trip-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 232px;
+  height: 280px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #d9d9d9;
+  will-change: transform, width, height;
+}
+.fc-trip-card > img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  object-fit: cover;
+  will-change: transform;
+}
+/* Режим scale: фон и градиент растут вместе с карточкой */
+.fc-trip--scale .fc-trip-card > img {
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+.fc-trip--scale .fc-trip-card .fc-trip-shade {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+  transform: none;
+}
+/* Режим reveal: фон и градиент прибиты к блоку (размеры задаёт JS),
+   карточка работает как раздвигающееся окно */
+.fc-trip--reveal .fc-trip-card .fc-trip-shade {
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  will-change: transform;
+}
+/* Слой текста и бейджей карточки приклеен к блоку по вертикали
+   (JS компенсирует смещение карточки) и едет только по горизонтали:
+   он ровно приезжает на место контента героя, ничего не масштабируя */
+.fc-trip-card .fc-trip-col { will-change: transform; }
+
+/* Кромки билета лежат в секции, а не внутри блока: маска на них не
+   действует, поэтому их сплошная часть свободно накрывает край
+   обрезки — там, где раньше просвечивал шов.
+   Видимые 16px — зубцы и скруглённые углы, ещё 16px уходят наружу. */
+.fc-trip-perf {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 50px;   /* 16px видимой кромки + 34px сейв-зоны наружу */
+  pointer-events: none;
+  z-index: 3;
+}
+.fc-trip-perf--t { transform: translateY(-34px); }
+
+/* Прозрачный слой скролла со снапом поверх канвы */
+.fc-trip-scroller {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  z-index: 4;
+}
+.fc-trip-scroller::-webkit-scrollbar { display: none; }
+.fc-trip-slot {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* ── Финальная карточка-переход в сервис (макет 77:3524) ──
+   Контент занимает всю ширину карточки и стоит по центру
+   у нижнего края — в отличие от обычной колонки слева. */
+.fc-trip-col--cta {
+  left: 0;
+  right: auto;          /* ширину задаёт JS = ширина блока */
+  align-items: center;
+  justify-content: flex-end;
+}
+.fc-trip-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.fc-trip-cta-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.28px;
+  line-height: normal;
+  text-align: center;
+  color: #fff;
+}
+.fc-trip-cta-desc {
+  margin-top: -8px; /* gap 8px до заголовка при общем gap 16 */
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  text-align: center;
+  color: #fff;
+}
+.fc-trip-cta-button {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 80px;
+  background: #000;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: normal;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ── Раскрытие билета силами браузера ──────────────────
+   Прокрутко-зависимые анимации считает компоновщик, без участия
+   JS. На iOS это единственный способ попасть кадр-в-кадр: там
+   прокрутка живёт в отдельном потоке, и любой расчёт из скрипта
+   приходит с опозданием — отсюда дрожь. JS остаётся запасным
+   путём для браузеров без поддержки (см. cssReveal). */
+@supports (animation-timeline: view()) {
+  .feed { timeline-scope: --fc-trip; }
+  .fc-trip {
+    view-timeline-name: --fc-trip;
+    view-timeline-axis: block;
+  }
+
+  /* билет: маска расходится от центра, сам он подтянут вверх
+     на скрытую часть, чтобы примыкать к блоку сверху */
+  @keyframes fc-trip-open {
+    from { clip-path: inset(164px 0 164px 0); transform: translateY(-164px); }
+    to   { clip-path: inset(0 0 0 0);         transform: translateY(0); }
+  }
+  /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
+     поэтому во время раскрытия она стоит на месте */
+  @keyframes fc-trip-below {
+    from { transform: translateY(-328px); }
+    to   { transform: translateY(0); }
+  }
+  /* Кромки лежат вне маски, поэтому свободно накрывают её край.
+     Верхняя стоит неподвижно, нижняя едет вместе с нижней
+     границей раскрывающегося билета */
+  @keyframes fc-trip-perf-b {
+    from { transform: translateY(16px) scaleY(-1); }   /* видимая 32 */
+    to   { transform: translateY(344px) scaleY(-1); }  /* видимая 360 */
+  }
+  /* фон из крупного плана приходит к обычному масштабу */
+  @keyframes fc-trip-zoom {
+    from { transform: scale(1.14); }
+    to   { transform: scale(1); }
+  }
+
+  .fc-trip-band,
+  .fc-trip-below,
+  .fc-trip-perf--b,
+  .fc-trip-bgwrap {
+    animation: linear both;
+    animation-timeline: --fc-trip;
+    /* старт — когда блок прошёл 20% экрана снизу, длина пути равна
+       раскрывающейся высоте: тогда компенсация точная */
+    animation-range: cover 20vh calc(20vh + 328px);
+  }
+  .fc-trip-band     { animation-name: fc-trip-open; }
+  .fc-trip-below    { animation-name: fc-trip-below; }
+  .fc-trip-perf--b  { animation-name: fc-trip-perf-b; }
+  .fc-trip-bgwrap   { animation-name: fc-trip-zoom; }
 }
