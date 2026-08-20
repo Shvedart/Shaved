@@ -603,25 +603,39 @@ const Feed = (() => {
          Блок раскрылся, а карусель не тронули — через паузу карточки
          слегка отъезжают и возвращаются, показывая, что их листают.
          Один раз за сессию и только если пользователь не вмешался. */
-      const HINT_DELAY = 5000;  // пауза до подсказки
+      const HINT_FIRST = 5000;  // пауза до первой подсказки
+      const HINT_REPEAT = 10000; // и до каждой следующей
       const HINT_SHIFT = 44;    // на сколько отъезжают
       const HINT_TIME = 1100;   // длительность движения туда-обратно
       const hintOn = block.hint !== false;
-      let hintUsed = false, hintTimer = 0, hintRaf = 0, hintArmed = false;
+      let hintTimer = 0, hintRaf = 0, hintCount = 0;
+      let hintPending = false, userSwiped = false;
 
-      function stopHint() {
+      // считаем время только пока блок виден и раскрыт: иначе
+      // подсказка играет за краем экрана и её никто не видит
+      function planHint() {
         clearTimeout(hintTimer);
+        if (userSwiped) { hintPending = false; return; }
+        hintPending = true;
+        hintTimer = setTimeout(() => {
+          hintPending = false;
+          playHint();
+        }, hintCount ? HINT_REPEAT : HINT_FIRST);
+      }
+      function pauseHint() { clearTimeout(hintTimer); hintPending = false; }
+      function dropHint() {
+        userSwiped = true;
+        pauseHint();
         if (hintRaf) {
           cancelAnimationFrame(hintRaf);
           hintRaf = 0;
           scroller.style.scrollSnapType = '';
         }
       }
-      function dropHint() { hintUsed = true; stopHint(); }
 
       function playHint() {
-        if (hintUsed || scroller.scrollLeft > 1) return;
-        hintUsed = true;
+        if (userSwiped || scroller.scrollLeft > 1) return;
+        hintCount++;
         // снап на время подсказки отключаем: он тянул бы карточку назад
         scroller.style.scrollSnapType = 'none';
         const t0 = performance.now();
@@ -632,6 +646,7 @@ const Feed = (() => {
           scroller.scrollLeft = 0;
           scroller.style.scrollSnapType = '';
           hintRaf = 0;
+          planHint();     // следующий показ, если так и не листнули
         };
         hintRaf = requestAnimationFrame(step);
       }
@@ -640,7 +655,9 @@ const Feed = (() => {
          JS только пересчитывает раскрытие карточек при скролле. */
       let tickingX = false;
       function onScrollX() {
-        if (!hintRaf) dropHint();   // листают сами — подсказка не нужна
+        // листают сами — подсказка больше не нужна. Свою анимацию
+        // не считаем: она идёт при hintRaf и возвращает скролл в ноль
+        if (!hintRaf && scroller.scrollLeft > 2) dropHint();
         if (document.hidden) { update(); return; }
         if (!tickingX) { tickingX = true; requestAnimationFrame(update); }
       }
@@ -700,10 +717,14 @@ const Feed = (() => {
         // зум фона рисует CSS; в JS он нужен лишь карточкам карусели
         revealScale = cssReveal ? 1 : 1 + REVEAL_ZOOM * (1 - e);
         revealE = e;
-        // блок раскрылся — заводим таймер подсказки про листание
-        if (hintOn && !hintArmed && !hintUsed && e > 0.99) {
-          hintArmed = true;
-          hintTimer = setTimeout(playHint, HINT_DELAY);
+        // подсказку отсчитываем, только пока блок раскрыт и на экране
+        if (hintOn && !userSwiped) {
+          const наЭкране = top < vh && top > -H_OPEN;
+          if (наЭкране && e > 0.99) {
+            if (!hintPending && !hintRaf) planHint();
+          } else if (hintPending) {
+            pauseHint();
+          }
         }
         update();
       }
