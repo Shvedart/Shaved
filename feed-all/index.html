@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Лента — путешествия и афиша</title>
+<link rel="stylesheet" href="components.css">
+</head>
+<body>
+
+<div class="feed" id="feed"></div>
+
+<script src="components.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   Полная лента: путешествия и афиша вместе.
+   Порядок: оферы, Яндекс Плюс, Хиты Hoff, билеты,
+   Сборы в дорогу, События для вас, оферы.
+   ═══════════════════════════════════════════════════ */
+const FEED = [
+  {
+    type: 'offer',
+    color: '#2b0c91',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#910c41',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'activities',
+    header: 'Яндекс Плюс',
+    subheader: 'Подписка на сервисы',
+    avatar: 'yandex/yandex-logo.png',
+    cards: [
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/Phone_gradient-front_RGB 1--723632988.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+    ],
+  },
+  {
+    type: 'productGrid',
+    caption: 'Товары для дома',
+    header: 'Хиты Hoff',
+    avatar: 'assets/brand-avatar.png',
+    moreButton: 'Посмотреть все',
+    products: [
+      {
+        img: 'shop/image 2.png',
+        oldPrice: '27 990 ₽', discount: '−11%',
+        price: '24 990 ₽', cashback: '1 250 ₽',
+        name: 'Кресло Леон', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 3.png',
+        oldPrice: '9 990 ₽', discount: '−15%',
+        price: '8 490 ₽', cashback: '420 ₽',
+        name: 'Кресло Корфу', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 4.png',
+        oldPrice: '7 990 ₽', discount: '−13%',
+        price: '6 990 ₽', cashback: '350 ₽',
+        name: 'Кресло Акапулько', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 5.png',
+        oldPrice: '16 990 ₽', discount: '−6%',
+        price: '15 990 ₽', cashback: '800 ₽',
+        name: 'Кресло Папасан', kind: 'Садовая мебель',
+      },
+    ],
+  },
+  {
+    type: 'travelTicket',
+    // header не задан — блок идёт без заголовка;
+    // добавьте header: 'Путешествия', чтобы вернуть шапку
+    // фон карточки при свайпе: 'scale' — растёт вместе с карточкой,
+    // 'reveal' — прибит к блоку, карточка раздвигается как окно
+    bgMode: 'scale',
+    items: [
+      {
+        img: 'assets/travel/moscow.webp',
+        title: 'Авиабилеты в Москву',
+        price: 'от 5 240 ₽',
+        oldPrice: '7 900 ₽',
+        meta: '15 сент • из Калининграда',
+        cashback: '7%',
+        hot: true,
+      },
+      {
+        img: 'assets/travel/spb.jpg',
+        title: 'Авиабилеты в Петербург',
+        price: 'от 3 180 ₽',
+        oldPrice: '4 900 ₽',
+        meta: '18 сент • из Москвы',
+        cashback: '5%',
+      },
+      {
+        img: 'assets/travel/almaty.webp',
+        title: 'Авиабилеты в Алматы',
+        price: 'от 12 450 ₽',
+        oldPrice: '18 300 ₽',
+        meta: '24 сент • из Москвы',
+        cashback: '10%',
+        hot: true,
+      },
+      {
+        img: 'assets/travel/hanoi.webp',
+        title: 'Авиабилеты в Ханой',
+        price: 'от 28 940 ₽',
+        oldPrice: '41 200 ₽',
+        meta: '7 окт • из Москвы',
+        cashback: '5%',
+      },
+      {
+        img: 'assets/travel/cairo.webp',
+        title: 'Авиабилеты в Каир',
+        price: 'от 19 380 ₽',
+        oldPrice: '27 900 ₽',
+        meta: '15 окт • из Москвы',
+        cashback: '7%',
+        hot: true,
+      },
+      {
+        img: 'assets/travel/nnovgorod.webp',
+        title: 'Авиабилеты в Н. Новгород',
+        price: 'от 3 940 ₽',
+        oldPrice: '5 600 ₽',
+        meta: '22 окт • из Москвы',
+        cashback: '5%',
+      },
+      {
+        img: 'assets/travel/minsk.jpg',
+        title: 'Авиабилеты в Минск',
+        price: 'от 7 310 ₽',
+        oldPrice: '10 200 ₽',
+        meta: '29 окт • из Москвы',
+        cashback: '7%',
+        hot: true,
+      },
+      // финальная карточка — переход в сервис (макет 77:3524)
+      {
+        cta: true,
+        img: 'assets/travel/cta-suitcase.png',
+        title: 'Скидки до 30%\nна горящие билеты',
+        desc: 'Подберём даты и цену под вас',
+        button: 'Смотреть билеты',
+      },
+    ],
+  },
+  {
+    type: 'productGrid',
+    caption: 'Товары для путешествий',
+    header: 'Сборы в дорогу',
+    moreButton: 'Посмотреть все',
+    products: [
+      {
+        img: 'assets/products/suitcase.png',
+        oldPrice: '12 990 ₽', discount: '−23%',
+        price: '9 990 ₽', cashback: '500 ₽',
+        name: 'Чемодан Ultra 75 см', kind: 'Чемоданы',
+      },
+      {
+        img: 'assets/products/hat.png',
+        oldPrice: '3 190 ₽', discount: '−22%',
+        price: '2 490 ₽', cashback: '120 ₽',
+        name: 'Шляпа соломенная', kind: 'Головные уборы',
+      },
+      {
+        img: 'assets/products/glasses.png',
+        oldPrice: '4 490 ₽', discount: '−22%',
+        price: '3 490 ₽', cashback: '170 ₽',
+        name: 'Очки солнцезащитные', kind: 'Аксессуары',
+      },
+      {
+        img: 'assets/products/cream.png',
+        oldPrice: '1 690 ₽', discount: '−24%',
+        price: '1 290 ₽', cashback: '60 ₽',
+        name: 'Крем SPF 50+', kind: 'Уход за кожей',
+      },
+    ],
+  },
+  {
+    type: 'heroCarousel',
+    header: 'События для вас',
+    scrollDrift: false, // намёк на горизонтальный скролл: карусель подъезжает при скролле страницы (true — включить)
+    items: [
+      {
+        img: 'img music/260508104046735.webp',
+        category: 'Спектакль',
+        title: 'Семейный ужин',
+        desc: 'Театр Эстрады (Москва) · 15 июля – 30 августа',
+        cashback: 'до 15%',
+      },
+      {
+        img: 'img music/402bf6a6fb1e766c8508294f1c543abc.webp',
+        category: 'Концерт',
+        title: 'Баста',
+        desc: 'БСА «Лужники» (Москва) · 12 сентября, суббота',
+        cashback: 'до 15%',
+      },
+      {
+        img: 'img music/260508173236153.webp',
+        category: 'Концерт',
+        title: 'Сироткин',
+        desc: 'ГлавClub (Москва) · 7 ноября, суббота',
+        cashback: 'до 10%',
+      },
+      {
+        img: 'img music/00-9ab49a6d-4a47b250-10e5dfb8.webp',
+        category: 'Концерт',
+        title: 'Enrique Iglesias',
+        desc: 'Центральный стадион (Алматы, Казахстан) · 3 сентября, четверг',
+        cashback: 'до 20%',
+      },
+      {
+        img: 'img music/00-250912181443758.webp',
+        category: 'Стендап',
+        title: 'Роаст-баттл без цензуры',
+        desc: 'Standup Club №1 (Москва) · 17 июля, пятница',
+        cashback: 'до 15%',
+      },
+      {
+        img: 'img music/00-6a228682f8ac9ee07d3496c6.webp',
+        category: 'Шоу',
+        title: 'Дракула. Иммерсивное шоу',
+        desc: 'ЛДМ (Санкт-Петербург) · 24 октября, суббота',
+        cashback: 'до 20%',
+      },
+      {
+        img: 'img music/00-cd7349f6d0b97b087087eefc59bc5589.webp',
+        category: 'Концерт',
+        title: 'Мистерия масок',
+        desc: 'VK Stadium (Москва) · 30 октября, пятница',
+        cashback: 'до 10%',
+      },
+      {
+        img: 'img music/240305165407341.webp',
+        category: 'Стендап',
+        title: 'Большой стендап',
+        desc: 'Стендап-клуб №1 (Москва) · 9 августа, воскресенье',
+        cashback: 'до 10%',
+      },
+      {
+        img: 'img music/250314185425918.webp',
+        category: 'Концерт',
+        title: 'Юлия Савичева',
+        desc: 'Petter (Москва) · 11 июля, суббота',
+        cashback: 'до 20%',
+      },
+      {
+        img: 'img music/a1954999d0fdca5d1a834067b526c07c.webp',
+        category: 'Концерт',
+        title: 'Егор Крид',
+        desc: 'БСА «Лужники» (Москва) · 10 июля, пятница',
+        cashback: 'до 15%',
+      },
+      {
+        img: 'img music/260122133052389.webp',
+        category: 'Концерт',
+        title: 'Квартирник. Акустический вечер',
+        desc: '16 Тонн (Москва) · 14 августа, пятница',
+        cashback: 'до 10%',
+      },
+    ],
+    moreCard: {
+      title: 'Идеи\nна выходные',
+      desc: 'Выберите, куда сходить',
+      button: 'Все события',
+      avatars: Array.from({ length: 19 }, (_, i) =>
+        `assets/cta/av-${String(i + 1).padStart(2, '0')}.png`),
+    },
+  },
+  {
+    type: 'offer',
+    color: '#4fbbb7',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#3d74af',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+];
+
+Feed.mount(FEED, document.getElementById('feed'));
+</script>
+
+</body>
+</html>
