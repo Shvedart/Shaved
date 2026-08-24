@@ -727,7 +727,7 @@ html, body {
    overflow-anchor выключен: иначе браузер подкручивает скролл сам */
 .fc-trip-band {
   position: relative;
-  height: 443px;   /* 360 карточек + 83 на заголовок сверху */
+  height: 360px;
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -759,7 +759,7 @@ html, body {
   left: 0;
   right: 0;
   top: -1px;
-  height: 445px;
+  height: 362px;
   overflow: hidden;
 }
 .fc-trip-hero { position: absolute; inset: 0; }
@@ -806,7 +806,7 @@ html, body {
 .fc-trip-col {
   position: absolute;
   left: 0;
-  top: 125px;
+  top: 40px;
   width: 232px;
   height: 280px;
   display: flex;
@@ -939,73 +939,6 @@ html, body {
    он ровно приезжает на место контента героя, ничего не масштабируя */
 .fc-trip-card .fc-trip-col { will-change: transform; }
 
-/* Затемнение сверху — зеркало нижнего, чтобы заголовок читался
-   на любой фотографии (макет 103:3387) */
-.fc-trip-topshade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 166px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
-  pointer-events: none;
-  z-index: 2;
-}
-/* Заголовок блока (макет 104:3836): отступы 16/20/12, между
-   текстом и иконкой 8px, между надзаголовком и заголовком 8px */
-.fc-trip-heads {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 22px;          /* сразу под верхней кромкой */
-  height: 100px;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 3;
-}
-.fc-trip-head {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  /* сверху место под статичный надзаголовок (16 + его строка),
-     справа — под иконку 40 + 8 */
-  padding: 31px 68px 12px 20px;
-  will-change: transform, opacity;
-}
-.fc-trip-head-caption {
-  position: absolute;
-  left: 20px;
-  top: 16px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.28px;
-  line-height: normal;
-  text-transform: uppercase;
-  color: #fff;
-}
-.fc-trip-head-title {
-  margin-top: 8px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.38px;
-  line-height: normal;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-}
-/* иконка в углу: контейнер 40×40, сама 19×19 по центру */
-.fc-trip-plane {
-  position: absolute;
-  right: 20px;
-  top: 16px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.fc-trip-plane svg { width: 19px; height: 19px; display: block; }
-
 /* Кромки билета лежат в секции, а не внутри блока: маска на них не
    действует, поэтому их сплошная часть свободно накрывает край
    обрезки — там, где раньше просвечивал шов.
@@ -1054,8 +987,6 @@ html, body {
   align-items: center;
   gap: 16px;
   width: 100%;
-  /* блок текста с кнопкой стоит выше нижнего края, чем у обычных карточек */
-  transform: translateY(-24px);
 }
 .fc-trip-cta-title {
   font-size: 20px;
@@ -1106,13 +1037,13 @@ html, body {
   /* билет: маска расходится от центра, сам он подтянут вверх
      на скрытую часть, чтобы примыкать к блоку сверху */
   @keyframes fc-trip-open {
-    from { clip-path: inset(205.5px 0); transform: translateY(-205.5px); }
+    from { clip-path: inset(164px 0 164px 0); transform: translateY(-164px); }
     to   { clip-path: inset(0 0 0 0);         transform: translateY(0); }
   }
   /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
      поэтому во время раскрытия она стоит на месте */
   @keyframes fc-trip-below {
-    from { transform: translateY(-411px); }
+    from { transform: translateY(-328px); }
     to   { transform: translateY(0); }
   }
   /* Кромки лежат вне маски, поэтому свободно накрывают её край.
@@ -1120,7 +1051,7 @@ html, body {
      границей раскрывающегося билета */
   @keyframes fc-trip-perf-b {
     from { transform: translateY(16px) scaleY(-1); }   /* видимая 32 */
-    to   { transform: translateY(427px) scaleY(-1); }  /* видимая 443 */
+    to   { transform: translateY(344px) scaleY(-1); }  /* видимая 360 */
   }
   /* фон из крупного плана приходит к обычному масштабу */
   @keyframes fc-trip-zoom {
@@ -1136,7 +1067,7 @@ html, body {
     animation-timeline: --fc-trip;
     /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
        раскрывающейся высоте: тогда компенсация точная */
-    animation-range: cover 15vh calc(15vh + 411px);
+    animation-range: cover 15vh calc(15vh + 328px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
   .fc-trip-below    { animation-name: fc-trip-below; }

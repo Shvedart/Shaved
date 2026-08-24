@@ -21,8 +21,6 @@ const Feed = (() => {
     crown14: `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><path d="M7 1.75087L8.99937 6.38575L13.125 3.9445L11.3855 10.5061C11.3232 10.7569 11.1778 10.9791 10.973 11.1366C10.7681 11.2941 10.516 11.3775 10.2576 11.3733H3.74237C3.48506 11.3734 3.23492 11.2884 3.03092 11.1316C2.82692 10.9747 2.68052 10.7548 2.6145 10.5061L0.875 3.94362L4.998 6.38487L7 1.75087Z" fill="#333333"/></svg>`,
     // огонёк 9×11 (чип «Горящий», макет 65:733)
     fire: `<svg viewBox="0 0 9.17203 11.0778" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.86387 3.83392C2.91621 2.88854 3.9312 1.9767 3.43949 0C6.55411 1.63847 9.38544 4.21166 9.15934 7.14655C9.07664 8.22456 8.68144 9.02917 8.15183 9.6259C8.15275 9.5819 8.15284 9.5432 8.15207 9.5117C8.15207 7.76822 5.61083 6.23501 5.61083 6.23501C5.61083 6.23501 3.05702 7.56477 3.05702 9.5117C3.05702 10.1185 3.29884 10.6537 3.6779 11.0778C2.27802 10.6784 0.0199124 9.5217 0.000142387 7.14655C-0.0133876 5.52039 0.939652 4.66422 1.86387 3.83392Z" fill="url(#fc-fire-grad)"/><defs><linearGradient id="fc-fire-grad" x1="6.3478" y1="-0.075" x2="3.01328" y2="11.0093" gradientUnits="userSpaceOnUse"><stop stop-color="black"/><stop offset="1" stop-color="black" stop-opacity="0.51"/></linearGradient></defs></svg>`,
-    // самолёт 19×19 (шапка блока путешествий, макет 104:3826)
-    plane: `<svg viewBox="0 0 19 19" xmlns="http://www.w3.org/2000/svg"><path d="M15.2366 0.645488C16.0975 -0.215213 17.4937 -0.215112 18.3548 0.645488C19.2156 1.50679 19.2155 2.90329 18.3548 3.76469L14.9905 7.12889L15.1965 8.01369V8.01569L16.9617 15.6641C17.137 16.4249 16.9747 17.2157 16.534 17.8418C16.4825 17.9346 16.2945 18.1462 16.2158 18.2188C16.0048 18.4256 15.7122 18.5287 15.4182 18.5C15.1244 18.4711 14.8587 18.3129 14.6918 18.0694L10.364 11.7569L8.51783 13.6035L8.66233 14.4082L9.19343 17.0664C9.32263 17.7126 9.07873 18.3768 8.56173 18.7852C8.33613 18.9634 8.04493 19.0354 7.76223 18.9834C7.47973 18.9314 7.23233 18.7611 7.08463 18.5147L4.61663 14.3867L2.66503 13.2178L5.37913 10.502L5.38103 10.503L7.24573 8.63769L7.24473 8.63669L11.8635 4.01659L11.8645 4.01759L15.2366 0.645488Z" fill="#fff"/><g opacity="0.6" fill="#fff"><path d="M0.225629 10.4234C0.638929 9.91789 1.29783 9.68109 1.93803 9.80919L4.60323 10.3434H4.61113L5.37843 10.5025L2.66343 13.2174L0.485329 11.9137C0.236429 11.7644 0.0647291 11.5131 0.0147291 11.2271C-0.0348709 10.9413 0.0421294 10.6481 0.225629 10.4234Z"/><path d="M1.15503 2.47029C1.78473 2.02689 2.58013 1.86419 3.34483 2.04059L10.7597 3.75249L10.7685 3.75449L11.8619 4.01719L7.24313 8.63629L0.93153 4.31109C0.68713 4.14369 0.52833 3.87649 0.49993 3.58159C0.47183 3.28669 0.57593 2.99349 0.78403 2.78279C0.85723 2.70149 1.05933 2.52399 1.15503 2.47029Z"/></g></svg>`,
     // звезда 16px (рейтинг)
     star16: `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3.684 14.275L4.82317 9.36451L1.0105 6.05901L6.04166 5.62651L8 0.994507L9.95833 5.62651L14.9895 6.05901L11.1768 9.36451L12.316 14.275L8 11.6682L3.684 14.275Z" fill="#000000"/></svg>`,
     // маски-театр 22×18 (аватар офера, белый)
@@ -386,23 +384,16 @@ const Feed = (() => {
       <div class="fc-trip-band">
         <div class="fc-trip-canvas">
           <div class="fc-trip-hero">
-            <div class="fc-trip-bgwrap"></div>
+            <div class="fc-trip-bgwrap"><img class="fc-trip-bg" alt=""></div>
             <div class="fc-trip-shade"></div>
             <div class="fc-trip-col"></div>
           </div>
-          <div class="fc-trip-topshade"></div>
-          <div class="fc-trip-heads">
-            <div class="fc-trip-head-caption" data-role="head-caption"></div>
-            <div class="fc-trip-head" data-role="head-cur"></div>
-            <div class="fc-trip-head" data-role="head-next"></div>
-            <div class="fc-trip-plane">${ICONS.plane}</div>
-          </div>
           <div class="fc-trip-card" data-role="next">
-            <div class="fc-trip-shade fc-trip-shade--card"></div>
+            <img alt=""><div class="fc-trip-shade fc-trip-shade--card"></div>
             <div class="fc-trip-col"></div>
           </div>
           <div class="fc-trip-card" data-role="incoming">
-            <div class="fc-trip-shade fc-trip-shade--card"></div>
+            <img alt=""><div class="fc-trip-shade fc-trip-shade--card"></div>
             <div class="fc-trip-col"></div>
           </div>
           <div class="fc-trip-scroller">
@@ -423,30 +414,14 @@ const Feed = (() => {
       const band = section.querySelector('.fc-trip-band');
       const canvas = section.querySelector('.fc-trip-canvas');
       const scroller = section.querySelector('.fc-trip-scroller');
-      /* Каждому направлению — свой <img> на всю жизнь блока. Слои
-         (герой, боковая, приезжающая) не меняют src, а забирают себе
-         готовый узел: смена src даже у закэшированной картинки даёт
-         кадр пустоты — то самое промаргивание при листании. */
-      const pool = items.map(it => {
+      /* Все фото декодируем заранее: при подстановке новой карточки
+         меняется src, и недекодированная картинка даёт вспышку
+         предыдущего кадра поверх блока (заметно в Chrome). */
+      for (const it of items) {
         const im = new Image();
-        im.alt = '';
         im.src = it.img;
         if (im.decode) im.decode().catch(() => {});
-        return im;
-      });
-      /* Узел переезжает между слоями, поэтому инлайновые размеры и
-         трансформы от прошлого слоя сбрасываем — их задаст update(). */
-      const mountImg = (host, idx, cls) => {
-        const node = pool[idx];
-        if (node.parentNode === host) return node;
-        node.style.cssText = '';
-        node.className = cls;
-        host.prepend(node);
-        // прежний узел слоя выселяем — он ждёт своей очереди вне DOM
-        for (const other of Array.from(host.children))
-          if (other !== node && other.tagName === 'IMG') other.remove();
-        return node;
-      };
+      }
 
       /* Всё, что идёт под блоком, собираем в один слой: его поднимает
          трансформ, пока билет свёрнут, — так лента не разъезжается,
@@ -459,29 +434,9 @@ const Feed = (() => {
         while (below.nextElementSibling) below.append(below.nextElementSibling);
       }
 
-      /* Заголовки над карточками. Два слоя: текущий и следующий.
-         headingMode: 'slide' — едут вместе с карточками (у каждой
-         карточки свой заголовок), 'fade' — один сменяется другим. */
-      const CARD_TOP = 125;      // карточки опустились под заголовок
-      const headMode = block.headingMode === 'fade' ? 'fade' : 'slide';
-      const topshade = section.querySelector('.fc-trip-topshade');
-      const heads = section.querySelector('.fc-trip-heads');
-      const headCur = section.querySelector('[data-role="head-cur"]');
-      const headNext = section.querySelector('[data-role="head-next"]');
-      let headCurIdx = -1, headNextIdx = -1;
-      const headHtml = it => it.heading
-        ? `<div class="fc-trip-head-title">${it.heading.title.split('\n').map(esc).join('<br>')}</div>`
-        : '';
-      /* Надзаголовок одинаков для всех направлений, поэтому стоит
-         отдельным слоем: будь он внутри сменяющегося заголовка,
-         при листании один и тот же текст мигал бы сам по себе. */
-      const headCaption = section.querySelector('[data-role="head-caption"]');
-      headCaption.textContent = block.headingCaption
-        || (items.find(it => it.heading && it.heading.caption) || {}).heading?.caption
-        || '';
-
       const hero = section.querySelector('.fc-trip-hero');
       const bgwrap = section.querySelector('.fc-trip-bgwrap');
+      const bg = section.querySelector('.fc-trip-bg');
       const heroShade = hero.querySelector('.fc-trip-shade');
       const heroCol = section.querySelector('.fc-trip-hero .fc-trip-col');
       const next = section.querySelector('[data-role="next"]');
@@ -515,8 +470,8 @@ const Feed = (() => {
         col.classList.toggle('fc-trip-col--cta', !!it.cta);
         col.innerHTML = it.cta ? ctaHtml(it) : chipHtml(it) + textsHtml(it, withHot);
       };
-      const fillCard = (card, it, idx) => {
-        mountImg(card, idx, '');
+      const fillCard = (card, it) => {
+        card.querySelector('img').src = it.img;
         // у карточки-перехода фон чистый, без затемнения (макет 77:3524)
         card.querySelector('.fc-trip-shade').style.display = it.cta ? 'none' : '';
         fillCol(card.querySelector('.fc-trip-col'), it, true);
@@ -586,25 +541,10 @@ const Feed = (() => {
 
         if (heroIdx !== i) {
           heroIdx = i;
+          bg.src = items[i].img;
           heroShade.style.display = items[i].cta ? 'none' : '';
           fillCol(heroCol, items[i], true);
         }
-        // заголовки: текущий уезжает, следующий приходит ему на смену
-        if (headCurIdx !== i) { headCurIdx = i; headCur.innerHTML = headHtml(items[i]); }
-        const nxt = items[i + 1];
-        if (headNextIdx !== i + 1) { headNextIdx = i + 1; headNext.innerHTML = nxt ? headHtml(nxt) : ''; }
-        if (headMode === 'slide') {
-          headCur.style.transform = `translateX(${(-W * t).toFixed(1)}px)`;
-          headNext.style.transform = `translateX(${(W * (1 - t)).toFixed(1)}px)`;
-          headCur.style.opacity = '1';
-          headNext.style.opacity = '1';
-        } else {
-          headCur.style.transform = 'none';
-          headNext.style.transform = 'none';
-          headCur.style.opacity = (1 - Math.min(1, t * 2)).toFixed(3);
-          headNext.style.opacity = Math.max(0, t * 2 - 1).toFixed(3);
-        }
-
         // контент карточки-перехода держит ширину блока: иначе при
         // раскрытии строки перекомпоновываются и текст скачет
         for (const c of [heroCol, next.querySelector('.fc-trip-col'), incoming.querySelector('.fc-trip-col')]) {
@@ -618,14 +558,7 @@ const Feed = (() => {
         // текст и бейджи проявляются на последней пятой раскрытия
         const sideIn = Math.min(1, Math.max(0, (revealE - SIDE_FROM) / (1 - SIDE_FROM)));
         heroCol.style.opacity = sideIn.toFixed(3);
-        /* На карточке-переходе ни заголовка, ни затемнения сверху —
-           у неё свой самодостаточный кадр. Гасим их по мере подъезда
-           к ней, чтобы не пропадали рывком. */
-        const ctaFade = items[i].cta ? 0 : (items[i + 1]?.cta ? 1 - t : 1);
-        heads.style.opacity = (sideIn * ctaFade).toFixed(3);
-        topshade.style.opacity = ctaFade.toFixed(3);
 
-        const bg = mountImg(bgwrap, i, 'fc-trip-bg');
         const shift = W * 0.18 * t;
         const zoom = 1 + 0.18 * t;
         bg.style.transform =
@@ -639,10 +572,9 @@ const Feed = (() => {
         const nx = items[i + 1];
         next.style.display = nx ? '' : 'none';
         if (nx) {
-          if (nextIdx !== i + 1) { nextIdx = i + 1; fillCard(next, nx, i + 1); }
-          else mountImg(next, i + 1, '');
+          if (nextIdx !== i + 1) { nextIdx = i + 1; fillCard(next, nx); }
           const left = parkRight((W - 70) * (1 - t));
-          const top = CARD_TOP * (1 - t);
+          const top = 40 * (1 - t);
           const w = 232 + (W - 232) * t;
           const h = 280 + (H - 280) * t;
           next.style.transform = `translate(${left.toFixed(1)}px, ${top.toFixed(1)}px)`;
@@ -656,15 +588,14 @@ const Feed = (() => {
         const IN_FROM = 0.55;
         incoming.style.display = inc && t > 0.05 ? '' : 'none';
         if (inc) {
-          if (incIdx !== i + 2) { incIdx = i + 2; fillCard(incoming, inc, i + 2); }
-          else mountImg(incoming, i + 2, '');
+          if (incIdx !== i + 2) { incIdx = i + 2; fillCard(incoming, inc); }
           // из-за края экрана ровно на место компактной карточки:
           // в конце свайпа left = W - 70, то есть та же точка, где
           // она окажется после подстановки — без отскока
           const u = Math.min(1, Math.max(0, (t - IN_FROM) / (1 - IN_FROM)));
           const left = parkRight((W + 16) - 86 * u);
-          incoming.style.transform = `translate(${left.toFixed(1)}px, ${CARD_TOP}px)`;
-          glue(incoming, left, CARD_TOP, W, H, 280);
+          incoming.style.transform = `translate(${left.toFixed(1)}px, 40px)`;
+          glue(incoming, left, 40, W, H, 280);
         }
       }
 
@@ -746,7 +677,7 @@ const Feed = (() => {
       // закрытая высота = две сомкнутые кромки по 16px: зубцы
       // сходятся посередине, скругления углов помещаются целиком
       const H_CLOSED = 32;
-      const H_OPEN = 443;        // блок вырос: сверху появился заголовок
+      const H_OPEN = 360;
       /* Раскрытие идёт 1:1 со скроллом — пиксель прокрутки на пиксель
          открывшегося билета, поэтому лента под ним стоит на месте.
          Зависимость строго линейная: ускорение сломало бы
