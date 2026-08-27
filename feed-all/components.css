@@ -727,7 +727,7 @@ html, body {
    overflow-anchor выключен: иначе браузер подкручивает скролл сам */
 .fc-trip-band {
   position: relative;
-  height: 360px;
+  height: 443px;   /* 360 карточек + 83 на заголовок сверху */
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -759,7 +759,7 @@ html, body {
   left: 0;
   right: 0;
   top: -1px;
-  height: 362px;
+  height: 445px;
   overflow: hidden;
 }
 .fc-trip-hero { position: absolute; inset: 0; }
@@ -806,7 +806,7 @@ html, body {
 .fc-trip-col {
   position: absolute;
   left: 0;
-  top: 40px;
+  top: 125px;
   width: 232px;
   height: 280px;
   display: flex;
@@ -939,20 +939,127 @@ html, body {
    он ровно приезжает на место контента героя, ничего не масштабируя */
 .fc-trip-card .fc-trip-col { will-change: transform; }
 
-/* Кромки билета лежат в секции, а не внутри блока: маска на них не
-   действует, поэтому их сплошная часть свободно накрывает край
-   обрезки — там, где раньше просвечивал шов.
-   Видимые 16px — зубцы и скруглённые углы, ещё 16px уходят наружу. */
-.fc-trip-perf {
+/* Затемнение сверху — зеркало нижнего, чтобы заголовок читался
+   на любой фотографии (макет 103:3387) */
+.fc-trip-topshade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 166px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+/* Заголовок блока (макет 104:3836): отступы 16/20/12, между
+   текстом и иконкой 8px, между надзаголовком и заголовком 8px */
+.fc-trip-heads {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;          /* сразу под верхней кромкой */
+  height: 100px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+}
+.fc-trip-head {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
-  height: 50px;   /* 16px видимой кромки + 34px сейв-зоны наружу */
+  /* сверху место под статичный надзаголовок (16 + его строка),
+     справа — под иконку 40 + 8 */
+  padding: 31px 68px 12px 20px;
+  will-change: transform, opacity;
+}
+.fc-trip-head-caption {
+  position: absolute;
+  left: 20px;
+  top: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.28px;
+  line-height: normal;
+  text-transform: uppercase;
+  color: #fff;
+}
+.fc-trip-head-title {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+/* иконка в углу: контейнер 40×40, сама 19×19 по центру */
+.fc-trip-plane {
+  position: absolute;
+  right: 20px;
+  top: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fc-trip-plane svg { width: 19px; height: 19px; display: block; }
+
+/* Кромки билета (макет 116:4371): белые полосы поверх краёв блока
+   со скруглением, обращённым внутрь. Это углы соседних карточек —
+   сверху и снизу они закругляются навстречу билету. Лежат в секции,
+   а не внутри блока: маска на них не действует, поэтому их сплошная
+   часть заодно накрывает край обрезки, где просвечивал шов. */
+.fc-trip-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  /* 16px видимой кромки плюс 48px наружу. Запас нужен на скролл:
+     маска блока и кромка едут разными путями (одна — обрезкой,
+     другая — трансформом), и на резком движении одна может отстать
+     от другой на несколько пикселей. Пока запас больше отставания,
+     между ними не открывается щель с фотографией. */
+  height: 64px;
+  background: #fff;
   pointer-events: none;
   z-index: 3;
+  will-change: transform, border-radius;
 }
-.fc-trip-perf--t { transform: translateY(-34px); }
+.fc-trip-edge--t { top: -48px; border-radius: 0 0 16px 16px; }
+/* Нижнюю кромку рисует сам нижний блок: она приклеена к его верхнему
+   краю и едет вместе с ним, а он уже двигается 1:1 с раскрытием
+   билета. Отставать от края билета ей попросту нечем — в отличие от
+   отдельного слоя со своей анимацией, который на резком скролле
+   расходился с маской и открывал щель. */
+.fc-trip-below::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -40px;         /* 24 зазора + 16 нахлёста на билет */
+  height: 56px;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  pointer-events: none;
+}
+/* Линия отрыва между кромками свёрнутого билета: пунктир 5/5
+   (макет 115:4341). Как только блок пошёл раскрываться, линия
+   уходит — её место занимает сам билет. */
+.fc-trip-dash {
+  position: absolute;
+  left: 12px;
+  right: 8px;
+  top: 16px;   /* в секции; внутри нижнего слоя — см. правило ниже */
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg, #575b61 0 5px, transparent 5px 10px);
+  pointer-events: none;
+  z-index: 4;
+}
+/* линия живёт в нижнем слое — отсчитываем её от его верхнего края */
+.fc-trip-below > .fc-trip-dash { top: -40px; }
 
 /* Прозрачный слой скролла со снапом поверх канвы */
 .fc-trip-scroller {
@@ -987,6 +1094,8 @@ html, body {
   align-items: center;
   gap: 16px;
   width: 100%;
+  /* блок текста с кнопкой стоит выше нижнего края, чем у обычных карточек */
+  transform: translateY(-24px);
 }
 .fc-trip-cta-title {
   font-size: 20px;
@@ -1037,21 +1146,20 @@ html, body {
   /* билет: маска расходится от центра, сам он подтянут вверх
      на скрытую часть, чтобы примыкать к блоку сверху */
   @keyframes fc-trip-open {
-    from { clip-path: inset(164px 0 164px 0); transform: translateY(-164px); }
-    to   { clip-path: inset(0 0 0 0);         transform: translateY(0); }
+    from { clip-path: inset(205.5px 0); transform: translateY(-205.5px); }
+    to   { clip-path: inset(0 0 0 0);   transform: translateY(0); }
   }
   /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
      поэтому во время раскрытия она стоит на месте */
   @keyframes fc-trip-below {
-    from { transform: translateY(-328px); }
+    from { transform: translateY(-411px); }
     to   { transform: translateY(0); }
   }
-  /* Кромки лежат вне маски, поэтому свободно накрывают её край.
-     Верхняя стоит неподвижно, нижняя едет вместе с нижней
-     границей раскрывающегося билета */
-  @keyframes fc-trip-perf-b {
-    from { transform: translateY(16px) scaleY(-1); }   /* видимая 32 */
-    to   { transform: translateY(344px) scaleY(-1); }  /* видимая 360 */
+  /* пунктир держится лишь в самом начале пути */
+  @keyframes fc-trip-dash {
+    from { opacity: 1; }
+    8%   { opacity: 0; }
+    to   { opacity: 0; }
   }
   /* фон из крупного плана приходит к обычному масштабу */
   @keyframes fc-trip-zoom {
@@ -1061,16 +1169,16 @@ html, body {
 
   .fc-trip-band,
   .fc-trip-below,
-  .fc-trip-perf--b,
+  .fc-trip-dash,
   .fc-trip-bgwrap {
     animation: linear both;
     animation-timeline: --fc-trip;
     /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
        раскрывающейся высоте: тогда компенсация точная */
-    animation-range: cover 15vh calc(15vh + 328px);
+    animation-range: cover 15vh calc(15vh + 411px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
-  .fc-trip-below    { animation-name: fc-trip-below; }
-  .fc-trip-perf--b  { animation-name: fc-trip-perf-b; }
+  .fc-trip-dash     { animation-name: fc-trip-dash; }
+  .fc-trip-below         { animation-name: fc-trip-below; }
   .fc-trip-bgwrap   { animation-name: fc-trip-zoom; }
 }

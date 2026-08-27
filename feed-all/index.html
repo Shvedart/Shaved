@@ -89,9 +89,14 @@ const FEED = [
     // фон карточки при свайпе: 'scale' — растёт вместе с карточкой,
     // 'reveal' — прибит к блоку, карточка раздвигается как окно
     bgMode: 'scale',
+    // надзаголовок один на все направления
+    headingCaption: 'Режим отпуска',
+    // заголовки: 'fade' — сменяются на месте, 'slide' — едут с карточками
+    headingMode: 'fade',
     items: [
       {
         img: 'assets/travel/moscow.webp',
+        heading: { title: 'Ужин на теплоходе\nпо Москве-реке' },
         title: 'Авиабилеты в Москву',
         price: 'от 5 240 ₽',
         oldPrice: '7 900 ₽',
@@ -101,6 +106,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/spb.jpg',
+        heading: { title: 'Развод мостов\nи прогулка по Неве' },
         title: 'Авиабилеты в Петербург',
         price: 'от 3 180 ₽',
         oldPrice: '4 900 ₽',
@@ -109,6 +115,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/almaty.webp',
+        heading: { title: 'Подъём на Шымбулак\nза один день' },
         title: 'Авиабилеты в Алматы',
         price: 'от 12 450 ₽',
         oldPrice: '18 300 ₽',
@@ -118,6 +125,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/hanoi.webp',
+        heading: { title: 'Уличная кухня\nи бухта Халонг' },
         title: 'Авиабилеты в Ханой',
         price: 'от 28 940 ₽',
         oldPrice: '41 200 ₽',
@@ -126,6 +134,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/cairo.webp',
+        heading: { title: 'Пирамиды Гизы\nи Нил на закате' },
         title: 'Авиабилеты в Каир',
         price: 'от 19 380 ₽',
         oldPrice: '27 900 ₽',
@@ -135,6 +144,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/nnovgorod.webp',
+        heading: { title: 'Кремль над стрелкой\nдвух рек' },
         title: 'Авиабилеты в Н. Новгород',
         price: 'от 3 940 ₽',
         oldPrice: '5 600 ₽',
@@ -143,6 +153,7 @@ const FEED = [
       },
       {
         img: 'assets/travel/minsk.jpg',
+        heading: { title: 'Троицкое предместье\nи кофе на Немиге' },
         title: 'Авиабилеты в Минск',
         price: 'от 7 310 ₽',
         oldPrice: '10 200 ₽',
