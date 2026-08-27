@@ -739,6 +739,9 @@ html, body {
   z-index: 1;
 }
 .feed > section.fc-trip {
+  /* билет прижат к соседям плотнее остальной ленты: зазор 8px
+     вместо общих 24 — иначе кромки висят далеко от фотографии */
+  margin: -16px 0;
   overflow-anchor: none;
   z-index: 0;
 }
@@ -1038,8 +1041,8 @@ html, body {
   position: absolute;
   left: 0;
   right: 0;
-  top: -40px;         /* 24 зазора + 16 нахлёста на билет */
-  height: 56px;
+  top: -24px;         /* 8 зазора + 16 нахлёста на билет */
+  height: 40px;
   background: #fff;
   border-radius: 16px 16px 0 0;
   pointer-events: none;
@@ -1059,7 +1062,7 @@ html, body {
   z-index: 4;
 }
 /* линия живёт в нижнем слое — отсчитываем её от его верхнего края */
-.fc-trip-below > .fc-trip-dash { top: -40px; }
+.fc-trip-below > .fc-trip-dash { top: -24px; }
 
 /* Прозрачный слой скролла со снапом поверх канвы */
 .fc-trip-scroller {
