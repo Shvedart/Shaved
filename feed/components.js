@@ -468,7 +468,8 @@ const Feed = (() => {
       /* Заголовки над карточками. Два слоя: текущий и следующий.
          headingMode: 'slide' — едут вместе с карточками (у каждой
          карточки свой заголовок), 'fade' — один сменяется другим. */
-      const CARD_TOP = 125;      // карточки опустились под заголовок
+      const hasHeadings = !!(block.headingCaption || (items || []).some(it => it.heading));
+      const CARD_TOP = hasHeadings ? 125 : 0; // без заголовков карточки на всю высоту
       const headMode = block.headingMode === 'fade' ? 'fade' : 'slide';
       const topshade = section.querySelector('.fc-trip-topshade');
       const heads = section.querySelector('.fc-trip-heads');
@@ -482,6 +483,7 @@ const Feed = (() => {
          отдельным слоем: будь он внутри сменяющегося заголовка,
          при листании один и тот же текст мигал бы сам по себе. */
       const headCaption = section.querySelector('[data-role="head-caption"]');
+      if (!hasHeadings) { heads.style.display = "none"; topshade.style.display = "none"; }
       headCaption.textContent = block.headingCaption
         || (items.find(it => it.heading && it.heading.caption) || {}).heading?.caption
         || '';
