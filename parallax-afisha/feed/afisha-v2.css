@@ -50,7 +50,6 @@ html, body {
   padding: 0 var(--pad-screen);
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -93,10 +92,16 @@ html, body {
   height: 100%;
   object-fit: cover;
 }
-/* Отдельный слой композитора — только у карточек рядом с экраном.
-   Постоянный will-change на всей ленте держал в видеопамяти
-   десятки мегабайт текстур, и телефон захлёбывался на листании */
-.fc-par-box.is-near > img { will-change: transform; }
+/* Слой у фотографии постоянный и не пересоздаётся. Включать его
+   по мере приближения нельзя — Safari на iOS промаргивает карточку
+   в момент создания слоя; не включать вовсе тоже: тогда он поднимает
+   и роняет слой сам, с тем же результатом. Стабильный слой плюс
+   backface-visibility — рецепт против мигания на iOS. */
+.fc-par-box > img {
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
 
 /* Текст с растворением справа (Gradient/Text/Secondary Fade) */
 .fc-fade-text {
@@ -343,7 +348,7 @@ html, body {
   /* пропорции карточки из макета (343×428): растягиваясь по ширине,
      она пропорционально растёт и в высоту */
   aspect-ratio: 343 / 428;
-  border-radius: 24px;
+  border-radius: 28px;
   transform-origin: center;
 }
 
@@ -455,7 +460,7 @@ html, body {
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: 20px;
+  bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1096,7 +1101,6 @@ html, body {
   display: flex;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   z-index: 4;

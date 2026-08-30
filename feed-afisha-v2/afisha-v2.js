@@ -221,7 +221,7 @@ const Feed = (() => {
          карточку. Прыжок кратен шагу сетки, поэтому на экране
          ничего не меняется — человек видит бесконечную ленту. */
       const looped = !!scroller.dataset.loop;
-      const CLONES = 2;   // запас на быстрые пролистывания
+      const CLONES = 3;   // от края спасает аварийный перескок
       let realCount = 0;
       if (looped) {
         const slots = Array.from(scroller.children);
@@ -355,9 +355,14 @@ const Feed = (() => {
          scrollLeft на лету, браузер сбрасывает инерцию и заново ищет
          снап — это и был рывок на стыке первой и последней карточки.
          Клоны по краям дают запас, чтобы дождаться остановки. */
-      let wrapTimer = 0;
-      function wrapNow() {
+      let wrapTimer = 0, wrappedThisFling = false;
+      /* exact=false — аварийный перескок посреди броска: сдвигаем
+         скролл ровно на длину ленты, сохраняя дробное смещение.
+         Прицеливаться в снап здесь нельзя: на лету это округлило бы
+         позицию до ближайшей карточки и лента прыгнула бы вбок. */
+      function wrapNow(exact = true) {
         wrapTimer = 0;
+        if (exact) wrappedThisFling = false;   // бросок закончился
         if (!looped || realCount <= CLONES) return;
         const step = layoutCenters[1] - layoutCenters[0];
         const idx = Math.round((scroller.scrollLeft - snapAt(0)) / step);
@@ -365,6 +370,14 @@ const Feed = (() => {
         if (idx < CLONES) to = idx + realCount;
         else if (idx > CLONES + realCount - 1) to = idx - realCount;
         if (to === idx) return;
+        if (!exact) {
+          /* Сдвиг берём как разницу измеренных позиций двойников, а не
+             «шаг × количество»: ширины дробные, и произведение
+             расходилось с настоящей длиной ленты на пару пикселей —
+             карточка на переходе заметно дёргалась назад. */
+          scroller.scrollLeft += layoutCenters[to] - layoutCenters[idx];
+          return;
+        }
         /* Прыгаем не «на длину ленты», а точно в снап-позицию карточки-
            двойника: ширины дробные, и накопленная погрешность оставляла
            скролл в полпикселе от снапа — браузер тут же доводил его
@@ -388,6 +401,21 @@ const Feed = (() => {
       });
 
       function onScroll() {
+        /* Быстрый бросок может проскочить всю зону клонов и упереться
+           в физический край — лента замирает, будто она не зациклена.
+           У самого края перескакиваем сразу, не дожидаясь остановки:
+           лучше едва заметный сдвиг, чем удар в стенку. */
+        if (looped && realCount > CLONES && !wrappedThisFling) {
+          const step = layoutCenters[1] - layoutCenters[0];
+          const max = scroller.scrollWidth - scroller.clientWidth;
+          // только у самой стенки и один раз за бросок: иначе перескок
+          // срабатывает несколько раз подряд и карусель ходит ходуном
+          if (scroller.scrollLeft < step * 0.25 ||
+              scroller.scrollLeft > max - step * 0.25) {
+            wrappedThisFling = true;
+            wrapNow(false);
+          }
+        }
         planWrap();
         // в фоновой вкладке rAF заморожен — считаем сразу
         if (document.hidden) { update(); return; }
