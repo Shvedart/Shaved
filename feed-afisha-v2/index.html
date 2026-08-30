@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Лента — афиша (v2)</title>
+<link rel="stylesheet" href="afisha-v2.css">
+</head>
+<body>
+
+<div class="feed" id="feed"></div>
+
+<script src="afisha-v2.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   Конфиг ленты — порядок и содержимое блоков.
+   Меняйте порядок элементов массива, добавляйте и
+   убирайте блоки — вёрстка соберётся сама.
+   Доступные типы: offer, activities, heroCarousel,
+   posterCarousel, productGrid.
+   ═══════════════════════════════════════════════════ */
+const FEED = [
+  {
+    type: 'offer',
+    color: '#2b0c91',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#910c41',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'activities',
+    header: 'Яндекс Плюс',
+    subheader: 'Подписка на сервисы',
+    avatar: 'yandex/yandex-logo.png',
+    cards: [
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/Phone_gradient-front_RGB 1--723632988.png' },
+      { color: '#eae1ff', title: 'Скидка 99%', lines: ['На опцию', '«Пакет от X5»'], img: 'yandex/PLUS_ TRAVEL_ M _ ANGLE-1245263265.png' },
+    ],
+  },
+  {
+    type: 'heroCarousel',
+    header: 'События для вас',
+    scrollDrift: false, // намёк на горизонтальный скролл: карусель подъезжает при скролле страницы (true — включить)
+    loop: true,         // карусель закольцована: с последней снова на первую
+    items: [
+      {
+        img: 'assets/afisha/basta.jpg',
+        category: 'Хип-хоп',
+        title: 'Баста',
+        place: 'ОК «ЛУЖНИКИ» - БОЛЬШАЯ АРЕНА',
+        date: '30 августа',
+        price: 'От 4 850 ₽',
+        cashback: 'До 20%',
+      },
+      {
+        img: 'assets/afisha/madam-boom.jpg',
+        category: 'Концерт',
+        title: 'Бурлеск кабаре шоу МАДАМ БУМ',
+        place: 'Гримёрка Gastro Club & Karaoke Bar',
+        date: '4 сентября',
+        price: 'От 4 500 ₽',
+        cashback: 'До 20%',
+      },
+      {
+        img: 'assets/afisha/lazarev.jpg',
+        category: 'Поп',
+        title: 'Сергей Лазарев. Шоумен',
+        place: 'На 3 площадках',
+        date: '23 октября',
+        price: 'От 12 000 ₽',
+        cashback: 'До 35%',
+      },
+      {
+        img: 'assets/afisha/vernuvshiesya.jpg',
+        category: 'Иммерсивный',
+        title: 'Вернувшиеся: Новая реальность',
+        place: 'Особняк «Дашков 5»',
+        date: '3 сентября',
+        price: 'От 8 000 ₽',
+        cashback: 'До 20%',
+      },
+      {
+        img: 'assets/afisha/savicheva.jpg',
+        category: 'Поп',
+        title: 'Юлия Савичева',
+        place: 'Petter — Петровка, 21, стр. 1',
+        date: '7 ноября',
+        price: 'От 5 500 ₽',
+        cashback: 'До 10%',
+      },
+      {
+        img: 'assets/afisha/rock-hits.jpg',
+        category: 'Рок',
+        title: 'Рок-хиты с симфоническим оркестром',
+        place: 'На 3 площадках',
+        date: '10 октября',
+        price: 'От 4 500 ₽',
+        cashback: 'До 15%',
+      },
+      {
+        img: 'assets/afisha/orlov.jpg',
+        category: 'Стендап',
+        title: 'Сергей Орлов «Звезда»',
+        place: 'ЦСКА АРЕНА',
+        date: '28 ноября',
+        price: 'От 4 000 ₽',
+        cashback: 'До 25%',
+      },
+    ],
+  },
+  {
+    type: 'productGrid',
+    caption: 'Товары для дома',
+    header: 'Хиты Hoff',
+    avatar: 'assets/brand-avatar.png',
+    moreButton: 'Посмотреть все',
+    products: [
+      {
+        img: 'shop/image 2.png',
+        oldPrice: '27 990 ₽', discount: '−11%',
+        price: '24 990 ₽', cashback: '1 250 ₽',
+        name: 'Кресло Леон', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 3.png',
+        oldPrice: '9 990 ₽', discount: '−15%',
+        price: '8 490 ₽', cashback: '420 ₽',
+        name: 'Кресло Корфу', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 4.png',
+        oldPrice: '7 990 ₽', discount: '−13%',
+        price: '6 990 ₽', cashback: '350 ₽',
+        name: 'Кресло Акапулько', kind: 'Садовая мебель',
+      },
+      {
+        img: 'shop/image 5.png',
+        oldPrice: '16 990 ₽', discount: '−6%',
+        price: '15 990 ₽', cashback: '800 ₽',
+        name: 'Кресло Папасан', kind: 'Садовая мебель',
+      },
+    ],
+  },
+  {
+    type: 'offer',
+    color: '#4fbbb7',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+  {
+    type: 'offer',
+    color: '#3d74af',
+    title: 'Скидка 25%',
+    lines: ['На одну покупку', 'До 31 декабря'],
+    brand: {
+      name: 'Афиша в Городе',
+      desc: 'Краткий текст про ценностное предложение максимум на две строки',
+    },
+  },
+];
+
+Feed.mount(FEED, document.getElementById('feed'));
+</script>
+
+</body>
+</html>
