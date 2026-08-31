@@ -623,7 +623,12 @@ const Feed = (() => {
         heroCol.style.transform = `translateX(${(-shift).toFixed(1)}px)`;
 
         // выезд боковых карточек по мере раскрытия блока
-        const parkRight = l => l + (W + 16 - l) * (1 - sideIn);
+        /* Боковая карточка выезжает не равномерно, а по кривой:
+           трогается резко и мягко притормаживает у своего места.
+           Кубическое замедление — путь съеден на 87% уже к середине
+           отведённого отрезка, дальше карточка только доводится. */
+        const sideCurve = 1 - Math.pow(1 - sideIn, 3);
+        const parkRight = l => l + (W + 16 - l) * (1 - sideCurve);
 
         const nx = items[i + 1];
         next.style.display = nx ? '' : 'none';
