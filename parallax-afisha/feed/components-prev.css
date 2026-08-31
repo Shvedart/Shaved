@@ -1,0 +1,1172 @@
+/* ═══════════════════════════════════════════════════
+   Компоненты ленты — токены и стили блоков
+   Источник: Figma «афиша», фрейм 14:235
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #9299a2;
+  --text-positive: #00b92d;
+  --text-black: #000000;
+  --accent-link: #428bf9;
+  --badge-bg: #ffdd3d;
+  --chip-bg: rgba(0, 0, 0, 0.22);
+  --poster-placeholder: #d9d9d9;
+  --product-bg: #f6f7f8;
+  --button-bg: rgba(0, 16, 36, 0.03);
+  --card-shadow: 0 6px 17px rgba(0, 0, 0, 0.12);
+
+  --pad-screen: 16px;
+  --gap-cards: 12px;
+
+  /* Параллакс: на сколько px картинка может уехать внутри карточки */
+  --parallax-shift: 84px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+.feed {
+  max-width: 100%;
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* отступ между смысловыми блоками */
+  padding: 24px 0;
+}
+
+/* ── Общее: горизонтальный скроллер ──────────────── */
+.fc-scroller {
+  display: flex;
+  gap: var(--gap-cards);
+  padding: 0 var(--pad-screen);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.fc-scroller::-webkit-scrollbar { display: none; }
+.fc-scroller > * {
+  scroll-snap-align: start;
+  scroll-margin-left: var(--pad-screen);
+  flex-shrink: 0;
+}
+
+/* Режим «карточка в фокусе по центру экрана».
+   Отступ по краям 16px: первая и последняя карточки встают
+   ровно у края, промежуточные снапятся по центру экрана. */
+.fc-scroller--center {
+  padding: 0 var(--pad-screen);
+}
+.fc-scroller--center > * {
+  scroll-snap-align: center;
+  scroll-margin-left: 0;
+}
+
+/* Картинка с параллаксом внутри карточки */
+.fc-par-box {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  isolation: isolate;
+  background: var(--poster-placeholder);
+}
+.fc-par-box > img {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--parallax-shift));
+  width: calc(100% + var(--parallax-shift) * 2);
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+/* Текст с растворением справа (Gradient/Text/Secondary Fade) */
+.fc-fade-text {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+}
+
+/* ── Общее: простая шапка секции (заголовок + Все) ── */
+.fc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pad-screen);
+}
+.fc-section-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--text-black);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+.fc-section-header .fc-all-link {
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.41px;
+  color: var(--accent-link);
+  text-decoration: none;
+}
+
+/* ── Общее: tui-шапка (заголовок + подзаголовок + аватар) ── */
+.fc-tui-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 16px 12px 20px;
+}
+.fc-tui-header .fc-texts {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-tui-header .fc-caption {
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  height: 12px;
+  line-height: 12px;
+}
+.fc-tui-header .fc-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+.fc-tui-header .fc-subtitle {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: normal;
+  color: var(--text-secondary);
+}
+.fc-tui-header .fc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ═══ Блок: Offer (баннер-предложение) ═══════════════ */
+.fc-offer {
+  padding: 0 var(--pad-screen);
+}
+.fc-offer .fc-card {
+  background: #fff;
+  border-radius: 29px;
+  box-shadow: var(--card-shadow);
+  padding: 8px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fc-offer .fc-banner {
+  position: relative;
+  height: 177px;
+  border-radius: 20px;
+  overflow: hidden;
+  color: #fff;
+}
+.fc-offer .fc-banner-text {
+  position: absolute;
+  left: 16px;
+  right: 26px;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-offer .fc-banner-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+.fc-offer .fc-banner-line {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: 18px;
+}
+.fc-offer .fc-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 8px;
+}
+.fc-offer .fc-cell-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fc-offer .fc-cell-avatar svg {
+  width: 22px;
+  height: 18px;
+  display: block;
+}
+.fc-offer .fc-cell-texts {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fc-offer .fc-cell-name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.41px;
+  line-height: normal;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.fc-offer .fc-cell-desc {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+
+/* ═══ Блок: Activities (брендовые карточки) ══════════ */
+.fc-brand-card {
+  position: relative;
+  width: 140px;
+  height: 196px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.fc-brand-card .fc-texts {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-primary);
+}
+.fc-brand-card .fc-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.24px;
+  line-height: normal;
+}
+.fc-brand-card .fc-line {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+.fc-brand-card > img {
+  position: absolute;
+  right: -18px;
+  bottom: -12px;
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ═══ Блок: Hero-карусель с параллаксом ══════════════ */
+
+/* Обёртка-снап: браузер равняется по ней, а трансформации
+   (scale/shift) живут на внутренней карточке и снап не сбивают */
+.fc-snap {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+/* CTA-карточка лежит под остальными и открывается свайпом.
+   Обёртка наезжает на слот последней карточки (margin -355 = 343+12),
+   а запас ширины +355 даёт диапазон скролла для раскрытия. */
+.fc-snap--under {
+  z-index: 0;
+  width: calc(343px + 355px);
+  margin-left: -355px;
+  scroll-snap-align: end;
+}
+/* Последняя контентная карточка (перед CTA) снапится к правому
+   краю с отступом 16px — CTA прячется ровно под ней там же.
+   scroll-margin-right компенсирует правый паддинг скроллера:
+   без него конечная снап-точка на 16px не доезжает до конца,
+   и карточка оставалась чуть наехавшей на CTA */
+.fc-snap:has(+ .fc-snap--under),
+.fc-snap--under {
+  scroll-snap-align: end;
+  scroll-margin-right: var(--pad-screen);
+}
+/* Sticky: едет в потоке под последней карточкой, у линии
+   «правый край минус 16px» прилипает и стоит как вкопанная —
+   позицию держит композитор, синхронно со скроллом */
+.fc-snap--under .fc-cta-card {
+  position: sticky;
+  /* 100% здесь — скроллпорт минус паддинги скроллера (по 16 с боков),
+     итог: карточка липнет в 16px от правого края экрана */
+  left: calc(100% - 343px);
+}
+.fc-hero-card {
+  position: relative;
+  width: 343px;
+  height: 428px;
+  border-radius: 32px;
+  transform-origin: center;
+}
+
+/* Карточка-переход «Идеи на выходные» (макет 38:762) */
+.fc-cta-card {
+  position: relative;
+  width: 343px;
+  height: 428px;
+  border-radius: 32px;
+  /* радиальный градиент из макета: прозрачный центр → #ececec к краям */
+  background: radial-gradient(267px 333px at center, rgba(246, 247, 248, 0) 0%, #ececec 100%);
+  overflow: hidden;
+}
+/* Кружки-аватары вокруг текста; позиция задаётся инлайном из JS */
+.fc-cta-ava {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px; /* центр кружка в точке left/top */
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.fc-cta-content {
+  position: absolute;
+  top: calc(50% - 5.2px);
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  color: #333;
+  letter-spacing: -0.08px;
+}
+.fc-cta-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-cta-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.38px;
+  line-height: normal;
+}
+.fc-cta-desc {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: normal;
+}
+.fc-cta-button {
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 30px;
+  background: #ffdd2d;
+  color: #000;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: normal;
+  cursor: pointer;
+}
+.fc-cta-img {
+  position: absolute;
+  left: 50%;
+  top: 131px;
+  width: 208px;
+  height: 224px;
+  object-fit: cover;
+  border-radius: 4px;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  pointer-events: none;
+}
+.fc-hero-card .fc-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.8) 80%);
+  pointer-events: none;
+}
+.fc-chip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 1.5px 6px 2.5px;
+  border-radius: 20px;
+  background: var(--chip-bg);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  white-space: nowrap;
+}
+.fc-hero-card .fc-content {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #fff;
+  letter-spacing: -0.08px;
+}
+.fc-hero-card .fc-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-hero-card .fc-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fc-hero-card .fc-desc {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fc-hero-card .fc-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fc-btn-buy {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: normal;
+  cursor: pointer;
+}
+.fc-cashback {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px 0 6px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+}
+.fc-cashback svg { width: 16px; height: 16px; display: block; }
+.fc-cashback span {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: normal;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* ═══ Блок: Poster-карусель (кино 230×345) ═══════════ */
+.fc-poster-card {
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-poster-card .fc-par-box {
+  height: 345px;
+  border-radius: 20px;
+}
+.fc-poster-card .fc-chip { top: 8px; left: 8px; }
+.fc-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 4px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+}
+.fc-badge svg { width: 12px; height: 12px; display: block; }
+.fc-badge span {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: normal;
+  color: var(--text-primary);
+  padding-bottom: 1px;
+  white-space: nowrap;
+}
+.fc-poster-card .fc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px;
+  font-size: 13px;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  color: var(--text-black);
+}
+.fc-poster-card .fc-info .fc-row-strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-poster-card .fc-info .fc-row { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-poster-card .fc-info .fc-row-muted { font-weight: 400; color: #8e8e93; }
+.fc-poster-card .fc-info .fc-row-muted-strong { font-weight: 600; color: #8e8e93; }
+.fc-poster-card .fc-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fc-poster-card .fc-rating svg { width: 16px; height: 16px; flex: 0 0 16px; display: block; }
+
+/* ═══ Блок: Product grid (товарная сетка) ════════════ */
+/* Шапка прижата к сетке: к её падингу добавляется ещё 24px
+   отступа между блоками ленты, и вместе выходило слишком много */
+.fc-products .fc-tui-header {
+  padding-top: 4px;
+}
+.fc-products .fc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  row-gap: 13px;
+  padding: 0 var(--pad-screen);
+}
+.fc-product-card {
+  width: calc(50% - 6px);
+  display: flex;
+  flex-direction: column;
+}
+.fc-product-card .fc-photo {
+  position: relative;
+  aspect-ratio: 165.5 / 214;
+  border-radius: 20px;
+  background: var(--product-bg);
+  overflow: hidden;
+}
+.fc-product-card .fc-photo > img.fc-product-img {
+  position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  object-fit: contain;
+  mix-blend-mode: darken;
+}
+.fc-product-card .fc-photo .fc-avatar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.fc-product-card .fc-photo .fc-fav {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.fc-product-card .fc-photo .fc-fav img { width: 100%; height: 100%; display: block; }
+.fc-product-card .fc-photo .fc-dots {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 51px;
+  height: 16px;
+}
+.fc-product-card .fc-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0 0 4px;
+}
+.fc-product-card .fc-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fc-product-card .fc-sale {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+.fc-product-card .fc-old-price {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.fc-product-card .fc-discount { color: var(--text-positive); }
+.fc-product-card .fc-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+}
+.fc-product-card .fc-price {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.41px;
+  line-height: normal;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.fc-product-card .fc-mini-cashback {
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 4px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+}
+.fc-product-card .fc-mini-cashback svg { width: 10px; height: 10px; display: block; }
+.fc-product-card .fc-mini-cashback span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  line-height: normal;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.fc-product-card .fc-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-product-card .fc-kind {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  color: var(--text-primary);
+  max-height: 32px;
+  overflow: hidden;
+}
+.fc-product-card .fc-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Кнопка «Посмотреть все» */
+.fc-more {
+  display: flex;
+  justify-content: center;
+  padding: 24px var(--pad-screen) 0;
+}
+.fc-more button {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: var(--button-bg);
+  color: var(--accent-link);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.41px;
+  line-height: normal;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* ═══ travelTicket — «посадочный талон» (макет 65:871) ═══ */
+/* Блок всегда занимает свои 360px, а раскрытие рисует маска.
+   overflow-anchor выключен: иначе браузер подкручивает скролл сам */
+.fc-trip-band {
+  position: relative;
+  height: 360px;
+  overflow: hidden;
+  overflow-anchor: none;
+}
+/* Соседние блоки рисуются поверх билета: у его кромок 34px сейв-зоны,
+   которая иначе накрыла бы их заголовки. Зубцы при этом в
+   безопасности — они внутри билета, а соседи в 24px от края */
+.feed > section {
+  position: relative;
+  z-index: 1;
+}
+.feed > section.fc-trip {
+  /* билет прижат к соседям плотнее остальной ленты: зазор 8px
+     вместо общих 24 — иначе кромки висят далеко от фотографии */
+  margin: -16px 0;
+  overflow-anchor: none;
+  z-index: 0;
+}
+/* Лента под блоком: поднята ровно на скрытую часть билета */
+.fc-trip-below {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+}
+/* Канва на пиксель выше блока и приподнята: край фотографии не
+   должен совпадать с краем маски, иначе на ретине между ними
+   остаётся полупрозрачный ряд пикселей — тонкая светлая линия */
+.fc-trip-canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 362px;
+  overflow: hidden;
+}
+/* Свой контекст наложения: внутри него заголовок поднимается над
+   затемнением, а сам герой целиком остаётся под боковой карточкой */
+.fc-trip-hero { position: absolute; inset: 0; isolation: isolate; }
+/* Обёртка фона: на ней живёт зум раскрытия, а на самой картинке —
+   горизонтальный параллакс. Два разных слоя, чтобы трансформы
+   не конфликтовали */
+.fc-trip-bgwrap { position: absolute; inset: 0; }
+/* Фото не должно перехватывать жест как перетаскивание картинки */
+.fc-trip img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+.fc-trip-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* уезжает влево и подрастает от левого края (параллакс) */
+  transform-origin: left center;
+  will-change: transform;
+}
+.fc-trip-hero .fc-trip-shade {
+  transform-origin: left center;
+  will-change: transform;
+}
+/* Затемнение снизу (166px, как в макете) */
+.fc-trip-shade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 166px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+}
+.fc-trip-shade--card { height: 126px; }
+/* Верхнее затемнение компактной карточки — то же, что у героя:
+   под ним читается её заголовок, когда она занимает его место.
+   Класс отдельный, не .fc-trip-shade: по нему JS находит нижний
+   градиент, и второе совпадение сломало бы выборку. */
+.fc-trip-cardtop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 126px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
+/* Колонка контента: чип сверху, тексты снизу.
+   Рамка 232×280 на отметке 40px от верха блока — одна и та же
+   у героя и у компактной карточки, поэтому бейджи и текст всегда
+   стоят на одной линии (макет 65:871). */
+.fc-trip-col {
+  position: absolute;
+  /* Поднята над затемнением, иначе градиент приглушает белый текст.
+     Z-index именно у колонки, а не у самого заголовка: колонку двигает
+     трансформ, а он создаёт свой контекст наложения — z-index внутри
+     колонки дальше её границ не действует. */
+  z-index: 3;
+  left: 0;
+  top: 40px;
+  width: 290px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: #fff;
+  transition: none;
+}
+.fc-trip-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px 0 5px;
+  border-radius: 20px;
+  background: #ffdd3d;
+}
+.fc-trip-chip svg { width: 14px; height: 14px; display: block; }
+.fc-trip-chip span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  color: #333;
+  line-height: normal;
+}
+/* Верх колонки — направление и триггер (макет 164:6103) */
+.fc-trip-head {
+  padding: 16px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+/* Низ колонки — бейдж кэшбэка, тип билета и цена (макет 164:6104) */
+.fc-trip-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.fc-trip-lines { display: flex; flex-direction: column; gap: 4px; }
+.fc-trip-kind {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+.fc-trip-hot {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  padding: 0 6px 0 4px;
+  border-radius: 20px;
+  background: #ffdd3d;
+}
+.fc-trip-hot svg { width: 10px; height: 12px; display: block; }
+.fc-trip-hot span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  color: #333;
+  line-height: normal;
+}
+.fc-trip-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  /* только одна строка: перенос сдвигал бы заголовок вверх
+     и ломал общую линию контента у всех карточек */
+  align-self: stretch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fc-trip-price-col { display: flex; flex-direction: column; gap: 4px; }
+.fc-trip-price-row { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.fc-trip-price {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.28px;
+  line-height: normal;
+}
+.fc-trip-old {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  text-decoration: line-through;
+  line-height: normal;
+}
+.fc-trip-meta {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+}
+
+/* Компактная карточка следующего направления (232×280, r26) —
+   позиция и размер интерполируются в JS при свайпе */
+.fc-trip-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 232px;
+  height: 280px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #d9d9d9;
+  will-change: transform, width, height;
+}
+.fc-trip-card > img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  object-fit: cover;
+  will-change: transform;
+}
+/* Режим scale: фон и градиент растут вместе с карточкой */
+.fc-trip--scale .fc-trip-card > img {
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+.fc-trip--scale .fc-trip-card .fc-trip-shade {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+  transform: none;
+}
+/* Режим reveal: фон и градиент прибиты к блоку (размеры задаёт JS),
+   карточка работает как раздвигающееся окно */
+.fc-trip--reveal .fc-trip-card .fc-trip-shade {
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  will-change: transform;
+}
+/* Слой текста и бейджей карточки приклеен к блоку по вертикали
+   (JS компенсирует смещение карточки) и едет только по горизонтали:
+   он ровно приезжает на место контента героя, ничего не масштабируя */
+.fc-trip-card .fc-trip-col { will-change: transform; }
+
+/* Затемнение сверху — зеркало нижнего, чтобы заголовок читался
+   на любой фотографии (макет 103:3387) */
+.fc-trip-topshade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 166px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+/* Заголовок блока (макет 104:3836): отступы 16/20/12, между
+   текстом и иконкой 8px, между надзаголовком и заголовком 8px */
+/* Кромки билета (макет 116:4371): белые полосы поверх краёв блока
+   со скруглением, обращённым внутрь. Это углы соседних карточек —
+   сверху и снизу они закругляются навстречу билету. Лежат в секции,
+   а не внутри блока: маска на них не действует, поэтому их сплошная
+   часть заодно накрывает край обрезки, где просвечивал шов. */
+.fc-trip-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  /* 16px видимой кромки плюс 48px наружу. Запас нужен на скролл:
+     маска блока и кромка едут разными путями (одна — обрезкой,
+     другая — трансформом), и на резком движении одна может отстать
+     от другой на несколько пикселей. Пока запас больше отставания,
+     между ними не открывается щель с фотографией. */
+  height: 64px;
+  background: #fff;
+  pointer-events: none;
+  z-index: 3;
+  will-change: transform, border-radius;
+}
+.fc-trip-edge--t { top: -48px; border-radius: 0 0 16px 16px; }
+/* Нижнюю кромку рисует сам нижний блок: она приклеена к его верхнему
+   краю и едет вместе с ним, а он уже двигается 1:1 с раскрытием
+   билета. Отставать от края билета ей попросту нечем — в отличие от
+   отдельного слоя со своей анимацией, который на резком скролле
+   расходился с маской и открывал щель. */
+.fc-trip-below::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -24px;         /* 8 зазора + 16 нахлёста на билет */
+  height: 40px;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  pointer-events: none;
+}
+/* Линия отрыва между кромками свёрнутого билета: пунктир 5/5
+   (макет 115:4341). Как только блок пошёл раскрываться, линия
+   уходит — её место занимает сам билет. */
+.fc-trip-dash {
+  position: absolute;
+  left: 12px;
+  right: 8px;
+  top: 16px;   /* в секции; внутри нижнего слоя — см. правило ниже */
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg, #575b61 0 5px, transparent 5px 10px);
+  pointer-events: none;
+  z-index: 4;
+}
+/* линия живёт в нижнем слое — отсчитываем её от его верхнего края */
+.fc-trip-below > .fc-trip-dash { top: -24px; }
+
+/* Точки-пагинация под контентом карточки (макет: слева, 6px,
+   активная белая). Слой блока, не карточки: карточки едут мимо,
+   точки стоят на месте */
+/* Прозрачный слой скролла со снапом поверх канвы */
+.fc-trip-scroller {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  z-index: 4;
+}
+.fc-trip-scroller::-webkit-scrollbar { display: none; }
+.fc-trip-slot {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* ── Финальная карточка-переход в сервис (макет 77:3524) ──
+   Контент занимает всю ширину карточки и стоит по центру
+   у нижнего края — в отличие от обычной колонки слева. */
+.fc-trip-col--cta {
+  left: 0;
+  right: auto;          /* ширину задаёт JS = ширина блока */
+  align-items: center;
+  justify-content: center;   /* текст с кнопкой по центру карточки */
+}
+.fc-trip-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.fc-trip-cta-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.28px;
+  line-height: normal;
+  text-align: center;
+  color: #fff;
+}
+.fc-trip-cta-desc {
+  margin-top: -8px; /* gap 8px до заголовка при общем gap 16 */
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
+  text-align: center;
+  color: #fff;
+}
+.fc-trip-cta-button {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 80px;
+  background: #000;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: normal;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ── Раскрытие билета силами браузера ──────────────────
+   Прокрутко-зависимые анимации считает компоновщик, без участия
+   JS. На iOS это единственный способ попасть кадр-в-кадр: там
+   прокрутка живёт в отдельном потоке, и любой расчёт из скрипта
+   приходит с опозданием — отсюда дрожь. JS остаётся запасным
+   путём для браузеров без поддержки (см. cssReveal). */
+@supports (animation-timeline: view()) {
+  .feed { timeline-scope: --fc-trip; }
+  .fc-trip {
+    view-timeline-name: --fc-trip;
+    view-timeline-axis: block;
+  }
+
+  /* билет: маска расходится от центра, сам он подтянут вверх
+     на скрытую часть, чтобы примыкать к блоку сверху */
+  @keyframes fc-trip-open {
+    from { clip-path: inset(164px 0); transform: translateY(-164px); }
+    to   { clip-path: inset(0 0 0 0);   transform: translateY(0); }
+  }
+  /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
+     поэтому во время раскрытия она стоит на месте */
+  @keyframes fc-trip-below {
+    from { transform: translateY(-328px); }
+    to   { transform: translateY(0); }
+  }
+  /* пунктир держится лишь в самом начале пути */
+  @keyframes fc-trip-dash {
+    from { opacity: 1; }
+    8%   { opacity: 0; }
+    to   { opacity: 0; }
+  }
+  /* фон из крупного плана приходит к обычному масштабу */
+  @keyframes fc-trip-zoom {
+    from { transform: scale(1.14); }
+    to   { transform: scale(1); }
+  }
+
+  .fc-trip-band,
+  .fc-trip-below,
+  .fc-trip-dash,
+  .fc-trip-bgwrap {
+    animation: linear both;
+    animation-timeline: --fc-trip;
+    /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
+       раскрывающейся высоте: тогда компенсация точная */
+    animation-range: cover 15vh calc(15vh + 328px);
+  }
+  .fc-trip-band     { animation-name: fc-trip-open; }
+  .fc-trip-dash     { animation-name: fc-trip-dash; }
+  .fc-trip-below         { animation-name: fc-trip-below; }
+  .fc-trip-bgwrap   { animation-name: fc-trip-zoom; }
+}
