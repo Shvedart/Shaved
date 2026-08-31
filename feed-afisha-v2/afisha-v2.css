@@ -481,8 +481,9 @@ html, body {
   height: 86px;
 }
 .fc-hero-card .fc-title {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: -0.41px;
   line-height: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -490,8 +491,12 @@ html, body {
   overflow: hidden;
 }
 .fc-hero-card .fc-desc {
-  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;            /* между площадкой и датой */
+  font-size: 15px;
   font-weight: 400;
+  letter-spacing: -0.24px;
   line-height: normal;
 }
 .fc-hero-card .fc-desc > div {
