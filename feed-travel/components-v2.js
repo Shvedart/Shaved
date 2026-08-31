@@ -388,21 +388,19 @@ const Feed = (() => {
           <div class="fc-trip-hero">
             <div class="fc-trip-bgwrap"></div>
             <div class="fc-trip-shade"></div>
+            <!-- затемнение под текстом, а не поверх: иначе оно
+                 приглушало белый заголовок -->
+            <div class="fc-trip-topshade"></div>
             <div class="fc-trip-col"></div>
-          </div>
-          <div class="fc-trip-topshade"></div>
-          <div class="fc-trip-heads">
-            <div class="fc-trip-head-caption" data-role="head-caption"></div>
-            <div class="fc-trip-head" data-role="head-cur"></div>
-            <div class="fc-trip-head" data-role="head-next"></div>
-            <div class="fc-trip-plane">${ICONS.plane}</div>
           </div>
           <div class="fc-trip-card" data-role="next">
             <div class="fc-trip-shade fc-trip-shade--card"></div>
+            <div class="fc-trip-cardtop"></div>
             <div class="fc-trip-col"></div>
           </div>
           <div class="fc-trip-card" data-role="incoming">
             <div class="fc-trip-shade fc-trip-shade--card"></div>
+            <div class="fc-trip-cardtop"></div>
             <div class="fc-trip-col"></div>
           </div>
           <div class="fc-trip-scroller">
@@ -465,29 +463,12 @@ const Feed = (() => {
         if (dashEl) below.prepend(dashEl);
       }
 
-      /* Заголовки над карточками. Два слоя: текущий и следующий.
-         headingMode: 'slide' — едут вместе с карточками (у каждой
-         карточки свой заголовок), 'fade' — один сменяется другим. */
-      const hasHeadings = !!(block.headingCaption || (items || []).some(it => it.heading));
-      const CARD_TOP = hasHeadings ? 125 : 0; // без заголовков карточки на всю высоту
-      const headMode = block.headingMode === 'fade' ? 'fade' : 'slide';
+      const CARD_TOP = 40;       // рамка контента внутри блока
+      /* Выглядывает ли следующая карточка из-за правого края.
+         peek: false — прячем её целиком за экран. */
+      const peek = block.peek !== false;
+      const PARK = peek ? -70 : 16;   // где стоит боковая карточка
       const topshade = section.querySelector('.fc-trip-topshade');
-      const heads = section.querySelector('.fc-trip-heads');
-      const headCur = section.querySelector('[data-role="head-cur"]');
-      const headNext = section.querySelector('[data-role="head-next"]');
-      let headCurIdx = -1, headNextIdx = -1;
-      const headHtml = it => it.heading
-        ? `<div class="fc-trip-head-title">${it.heading.title.split('\n').map(esc).join('<br>')}</div>`
-        : '';
-      /* Надзаголовок одинаков для всех направлений, поэтому стоит
-         отдельным слоем: будь он внутри сменяющегося заголовка,
-         при листании один и тот же текст мигал бы сам по себе. */
-      const headCaption = section.querySelector('[data-role="head-caption"]');
-      if (!hasHeadings) { heads.style.display = "none"; topshade.style.display = "none"; }
-      headCaption.textContent = block.headingCaption
-        || (items.find(it => it.heading && it.heading.caption) || {}).heading?.caption
-        || '';
-
       const hero = section.querySelector('.fc-trip-hero');
       const bgwrap = section.querySelector('.fc-trip-bgwrap');
       const heroShade = hero.querySelector('.fc-trip-shade');
@@ -495,18 +476,21 @@ const Feed = (() => {
       const next = section.querySelector('[data-role="next"]');
       const incoming = section.querySelector('[data-role="incoming"]');
 
-      const chipHtml = it =>
-        `<div class="fc-trip-chip">${ICONS.crown14}<span>${esc(it.cashback)}</span></div>`;
-      const textsHtml = (it, withHot) => `
-        <div class="fc-trip-texts">
-          ${withHot && it.hot ? `<div class="fc-trip-hot">${ICONS.fire}<span>Горящий</span></div>` : ''}
-          <div class="fc-trip-name">${esc(it.title)}</div>
-          <div class="fc-trip-price-col">
+      /* Колонка карточки (макет 164:6101): сверху направление
+         с триггером, снизу бейдж кэшбэка и цена. Заголовок есть
+         только у раскрытой карточки — у компактной он проявляется
+         по мере того, как она занимает место героя. */
+      const colHtml = it => `
+        <div class="fc-trip-head" data-role="head">${esc(it.place)}${
+          it.trigger ? `<br>${esc(it.trigger)}` : ''}</div>
+        <div class="fc-trip-bottom">
+          <div class="fc-trip-chip">${ICONS.crown14}<span>${esc(it.cashback)}</span></div>
+          <div class="fc-trip-lines">
+            <div class="fc-trip-kind">${esc(it.kind || 'Авиабилеты')}</div>
             <div class="fc-trip-price-row">
               <span class="fc-trip-price">${esc(it.price)}</span>
               ${it.oldPrice ? `<span class="fc-trip-old">${esc(it.oldPrice)}</span>` : ''}
             </div>
-            <div class="fc-trip-meta">${esc(it.meta)}</div>
           </div>
         </div>`;
 
@@ -519,15 +503,19 @@ const Feed = (() => {
           <button class="fc-trip-cta-button" type="button">${esc(it.button || 'Смотреть')}</button>
         </div>`;
 
-      const fillCol = (col, it, withHot) => {
+      const fillCol = (col, it) => {
         col.classList.toggle('fc-trip-col--cta', !!it.cta);
-        col.innerHTML = it.cta ? ctaHtml(it) : chipHtml(it) + textsHtml(it, withHot);
+        col.innerHTML = it.cta ? ctaHtml(it) : colHtml(it);
       };
+      const headOf = col => col.querySelector('[data-role="head"]');
       const fillCard = (card, it, idx) => {
         mountImg(card, idx, '');
         // у карточки-перехода фон чистый, без затемнения (макет 77:3524)
-        card.querySelector('.fc-trip-shade').style.display = it.cta ? 'none' : '';
-        fillCol(card.querySelector('.fc-trip-col'), it, true);
+        // затемнения есть и у карточки-перехода: под ними фотография,
+        // и без них текст с кнопкой теряется на светлом небе
+        card.querySelector('.fc-trip-shade').style.display = '';
+        card.querySelector('.fc-trip-cardtop').style.display = '';
+        fillCol(card.querySelector('.fc-trip-col'), it);
       };
 
       /* Два режима фона (block.bgMode):
@@ -543,8 +531,11 @@ const Feed = (() => {
           // градиент тянется от 126px (компактная) до 166px (герой) —
           // иначе на подстановке нового героя он прыгал бы
           const k = (cardH - 280) / (H - 280);
+          const kk = Math.min(1, Math.max(0, k));
           card.querySelector('.fc-trip-shade').style.height =
-            (126 + 40 * Math.min(1, Math.max(0, k))).toFixed(1) + 'px';
+            (126 + 40 * kk).toFixed(1) + 'px';
+          card.querySelector('.fc-trip-cardtop').style.height =
+            (126 + 40 * kk).toFixed(1) + 'px';
         }
         if (revealMode) {
           const dx = (-left).toFixed(1);
@@ -594,23 +585,8 @@ const Feed = (() => {
 
         if (heroIdx !== i) {
           heroIdx = i;
-          heroShade.style.display = items[i].cta ? 'none' : '';
-          fillCol(heroCol, items[i], true);
-        }
-        // заголовки: текущий уезжает, следующий приходит ему на смену
-        if (headCurIdx !== i) { headCurIdx = i; headCur.innerHTML = headHtml(items[i]); }
-        const nxt = items[i + 1];
-        if (headNextIdx !== i + 1) { headNextIdx = i + 1; headNext.innerHTML = nxt ? headHtml(nxt) : ''; }
-        if (headMode === 'slide') {
-          headCur.style.transform = `translateX(${(-W * t).toFixed(1)}px)`;
-          headNext.style.transform = `translateX(${(W * (1 - t)).toFixed(1)}px)`;
-          headCur.style.opacity = '1';
-          headNext.style.opacity = '1';
-        } else {
-          headCur.style.transform = 'none';
-          headNext.style.transform = 'none';
-          headCur.style.opacity = (1 - Math.min(1, t * 2)).toFixed(3);
-          headNext.style.opacity = Math.max(0, t * 2 - 1).toFixed(3);
+          heroShade.style.display = '';
+          fillCol(heroCol, items[i]);
         }
 
         // контент карточки-перехода держит ширину блока: иначе при
@@ -630,8 +606,9 @@ const Feed = (() => {
            у неё свой самодостаточный кадр. Гасим их по мере подъезда
            к ней, чтобы не пропадали рывком. */
         const ctaFade = items[i].cta ? 0 : (items[i + 1]?.cta ? 1 - t : 1);
-        heads.style.opacity = (sideIn * ctaFade).toFixed(3);
-        topshade.style.opacity = ctaFade.toFixed(3);
+        // затемнение сверху держим всегда: раньше оно гасло при подъезде
+        // к карточке-переходу, и это читалось как пропажа слоя
+        topshade.style.opacity = '1';
 
         const bg = mountImg(bgwrap, i, 'fc-trip-bg');
         const shift = W * 0.18 * t;
@@ -649,7 +626,7 @@ const Feed = (() => {
         if (nx) {
           if (nextIdx !== i + 1) { nextIdx = i + 1; fillCard(next, nx, i + 1); }
           else mountImg(next, i + 1, '');
-          const left = parkRight((W - 70) * (1 - t));
+          const left = parkRight((W + PARK) * (1 - t));
           const top = CARD_TOP * (1 - t);
           const w = 232 + (W - 232) * t;
           const h = 280 + (H - 280) * t;
@@ -657,10 +634,16 @@ const Feed = (() => {
           next.style.width = w.toFixed(1) + 'px';
           next.style.height = h.toFixed(1) + 'px';
           next.style.borderRadius = (26 * (1 - t)).toFixed(1) + 'px';
+          // заголовок появляется, пока карточка занимает место героя
+          const nh = headOf(next.querySelector('.fc-trip-col'));
+          if (nh) nh.style.opacity = t.toFixed(3);
           glue(next, left, top, W, H, h);
         }
 
-        const inc = items[i + 2];
+        /* Карточка через одну нужна была, пока следующая выглядывала
+           из-за края: она занимала освобождающееся место. Теперь
+           боковая уезжает за экран целиком, и подставлять нечего. */
+        const inc = peek ? items[i + 2] : null;
         const IN_FROM = 0.55;
         incoming.style.display = inc && t > 0.05 ? '' : 'none';
         if (inc) {
@@ -670,8 +653,10 @@ const Feed = (() => {
           // в конце свайпа left = W - 70, то есть та же точка, где
           // она окажется после подстановки — без отскока
           const u = Math.min(1, Math.max(0, (t - IN_FROM) / (1 - IN_FROM)));
-          const left = parkRight((W + 16) - 86 * u);
+          const left = parkRight((W + 16) - 86 * u);   // peek-режим
           incoming.style.transform = `translate(${left.toFixed(1)}px, ${CARD_TOP}px)`;
+          const ih = headOf(incoming.querySelector('.fc-trip-col'));
+          if (ih) ih.style.opacity = '0';
           glue(incoming, left, CARD_TOP, W, H, 280);
         }
       }
@@ -684,7 +669,8 @@ const Feed = (() => {
       const HINT_REPEAT = 10000; // и до каждой следующей
       const HINT_SHIFT = 44;    // на сколько отъезжают
       const HINT_TIME = 1100;   // длительность движения туда-обратно
-      const hintOn = block.hint !== false;
+      // при автолистании подсказка не нужна: карточки и так едут сами
+      const hintOn = block.hint !== false && block.autoplay !== true;
       let hintTimer = 0, hintRaf = 0, hintCount = 0;
       let hintPending = false, userSwiped = false;
 
@@ -703,6 +689,7 @@ const Feed = (() => {
       function dropHint() {
         userSwiped = true;
         pauseHint();
+        stopAuto();
         if (hintRaf) {
           cancelAnimationFrame(hintRaf);
           hintRaf = 0;
@@ -728,13 +715,40 @@ const Feed = (() => {
         hintRaf = requestAnimationFrame(step);
       }
 
+      /* ── Автолистание ──
+         autoplay: true — карточки сами сменяются раз в N мс, пока
+         блок раскрыт и на экране. Первое же касание карусели
+         выключает автолистание насовсем: перебивать человека,
+         который начал листать сам, — худшее, что можно сделать. */
+      const autoOn = block.autoplay === true;
+      const AUTO_MS = block.autoplayDelay || 3000;
+      let autoTimer = 0, autoScrolling = false;
+      function planAuto() {
+        clearTimeout(autoTimer);
+        if (!autoOn || userSwiped) return;
+        autoTimer = setTimeout(autoStep, AUTO_MS);
+      }
+      function stopAuto() { clearTimeout(autoTimer); autoTimer = 0; }
+      function autoStep() {
+        autoTimer = 0;
+        if (userSwiped || !W) return;
+        const i = Math.round(scroller.scrollLeft / W);
+        // с последней возвращаемся к первой — карусель закольцована
+        const to = i >= items.length - 1 ? 0 : i + 1;
+        autoScrolling = true;
+        scroller.scrollTo({ left: W * to, behavior: 'smooth' });
+        setTimeout(() => { autoScrolling = false; }, 700);
+        planAuto();
+      }
+
       /* Листание — нативный scroll-snap браузера (см. CSS).
          JS только пересчитывает раскрытие карточек при скролле. */
       let tickingX = false;
       function onScrollX() {
         // листают сами — подсказка больше не нужна. Свою анимацию
-        // не считаем: она идёт при hintRaf и возвращает скролл в ноль
-        if (!hintRaf && scroller.scrollLeft > 2) dropHint();
+        // не считаем: она идёт при hintRaf и возвращает скролл в ноль,
+        // и своё автолистание — оно двигает скролл само
+        if (!hintRaf && !autoScrolling && scroller.scrollLeft > 2) dropHint();
         if (document.hidden) { update(); return; }
         if (!tickingX) { tickingX = true; requestAnimationFrame(update); }
       }
@@ -754,7 +768,7 @@ const Feed = (() => {
       // закрытая высота = две сомкнутые кромки по 16px: зубцы
       // сходятся посередине, скругления углов помещаются целиком
       const H_CLOSED = 32;  // свёрнутый билет: две кромки по 16px впритык
-      const H_OPEN = 443;        // блок вырос: сверху появился заголовок
+      const H_OPEN = 360;        // заголовок переехал внутрь карточки
       /* Раскрытие идёт 1:1 со скроллом — пиксель прокрутки на пиксель
          открывшегося билета, поэтому лента под ним стоит на месте.
          Зависимость строго линейная: ускорение сломало бы
@@ -795,12 +809,14 @@ const Feed = (() => {
         revealScale = cssReveal ? 1 : 1 + REVEAL_ZOOM * (1 - e);
         revealE = e;
         // подсказку отсчитываем, только пока блок раскрыт и на экране
-        if (hintOn && !userSwiped) {
+        if ((hintOn || autoOn) && !userSwiped) {
           const наЭкране = top < vh && top > -H_OPEN;
           if (наЭкране && e > 0.99) {
-            if (!hintPending && !hintRaf) planHint();
-          } else if (hintPending) {
-            pauseHint();
+            if (hintOn && !hintPending && !hintRaf) planHint();
+            if (autoOn && !autoTimer) planAuto();
+          } else {
+            if (hintPending) pauseHint();
+            if (autoTimer) stopAuto();
           }
         }
         update();

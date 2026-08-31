@@ -875,7 +875,7 @@ html, body {
 }
 .fc-trip-lines { display: flex; flex-direction: column; gap: 4px; }
 .fc-trip-kind {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.08px;
   line-height: normal;

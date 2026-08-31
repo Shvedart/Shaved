@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Лента — путешествия</title>
-<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="components-v2.css">
 </head>
 <body>
 
 <div class="feed" id="feed"></div>
 
-<script src="components.js"></script>
+<script src="components-v2.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    Дубль ленты: вместо блока афиши — блок путешествий
@@ -88,71 +88,59 @@ const FEED = [
     // фон карточки при свайпе: 'scale' — растёт вместе с карточкой,
     // 'reveal' — прибит к блоку, карточка раздвигается как окно
     bgMode: 'scale',
+    autoplay: false,
     items: [
       {
-        img: 'assets/travel/moscow.webp',
-        title: 'Авиабилеты в Москву',
+        img: 'assets/travel/phuket.webp',
+        place: 'Пхукет',
+        trigger: 'вода +29°',
+        cashback: '7%',
         price: 'от 5 240 ₽',
         oldPrice: '7 900 ₽',
-        meta: '15 сент • из Калининграда',
-        cashback: '7%',
-        hot: true,
       },
       {
-        img: 'assets/travel/spb.jpg',
-        title: 'Авиабилеты в Петербург',
+        img: 'assets/travel/alanya.webp',
+        place: 'Аланья',
+        trigger: 'Пляж Клеопатры',
+        cashback: '5%',
         price: 'от 3 180 ₽',
         oldPrice: '4 900 ₽',
-        meta: '18 сент • из Москвы',
-        cashback: '5%',
       },
       {
-        img: 'assets/travel/almaty.webp',
-        title: 'Авиабилеты в Алматы',
+        img: 'assets/travel/makhachkala.webp',
+        place: 'Махачкала',
+        trigger: 'Озёра выше облаков',
+        cashback: '10%',
         price: 'от 12 450 ₽',
         oldPrice: '18 300 ₽',
-        meta: '24 сент • из Москвы',
-        cashback: '10%',
-        hot: true,
       },
       {
-        img: 'assets/travel/hanoi.webp',
-        title: 'Авиабилеты в Ханой',
+        img: 'assets/travel/barnaul.jpg',
+        place: 'Барнаул',
+        trigger: 'Степи до горизонта',
+        cashback: '5%',
         price: 'от 28 940 ₽',
         oldPrice: '41 200 ₽',
-        meta: '7 окт • из Москвы',
-        cashback: '5%',
       },
       {
-        img: 'assets/travel/cairo.webp',
-        title: 'Авиабилеты в Каир',
+        img: 'assets/travel/orenburg.webp',
+        place: 'Оренбург',
+        trigger: 'Бархатные холмы',
+        cashback: '7%',
         price: 'от 19 380 ₽',
         oldPrice: '27 900 ₽',
-        meta: '15 окт • из Москвы',
-        cashback: '7%',
-        hot: true,
       },
       {
-        img: 'assets/travel/nnovgorod.webp',
-        title: 'Авиабилеты в Н. Новгород',
-        price: 'от 3 940 ₽',
-        oldPrice: '5 600 ₽',
-        meta: '22 окт • из Москвы',
+        img: 'assets/travel/perm.webp',
+        place: 'Пермь',
+        trigger: 'Запах хвои и туман',
         cashback: '5%',
+        price: 'от 6 480 ₽',
+        oldPrice: '9 200 ₽',
       },
-      {
-        img: 'assets/travel/minsk.jpg',
-        title: 'Авиабилеты в Минск',
-        price: 'от 7 310 ₽',
-        oldPrice: '10 200 ₽',
-        meta: '29 окт • из Москвы',
-        cashback: '7%',
-        hot: true,
-      },
-      // финальная карточка — переход в сервис (макет 77:3524)
       {
         cta: true,
-        img: 'assets/travel/cta-suitcase.png',
+        img: 'assets/travel/stavropol.webp',
         title: 'Скидки до 30%\nна горящие билеты',
         desc: 'Подберём даты и цену под вас',
         button: 'Смотреть билеты',

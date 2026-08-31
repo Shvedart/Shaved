@@ -727,7 +727,7 @@ html, body {
    overflow-anchor выключен: иначе браузер подкручивает скролл сам */
 .fc-trip-band {
   position: relative;
-  height: 443px;   /* 360 карточек + 83 на заголовок сверху */
+  height: 360px;
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -762,10 +762,12 @@ html, body {
   left: 0;
   right: 0;
   top: -1px;
-  height: 445px;
+  height: 362px;
   overflow: hidden;
 }
-.fc-trip-hero { position: absolute; inset: 0; }
+/* Свой контекст наложения: внутри него заголовок поднимается над
+   затемнением, а сам герой целиком остаётся под боковой карточкой */
+.fc-trip-hero { position: absolute; inset: 0; isolation: isolate; }
 /* Обёртка фона: на ней живёт зум раскрытия, а на самой картинке —
    горизонтальный параллакс. Два разных слоя, чтобы трансформы
    не конфликтовали */
@@ -797,10 +799,23 @@ html, body {
   right: 0;
   bottom: 0;
   height: 166px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 100%);
   pointer-events: none;
 }
 .fc-trip-shade--card { height: 126px; }
+/* Верхнее затемнение компактной карточки — то же, что у героя:
+   под ним читается её заголовок, когда она занимает его место.
+   Класс отдельный, не .fc-trip-shade: по нему JS находит нижний
+   градиент, и второе совпадение сломало бы выборку. */
+.fc-trip-cardtop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 126px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
 
 /* Колонка контента: чип сверху, тексты снизу.
    Рамка 232×280 на отметке 40px от верха блока — одна и та же
@@ -808,15 +823,19 @@ html, body {
    стоят на одной линии (макет 65:871). */
 .fc-trip-col {
   position: absolute;
+  /* Поднята над затемнением, иначе градиент приглушает белый текст.
+     Z-index именно у колонки, а не у самого заголовка: колонку двигает
+     трансформ, а он создаёт свой контекст наложения — z-index внутри
+     колонки дальше её границ не действует. */
+  z-index: 3;
   left: 0;
-  top: 125px;
-  width: 232px;
+  top: 40px;
+  width: 290px;
   height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 20px 20px 16px;
   color: #fff;
   transition: none;
 }
@@ -837,11 +856,29 @@ html, body {
   color: #333;
   line-height: normal;
 }
-.fc-trip-texts {
+/* Верх колонки — направление и триггер (макет 164:6103) */
+.fc-trip-head {
+  padding: 16px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+/* Низ колонки — бейдж кэшбэка, тип билета и цена (макет 164:6104) */
+.fc-trip-bottom {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.fc-trip-lines { display: flex; flex-direction: column; gap: 4px; }
+.fc-trip-kind {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.08px;
+  line-height: normal;
 }
 .fc-trip-hot {
   display: flex;
@@ -877,7 +914,7 @@ html, body {
 .fc-trip-price {
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.38px;
+  letter-spacing: 0.28px;
   line-height: normal;
 }
 .fc-trip-old {
@@ -950,65 +987,12 @@ html, body {
   right: 0;
   top: 0;
   height: 166px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
   pointer-events: none;
   z-index: 2;
 }
 /* Заголовок блока (макет 104:3836): отступы 16/20/12, между
    текстом и иконкой 8px, между надзаголовком и заголовком 8px */
-.fc-trip-heads {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 22px;          /* сразу под верхней кромкой */
-  height: 100px;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 3;
-}
-.fc-trip-head {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  /* сверху место под статичный надзаголовок (16 + его строка),
-     справа — под иконку 40 + 8 */
-  padding: 31px 68px 12px 20px;
-  will-change: transform, opacity;
-}
-.fc-trip-head-caption {
-  position: absolute;
-  left: 20px;
-  top: 16px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.28px;
-  line-height: normal;
-  text-transform: uppercase;
-  color: #fff;
-}
-.fc-trip-head-title {
-  margin-top: 8px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.38px;
-  line-height: normal;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-}
-/* иконка в углу: контейнер 40×40, сама 19×19 по центру */
-.fc-trip-plane {
-  position: absolute;
-  right: 20px;
-  top: 16px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.fc-trip-plane svg { width: 19px; height: 19px; display: block; }
-
 /* Кромки билета (макет 116:4371): белые полосы поверх краёв блока
    со скруглением, обращённым внутрь. Это углы соседних карточек —
    сверху и снизу они закругляются навстречу билету. Лежат в секции,
@@ -1064,6 +1048,9 @@ html, body {
 /* линия живёт в нижнем слое — отсчитываем её от его верхнего края */
 .fc-trip-below > .fc-trip-dash { top: -24px; }
 
+/* Точки-пагинация под контентом карточки (макет: слева, 6px,
+   активная белая). Слой блока, не карточки: карточки едут мимо,
+   точки стоят на месте */
 /* Прозрачный слой скролла со снапом поверх канвы */
 .fc-trip-scroller {
   position: absolute;
@@ -1089,7 +1076,7 @@ html, body {
   left: 0;
   right: auto;          /* ширину задаёт JS = ширина блока */
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;   /* текст с кнопкой по центру карточки */
 }
 .fc-trip-cta {
   display: flex;
@@ -1097,8 +1084,6 @@ html, body {
   align-items: center;
   gap: 16px;
   width: 100%;
-  /* блок текста с кнопкой стоит выше нижнего края, чем у обычных карточек */
-  transform: translateY(-24px);
 }
 .fc-trip-cta-title {
   font-size: 20px;
@@ -1149,13 +1134,13 @@ html, body {
   /* билет: маска расходится от центра, сам он подтянут вверх
      на скрытую часть, чтобы примыкать к блоку сверху */
   @keyframes fc-trip-open {
-    from { clip-path: inset(205.5px 0); transform: translateY(-205.5px); }
+    from { clip-path: inset(164px 0); transform: translateY(-164px); }
     to   { clip-path: inset(0 0 0 0);   transform: translateY(0); }
   }
   /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
      поэтому во время раскрытия она стоит на месте */
   @keyframes fc-trip-below {
-    from { transform: translateY(-411px); }
+    from { transform: translateY(-328px); }
     to   { transform: translateY(0); }
   }
   /* пунктир держится лишь в самом начале пути */
@@ -1178,7 +1163,7 @@ html, body {
     animation-timeline: --fc-trip;
     /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
        раскрывающейся высоте: тогда компенсация точная */
-    animation-range: cover 15vh calc(15vh + 411px);
+    animation-range: cover 15vh calc(15vh + 328px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
   .fc-trip-dash     { animation-name: fc-trip-dash; }
