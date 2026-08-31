@@ -482,10 +482,10 @@ const Feed = (() => {
          по мере того, как она занимает место героя. */
       const colHtml = it => `
         <div class="fc-trip-head" data-role="head">${esc(it.place)}${
-          /* тире остаётся при городе, подпись уходит на свою строку.
-             dash: false у направления — обойтись без тире */
+          /* подпись уходит на свою строку; dash: true у направления
+             добавляет тире после города */
           it.trigger
-            ? `${it.dash === false ? '' : '\u00A0—'}<br>${esc(it.trigger)}`
+            ? `${it.dash === true ? '\u00A0—' : ''}<br>${esc(it.trigger)}`
             : ''}</div>
         <div class="fc-trip-bottom">
           <div class="fc-trip-chip">${ICONS.crown14}<span>${esc(it.cashback)}</span></div>
