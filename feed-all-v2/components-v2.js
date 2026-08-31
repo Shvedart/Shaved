@@ -185,8 +185,8 @@ const Feed = (() => {
             <div class="fc-photo">
               <img class="fc-product-img" src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">
               ${b.avatar ? `<img class="fc-avatar" src="${esc(b.avatar)}" alt="">` : ''}
-              <button class="fc-fav" type="button" aria-label="В избранное"><img src="feed/assets/heart.svg" alt=""></button>
-              <img class="fc-dots" src="feed/assets/pagination.svg" alt="">
+              <button class="fc-fav" type="button" aria-label="В избранное"><img src="assets/heart.svg" alt=""></button>
+              <img class="fc-dots" src="assets/pagination.svg" alt="">
             </div>
             <div class="fc-item-info">
               <div class="fc-price-block">
