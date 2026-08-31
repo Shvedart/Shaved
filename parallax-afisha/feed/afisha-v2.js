@@ -113,7 +113,7 @@ const Feed = (() => {
   register('heroCarousel', b => el(`
     <section class="fc-hero${b.scrollDrift ? ' fc-hero--drift' : ''}">
       ${sectionHeader(b)}
-      <div class="fc-scroller fc-scroller--center" data-parallax
+      <div class="fc-scroller fc-scroller--center" data-hero
            data-loop="${b.loop === false ? '' : '1'}">
         ${(b.items || []).map(m => heroCardHtml(m)).join('')}
       </div>
@@ -484,6 +484,184 @@ const Feed = (() => {
 
         window.addEventListener('scroll', onPageScroll, { passive: true });
       }
+    });
+  }
+
+
+  /* ── Карусель афиши ────────────────────────────────
+     Своя реализация вместо общего параллакса: карточка в фокусе
+     стоит по центру экрана в полный размер, соседние чуть меньше,
+     фотография внутри отстаёт от карточки, лента закольцована.
+
+     Листание — нативный scroll-snap браузера. Скрипт только читает
+     scrollLeft и раздаёт трансформы: ни одного касания к позиции
+     скролла во время движения, иначе на iOS сбивается инерция. */
+  function initHeroCarousel(root = document) {
+    const SHRINK = 0.06;   // насколько меньше соседние карточки
+    const LAG = 85;        // на столько пикселей отстаёт фотография
+    const CLONES = 3;      // дубликатов по краям для зацикливания
+    const SETTLE = 120;    // мс тишины, после которых считаем, что встали
+
+    root.querySelectorAll('.fc-scroller[data-hero]').forEach(scroller => {
+      if (scroller.dataset.heroReady) return;
+      scroller.dataset.heroReady = '1';
+
+      /* Зацикливание: по краям дублируем по несколько карточек.
+         Докрутив до дубликата, скролл перескакивает на такую же
+         настоящую — прыжок незаметен, потому что кадр не меняется. */
+      const looped = scroller.dataset.loop === '1';
+      const realCount = scroller.children.length;
+      if (looped && realCount > CLONES) {
+        const slots = [...scroller.children];
+        for (let i = 0; i < CLONES; i++) {
+          const head = slots[i].cloneNode(true);
+          const tail = slots[realCount - 1 - i].cloneNode(true);
+          head.dataset.clone = tail.dataset.clone = '1';
+          scroller.append(head);
+          scroller.prepend(tail);
+        }
+      }
+      const first = looped && realCount > CLONES ? CLONES : 0;
+
+      const slots = [...scroller.children];
+      const cards = slots.map(sl => sl.querySelector('.fc-hero-card'));
+      const imgs = cards.map(c => c && c.querySelector('img'));
+      if (!cards[0]) return;
+
+      /* Фотографии декодируем заранее: дубликаты попадают в кадр
+         только на стыке, и ленивая загрузка давала заминку ровно там */
+      for (const im of imgs) {
+        if (!im) continue;
+        im.loading = 'eager';
+        if (im.decode) im.decode().catch(() => {});
+      }
+
+      /* Геометрию берём из offsetLeft/offsetWidth: это чистая
+         раскладка, её не искажают наши же трансформы — в отличие
+         от getBoundingClientRect, который вернул бы размеры
+         уже уменьшенной соседней карточки. */
+      let step = 0, cardW = 0;
+      const snapOf = i => slots[i].offsetLeft + slots[i].offsetWidth / 2
+                          - scroller.clientWidth / 2;
+      function measure() {
+        cardW = slots[first].offsetWidth;
+        step = slots.length > 1 ? slots[1].offsetLeft - slots[0].offsetLeft : cardW;
+      }
+
+      /* Положение карточки относительно фокуса: 0 — стоит по центру,
+         ±1 — соседняя. На нём держатся и масштаб, и параллакс. */
+      const parked = new Array(slots.length).fill(null);
+      function paint() {
+        const p = scroller.scrollLeft;
+        for (let i = 0; i < cards.length; i++) {
+          const rel = (p - snapOf(i)) / step;
+          const a = Math.max(-1, Math.min(1, rel));
+          // за пределами кадра ничего не меняется — не трогаем стили
+          const far = Math.abs(rel) > 1.5;
+          if (far && parked[i] === 'far') continue;
+          parked[i] = far ? 'far' : null;
+          const scale = 1 - SHRINK * Math.abs(a);
+          /* Уменьшаясь, соседка отходит от центральной — зазор между
+             ними вырос бы. Подвигаем её обратно ровно на половину
+             съеденной ширины, и зазор остаётся тем же 8px. */
+          const dx = SHRINK * a * cardW / 2;
+          cards[i].style.transform =
+            `translateX(${dx.toFixed(2)}px) scale(${scale.toFixed(4)})`;
+          if (imgs[i]) imgs[i].style.transform = `translateX(${(a * LAG).toFixed(2)}px)`;
+        }
+      }
+
+      /* ── Перескок на стыке ──
+         Только когда лента встала: подмена позиции на лету сбивает
+         инерцию и снап — именно это читалось как затык на переходе
+         с последней карточки на первую. */
+      let settleTimer = 0, jumpedThisFling = false;
+      function indexAt(p) { return Math.round((p - snapOf(first)) / step); }
+      function jump(exact) {
+        const i = indexAt(scroller.scrollLeft);
+        let to = i;
+        if (i < 0) to = i + realCount;
+        else if (i > realCount - 1) to = i - realCount;
+        if (to === i) return;
+        const from = first + i, dest = first + to;
+        if (!slots[dest]) return;
+        if (exact) {
+          // встали ровно на снап-позицию двойника; снап на этот кадр
+          // выключаем, иначе браузер станет доводить её анимацией
+          const prev = scroller.style.scrollSnapType;
+          scroller.style.scrollSnapType = 'none';
+          scroller.scrollLeft = snapOf(dest);
+          void scroller.offsetWidth;
+          scroller.style.scrollSnapType = prev;
+        } else {
+          /* На лету сдвигаем на разницу измеренных позиций двойников:
+             прицеливаться в снап нельзя — округление до ближайшей
+             карточки дёрнуло бы ленту вбок посреди броска. */
+          scroller.scrollLeft += snapOf(dest) - snapOf(from);
+        }
+      }
+
+      /* Пока палец на экране, перескакивать нельзя: человек ведёт
+         ленту сам, и подмена позиции выдёргивает её из-под пальца.
+         Медленный свайп с задержкой как раз давал паузу в событиях
+         скролла длиннее SETTLE — и перескок случался прямо в жесте. */
+      let touching = false;
+      const holdStart = () => { touching = true; clearTimeout(settleTimer); };
+      const holdEnd = () => {
+        touching = false;
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(settled, SETTLE);
+      };
+      scroller.addEventListener('pointerdown', holdStart, { passive: true });
+      scroller.addEventListener('touchstart', holdStart, { passive: true });
+      for (const ev of ['pointerup', 'pointercancel', 'touchend', 'touchcancel'])
+        scroller.addEventListener(ev, holdEnd, { passive: true });
+
+      let ticking = false, lastPos = -1;
+      function onScroll() {
+        if (looped && realCount > CLONES && !jumpedThisFling && !touching) {
+          // у самой стенки перескакиваем сразу: иначе лента упрётся
+          // в физический край и замрёт, будто она не зациклена
+          const max = scroller.scrollWidth - scroller.clientWidth;
+          if (scroller.scrollLeft < step * 0.25 ||
+              scroller.scrollLeft > max - step * 0.25) {
+            jumpedThisFling = true;
+            jump(false);
+          }
+        }
+        clearTimeout(settleTimer);
+        lastPos = scroller.scrollLeft;
+        settleTimer = setTimeout(settled, SETTLE);
+        if (document.hidden) { paint(); return; }
+        if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; paint(); }); }
+      }
+      function settled() {
+        // ждём, пока отпустят и лента действительно остановится:
+        // равенство позиции двум замерам подряд — признак покоя
+        if (touching || scroller.scrollLeft !== lastPos) {
+          lastPos = scroller.scrollLeft;
+          settleTimer = setTimeout(settled, SETTLE);
+          return;
+        }
+        jumpedThisFling = false;
+        if (looped && realCount > CLONES) jump(true);
+        paint();
+      }
+
+      scroller.addEventListener('scroll', onScroll, { passive: true });
+      scroller.addEventListener('scrollend', () => {
+        if (touching) return;      // жест ещё идёт, снап впереди
+        clearTimeout(settleTimer);
+        lastPos = scroller.scrollLeft;
+        settled();
+      });
+      window.addEventListener('resize', () => { measure(); paint(); });
+      document.addEventListener('visibilitychange', paint);
+      window.addEventListener('pageshow', paint);
+
+      measure();
+      if (looped && realCount > CLONES) scroller.scrollLeft = snapOf(first);
+      paint();
     });
   }
 
@@ -960,8 +1138,9 @@ const Feed = (() => {
       container.appendChild(node);
     }
     initParallax(container);
+    initHeroCarousel(container);
     initTravelTicket(container);
   }
 
-  return { register, mount, initParallax, initTravelTicket, ICONS };
+  return { register, mount, initParallax, initHeroCarousel, initTravelTicket, ICONS };
 })();

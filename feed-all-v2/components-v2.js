@@ -408,7 +408,6 @@ const Feed = (() => {
           </div>
         </div>
       </div>
-      <div class="fc-trip-edge fc-trip-edge--t"></div>
       <div class="fc-trip-dash"></div>
     </section>`));
 
@@ -455,15 +454,9 @@ const Feed = (() => {
         below.className = 'fc-trip-below';
         section.after(below);
         while (below.nextElementSibling) below.append(below.nextElementSibling);
-        /* Пунктир переезжает в нижний слой: его белая кромка (::before)
-           рисуется поверх всей секции билета и накрыла бы линию.
-           Внутри слоя линия оказывается над кромкой и заодно едет
-           вместе с ней — точно по стыку. */
-        const dashEl = section.querySelector('.fc-trip-dash');
-        if (dashEl) below.prepend(dashEl);
       }
 
-      const CARD_TOP = 40;       // рамка контента внутри блока
+      const CARD_TOP = 24;       // рамка контента внутри блока
       /* Выглядывает ли следующая карточка из-за правого края.
          peek: false — прячем её целиком за экран. */
       const peek = block.peek !== false;
@@ -767,8 +760,8 @@ const Feed = (() => {
          иначе на iOS раскрытие всегда отстаёт от пальца. */
       // закрытая высота = две сомкнутые кромки по 16px: зубцы
       // сходятся посередине, скругления углов помещаются целиком
-      const H_CLOSED = 32;  // свёрнутый билет: две кромки по 16px впритык
-      const H_OPEN = 360;        // заголовок переехал внутрь карточки
+      const H_CLOSED = 0;   // свёрнутый блок не виден совсем
+      const H_OPEN = 328;        // 280 карточки + по 24 сверху и снизу
       /* Раскрытие идёт 1:1 со скроллом — пиксель прокрутки на пиксель
          открывшегося билета, поэтому лента под ним стоит на месте.
          Зависимость строго линейная: ускорение сломало бы
@@ -780,7 +773,7 @@ const Feed = (() => {
          рисует он сам (см. CSS) — скрипт в это не вмешивается */
       const cssReveal = window.CSS && CSS.supports &&
         CSS.supports('animation-timeline', 'view()');
-      let lastH = -1;
+      let lastH = -1, opened = false;
       function updateReveal() {
         tickingY = false;
         // читаем layout один раз, дальше только пишем трансформы.
@@ -789,10 +782,19 @@ const Feed = (() => {
         const vh = window.innerHeight;
         const top = section.getBoundingClientRect().top;
         const startTop = vh * 0.85;             // поднялся на 15% снизу
-        const e = Math.min(1, Math.max(0, (startTop - top) / REVEAL_SPAN));
+        const e = opened ? 1
+          : Math.min(1, Math.max(0, (startTop - top) / REVEAL_SPAN));
         // целые пиксели: дробные дают субпиксельное дрожание
         const h = Math.round(H_CLOSED + (H_OPEN - H_CLOSED) * e);
-        if (!cssReveal && h !== lastH) {
+        /* Раскрытие одноразовое: дойдя до конца, блок остаётся
+           открытым. Дальше анимацию снимаем совсем — иначе при
+           скролле вверх она отыграла бы обратно и блок закрылся. */
+        if (e >= 0.999 && !opened) {
+          opened = true;
+          section.classList.add('fc-trip--opened');
+          if (below) below.classList.add('fc-trip-below--opened');
+        }
+        if (!cssReveal && !opened && h !== lastH) {
           lastH = h;
           const cut = (H_OPEN - h) / 2;         // маска сверху и снизу
           band.style.clipPath = `inset(${cut}px 0px ${cut}px 0px)`;
@@ -802,10 +804,8 @@ const Feed = (() => {
           if (below) below.style.transform = `translateY(${-(H_OPEN - h)}px)`;
           bgwrap.style.transform = `scale(${(1 + REVEAL_ZOOM * (1 - e)).toFixed(4)})`;
         }
+        if (!cssReveal && !opened) dash.style.opacity = Math.max(0, 1 - e / DASH_OUT).toFixed(3);
         // зум фона рисует CSS; в JS он нужен лишь карточкам карусели
-        if (!cssReveal) {
-          dash.style.opacity = Math.max(0, 1 - e / DASH_OUT).toFixed(3);
-        }
         revealScale = cssReveal ? 1 : 1 + REVEAL_ZOOM * (1 - e);
         revealE = e;
         // подсказку отсчитываем, только пока блок раскрыт и на экране

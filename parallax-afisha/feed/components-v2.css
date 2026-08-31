@@ -727,7 +727,7 @@ html, body {
    overflow-anchor выключен: иначе браузер подкручивает скролл сам */
 .fc-trip-band {
   position: relative;
-  height: 360px;
+  height: 328px;
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -739,9 +739,8 @@ html, body {
   z-index: 1;
 }
 .feed > section.fc-trip {
-  /* билет прижат к соседям плотнее остальной ленты: зазор 8px
-     вместо общих 24 — иначе кромки висят далеко от фотографии */
-  margin: -16px 0;
+  /* зазор до соседних блоков 20px вместо общих по ленте 24 */
+  margin: -4px 0;
   overflow-anchor: none;
   z-index: 0;
 }
@@ -762,7 +761,7 @@ html, body {
   left: 0;
   right: 0;
   top: -1px;
-  height: 362px;
+  height: 330px;
   overflow: hidden;
 }
 /* Свой контекст наложения: внутри него заголовок поднимается над
@@ -829,7 +828,7 @@ html, body {
      колонки дальше её границ не действует. */
   z-index: 3;
   left: 0;
-  top: 40px;
+  top: 24px;
   width: 290px;
   height: 280px;
   display: flex;
@@ -993,64 +992,21 @@ html, body {
 }
 /* Заголовок блока (макет 104:3836): отступы 16/20/12, между
    текстом и иконкой 8px, между надзаголовком и заголовком 8px */
-/* Кромки билета (макет 116:4371): белые полосы поверх краёв блока
-   со скруглением, обращённым внутрь. Это углы соседних карточек —
-   сверху и снизу они закругляются навстречу билету. Лежат в секции,
-   а не внутри блока: маска на них не действует, поэтому их сплошная
-   часть заодно накрывает край обрезки, где просвечивал шов. */
-.fc-trip-edge {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  /* 16px видимой кромки плюс 48px наружу. Запас нужен на скролл:
-     маска блока и кромка едут разными путями (одна — обрезкой,
-     другая — трансформом), и на резком движении одна может отстать
-     от другой на несколько пикселей. Пока запас больше отставания,
-     между ними не открывается щель с фотографией. */
-  height: 64px;
-  background: #fff;
-  pointer-events: none;
-  z-index: 3;
-  will-change: transform, border-radius;
-}
-.fc-trip-edge--t { top: -48px; border-radius: 0 0 16px 16px; }
-/* Нижнюю кромку рисует сам нижний блок: она приклеена к его верхнему
-   краю и едет вместе с ним, а он уже двигается 1:1 с раскрытием
-   билета. Отставать от края билета ей попросту нечем — в отличие от
-   отдельного слоя со своей анимацией, который на резком скролле
-   расходился с маской и открывал щель. */
-.fc-trip-below::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -24px;         /* 8 зазора + 16 нахлёста на билет */
-  height: 40px;
-  background: #fff;
-  border-radius: 16px 16px 0 0;
-  pointer-events: none;
-}
-/* Линия отрыва между кромками свёрнутого билета: пунктир 5/5
-   (макет 115:4341). Как только блок пошёл раскрываться, линия
-   уходит — её место занимает сам билет. */
+/* Линия стыка: пунктир 5/5 на месте свёрнутого блока (макет 115:4341).
+   Как только блок пошёл раскрываться, линия уходит — её место
+   занимает сама фотография. */
 .fc-trip-dash {
   position: absolute;
   left: 12px;
   right: 8px;
-  top: 16px;   /* в секции; внутри нижнего слоя — см. правило ниже */
+  top: 0;
   height: 1px;
   background-image: repeating-linear-gradient(
     90deg, #575b61 0 5px, transparent 5px 10px);
   pointer-events: none;
   z-index: 4;
 }
-/* линия живёт в нижнем слое — отсчитываем её от его верхнего края */
-.fc-trip-below > .fc-trip-dash { top: -24px; }
 
-/* Точки-пагинация под контентом карточки (макет: слева, 6px,
-   активная белая). Слой блока, не карточки: карточки едут мимо,
-   точки стоят на месте */
 /* Прозрачный слой скролла со снапом поверх канвы */
 .fc-trip-scroller {
   position: absolute;
@@ -1124,6 +1080,27 @@ html, body {
    прокрутка живёт в отдельном потоке, и любой расчёт из скрипта
    приходит с опозданием — отсюда дрожь. JS остаётся запасным
    путём для браузеров без поддержки (см. cssReveal). */
+/* Блок раскрылся насовсем: анимацию снимаем и фиксируем конечный
+   вид. Иначе прокрутка вверх отматывала бы её назад и блок
+   закрывался бы каждый раз, когда уходит вниз экрана. */
+.fc-trip--opened .fc-trip-band {
+  animation: none !important;
+  clip-path: none;
+  transform: none;
+}
+.fc-trip--opened .fc-trip-bgwrap {
+  animation: none !important;
+  transform: none;
+}
+.fc-trip--opened .fc-trip-dash {
+  animation: none !important;
+  opacity: 0;
+}
+.fc-trip-below--opened {
+  animation: none !important;
+  transform: none;
+}
+
 @supports (animation-timeline: view()) {
   .feed { timeline-scope: --fc-trip; }
   .fc-trip {
@@ -1166,7 +1143,7 @@ html, body {
     animation-range: cover 15vh calc(15vh + 328px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
-  .fc-trip-dash     { animation-name: fc-trip-dash; }
   .fc-trip-below         { animation-name: fc-trip-below; }
+  .fc-trip-dash     { animation-name: fc-trip-dash; }
   .fc-trip-bgwrap   { animation-name: fc-trip-zoom; }
 }

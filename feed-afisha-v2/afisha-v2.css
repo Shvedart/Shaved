@@ -45,6 +45,7 @@ html, body {
 
 /* ── Общее: горизонтальный скроллер ──────────────── */
 .fc-scroller {
+  position: relative;   /* offsetLeft карточек = координата в ленте */
   display: flex;
   gap: var(--gap-cards);
   padding: 0 var(--pad-screen);
@@ -64,6 +65,8 @@ html, body {
    Отступ по краям 16px: первая и последняя карточки встают
    ровно у края, промежуточные снапятся по центру экрана. */
 .fc-scroller--center {
+  /* запас фотографии по бокам = величине отставания в параллаксе */
+  --parallax-shift: 85px;
   padding: 0 var(--pad-screen);
   gap: 8px;   /* между соседними карточками (макет) */
 }
