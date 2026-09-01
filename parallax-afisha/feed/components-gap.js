@@ -564,12 +564,14 @@ const Feed = (() => {
       <div class="fc-trip-band">
         <div class="fc-trip-canvas">
           <div class="fc-trip-hero">
-            <div class="fc-trip-bgwrap"></div>
+            <!-- нажатие поджимает фотографию и текст, но не затемнения:
+                 они лежат вне слоёв с нажатием и держат края блока -->
+            <div class="fc-trip-press"><div class="fc-trip-bgwrap"></div></div>
             <div class="fc-trip-shade"></div>
             <!-- затемнение под текстом, а не поверх: иначе оно
                  приглушало белый заголовок -->
             <div class="fc-trip-topshade"></div>
-            <div class="fc-trip-col"></div>
+            <div class="fc-trip-press"><div class="fc-trip-col"></div></div>
           </div>
           <div class="fc-trip-card" data-role="next">
             <div class="fc-trip-shade fc-trip-shade--card"></div>
@@ -707,8 +709,11 @@ const Feed = (() => {
          стоит на своей линии и едет только по горизонтали. */
       const revealMode = block.bgMode === 'reveal';
       const glue = (card, left, top, W, H, cardH) => {
-        // фон карточки тоже отъезжает вместе с раскрытием блока
-        card.querySelector('img').style.transform = `scale(${revealScale.toFixed(4)})`;
+        /* Фон карточки отъезжает вместе с раскрытием блока и заранее
+           увеличен на ту же величину, что у героя: иначе при подстановке
+           новой карточки фотография скакала бы с 1 на 1.0526. */
+        card.querySelector('img').style.transform =
+          `scale(${(revealScale * PRESS_COMP).toFixed(4)})`;
         if (!revealMode) {
           // градиент тянется от 126px (компактная) до 166px (герой) —
           // иначе на подстановке нового героя он прыгал бы
@@ -740,6 +745,9 @@ const Feed = (() => {
       /* Пока блок сложен, фон показан крупнее и по мере раскрытия
          приходит к обычному масштабу — кадр как будто отъезжает. */
       const REVEAL_ZOOM = 0.14;
+      /* Фон заранее увеличен на величину, обратную нажатию: при нажатии
+         карточка сжимается, и фон приходит ровно к краям блока. */
+      const PRESS_COMP = 1 / (block.press === false ? 1 : (block.pressScale || 0.95));
       let revealScale = 1 + REVEAL_ZOOM;
       /* Боковые карточки прячутся за правым краем, пока блок
          раскрывается, и выезжают на последней пятой части. */
@@ -847,6 +855,23 @@ const Feed = (() => {
           glue(incoming, left, CARD_TOP, W, H, 280);
         }
       }
+
+      /* ── Нажатие на карточку ──
+         Раскрытая карточка вместе с фотографией слегка поджимается.
+         Свайп нажатие снимает: иначе карточка залипала бы поджатой
+         на всё время листания. */
+      const PRESS = block.press === false ? 1 : (block.pressScale || 0.95);
+      let pressed = false;
+      const pressLayers = [...section.querySelectorAll('.fc-trip-press')];
+      function setPress(on) {
+        if (pressed === on || PRESS === 1) return;
+        pressed = on;
+        for (const l of pressLayers) l.style.transform = on ? `scale(${PRESS})` : '';
+      }
+      for (const ev of ['pointerdown', 'touchstart'])
+        scroller.addEventListener(ev, () => setPress(true), { passive: true });
+      for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel', 'scroll'])
+        scroller.addEventListener(ev, () => setPress(false), { passive: true });
 
       /* ── Подсказка про горизонтальный скролл ──
          Блок раскрылся, а карусель не тронули — через паузу карточки
@@ -1058,7 +1083,8 @@ const Feed = (() => {
           // к блоку сверху, а лента снизу — на всю скрытую высоту
           band.style.transform = `translateY(${-cut}px)`;
           if (below) below.style.transform = `translateY(${-(H_OPEN - h)}px)`;
-          bgwrap.style.transform = `scale(${(1 + REVEAL_ZOOM * (1 - e)).toFixed(4)})`;
+          bgwrap.style.transform =
+            `scale(${((1 + REVEAL_ZOOM * (1 - e)) * PRESS_COMP).toFixed(4)})`;
         }
         // зум фона рисует CSS; в JS он нужен лишь карточкам карусели
         if (!cssReveal) {
