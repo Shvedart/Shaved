@@ -975,19 +975,44 @@ const Feed = (() => {
       const snapOn = block.autoSnap === true;
       const SNAP_FROM = block.autoSnapFrom || 0.8;
       const SNAP_WAIT = 140;   // мс тишины, после которых считаем, что встали
-      let snapTimer = 0, snapped = false, touchingPage = false, lastY = -1;
+      let snapTimer = 0, snapped = false, touchingPage = false;
       let snapRaf = 0;
       const holdPage = v => () => {
         touchingPage = v;
         // тронули экран — доводку прекращаем на полуслове
         if (v) { clearTimeout(snapTimer); snapTimer = 0; cancelAnimationFrame(snapRaf); snapRaf = 0; }
+        else armSnap();   // отпустили — ждём тишины и доводим
       };
       if (snapOn) {
         for (const ev of ['pointerdown', 'touchstart'])
           window.addEventListener(ev, holdPage(true), { passive: true });
         for (const ev of ['pointerup', 'pointercancel', 'touchend', 'touchcancel'])
           window.addEventListener(ev, holdPage(false), { passive: true });
+        window.addEventListener('scroll', armSnap, { passive: true });
+        // где поддерживается — ловим остановку точно
+        window.addEventListener('scrollend', () => {
+          clearTimeout(snapTimer);
+          if (!touchingPage) doSnap();
+        });
       }
+      /* Насколько блок раскрыт прямо сейчас. Считаем по месту, а не
+         по revealE: тот обновляется в кадровом цикле, а на iOS кадры
+         во время инерции не идут — к моменту доводки значение было бы
+         устаревшим, и порог не срабатывал. */
+      function progressNow() {
+        const vh = window.innerHeight;
+        const top = section.getBoundingClientRect().top;
+        return Math.min(1, Math.max(0, (vh * 0.85 - top) / REVEAL_SPAN));
+      }
+      /* Ждём тишины в событиях скролла: на iOS они приходят и во время
+         инерции, а вот кадры анимации там останавливаются — по ним
+         остановку не поймать. */
+      function armSnap() {
+        if (!snapOn || snapped || touchingPage) return;
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(doSnap, SNAP_WAIT);
+      }
+
       /* Доводим сами, а не через behavior: smooth — у браузера своя
          скорость, и на коротком остатке она выглядит рывком. Здесь
          длительность зависит от остатка пути, а замедление к концу
@@ -995,7 +1020,9 @@ const Feed = (() => {
       function doSnap() {
         snapTimer = 0;
         if (touchingPage || snapped) return;
-        const left = (1 - revealE) * REVEAL_SPAN;
+        const e = progressNow();
+        if (e < SNAP_FROM || e >= 0.999) return;
+        const left = (1 - e) * REVEAL_SPAN;
         if (left < 1) return;
         snapped = true;
         const from = window.scrollY;
@@ -1039,21 +1066,7 @@ const Feed = (() => {
         }
         revealScale = cssReveal ? 1 : 1 + REVEAL_ZOOM * (1 - e);
         revealE = e;
-        if (snapOn) {
-          // таймер заводим только когда страница перестала двигаться:
-          // иначе он сбрасывался бы каждый кадр и не срабатывал никогда
-          const y = window.scrollY;
-          const движется = y !== lastY;
-          lastY = y;
-          if (e >= SNAP_FROM && e < 0.999 && !snapped) {
-            if (движется || touchingPage) { clearTimeout(snapTimer); snapTimer = 0; }
-            else if (!snapTimer) snapTimer = setTimeout(doSnap, SNAP_WAIT);
-          } else {
-            clearTimeout(snapTimer);
-            snapTimer = 0;
-            if (e < SNAP_FROM) snapped = false;   // ушли назад — можно снова
-          }
-        }
+        if (snapOn && e < SNAP_FROM) snapped = false;   // ушли назад — можно снова
         // подсказку отсчитываем, только пока блок раскрыт и на экране
         if ((hintOn || autoOn) && !userSwiped) {
           const наЭкране = top < vh && top > -H_OPEN;
