@@ -45,12 +45,12 @@ html, body {
 
 /* ── Общее: горизонтальный скроллер ──────────────── */
 .fc-scroller {
+  position: relative;   /* offsetLeft карточек = координата в ленте */
   display: flex;
   gap: var(--gap-cards);
   padding: 0 var(--pad-screen);
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -65,7 +65,10 @@ html, body {
    Отступ по краям 16px: первая и последняя карточки встают
    ровно у края, промежуточные снапятся по центру экрана. */
 .fc-scroller--center {
+  /* запас фотографии по бокам = величине отставания в параллаксе */
+  --parallax-shift: 85px;
   padding: 0 var(--pad-screen);
+  gap: 8px;   /* между соседними карточками (макет) */
 }
 .fc-scroller--center > * {
   scroll-snap-align: center;
@@ -88,7 +91,6 @@ html, body {
   width: calc(100% + var(--parallax-shift) * 2);
   height: 100%;
   object-fit: cover;
-  will-change: transform;
 }
 
 /* Текст с растворением справа (Gradient/Text/Secondary Fade) */
@@ -164,6 +166,91 @@ html, body {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+/* ═══ offers — стопка предложений (макет 203:5239) ═══ */
+.fc-offers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 var(--pad-screen);
+}
+.fc-offer-card {
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 6px 34px rgba(0, 0, 0, 0.12);
+}
+/* Верх карточки: фотография на всю ширину, поверх неё кэшбэк и срок */
+.fc-offer-top {
+  position: relative;
+  height: 180px;
+  color: var(--text-primary);
+}
+.fc-offer-top > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* на тёмной подложке текст светлый (макет: третья карточка) */
+.fc-offer-top--light { color: #f6f7f8; }
+.fc-offer-texts {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-offer-cashback {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.38px;
+  line-height: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+.fc-offer-until {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.24px;
+  line-height: 18px;
+}
+/* Низ карточки: аватар бренда, название и категория */
+.fc-offer-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+.fc-offer-ava {
+  width: 56px;
+  height: 56px;
+  border-radius: 100px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.fc-offer-cell-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.fc-offer-name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.41px;
+  line-height: normal;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.fc-offer-kind {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: normal;
 }
 
 /* ═══ Блок: Offer (баннер-предложение) ═══════════════ */
@@ -327,11 +414,22 @@ html, body {
      итог: карточка липнет в 16px от правого края экрана */
   left: calc(100% - 343px);
 }
+.fc-hero-card .fc-desc > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-scroller--center > .fc-snap { width: 100%; }
 .fc-hero-card {
   position: relative;
-  width: 343px;
-  height: 428px;
-  border-radius: 32px;
+  /* во всю ширину слота (макет 144:4698). Ширину задаёт обёртка,
+     а не 100vw: vw считается от layout-вьюпорта и на телефоне
+     расходится с реальной шириной карусели */
+  width: 100%;
+  /* пропорции карточки из макета (343×428): растягиваясь по ширине,
+     она пропорционально растёт и в высоту */
+  aspect-ratio: 343 / 428;
+  border-radius: 28px;
   transform-origin: center;
 }
 
@@ -413,18 +511,25 @@ html, body {
 .fc-hero-card .fc-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.8) 80%);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 100%),
+    rgba(0, 0, 0, 0.15);
   pointer-events: none;
 }
 .fc-chip {
   position: absolute;
   top: 16px;
   left: 16px;
-  padding: 1.5px 6px 2.5px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
   border-radius: 20px;
-  background: var(--chip-bg);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+  /* Без backdrop-filter: размытие фона считается каждый кадр и на
+     каждой карточке отдельно — тринадцать таких чипов заметно
+     подтормаживали листание. Плотность заливки подобрана так,
+     чтобы текст читался так же */
+  background: rgba(0, 0, 0, 0.4);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -439,18 +544,21 @@ html, body {
   bottom: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   color: #fff;
   letter-spacing: -0.08px;
 }
 .fc-hero-card .fc-texts {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 8px;
+  height: 86px;
 }
 .fc-hero-card .fc-title {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: -0.41px;
   line-height: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -458,13 +566,13 @@ html, body {
   overflow: hidden;
 }
 .fc-hero-card .fc-desc {
-  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;            /* между площадкой и датой */
+  font-size: 15px;
   font-weight: 400;
+  letter-spacing: -0.24px;
   line-height: normal;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .fc-hero-card .fc-actions {
   display: flex;
@@ -472,10 +580,10 @@ html, body {
   gap: 8px;
 }
 .fc-btn-buy {
-  height: 28px;
+  height: 24px;
   display: flex;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 8px;
   border: none;
   border-radius: 20px;
   background: #fff;
@@ -487,15 +595,15 @@ html, body {
   cursor: pointer;
 }
 .fc-cashback {
-  height: 28px;
+  height: 24px;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 10px 0 6px;
+  padding: 0 8px 0 4px;
   border-radius: 20px;
   background: var(--badge-bg);
 }
-.fc-cashback svg { width: 16px; height: 16px; display: block; }
+.fc-cashback svg { width: 14px; height: 14px; display: block; }
 .fc-cashback span {
   font-size: 13px;
   font-weight: 600;
@@ -1035,7 +1143,7 @@ html, body {
    (макет 115:4341). Как только блок пошёл раскрываться, линия
    уходит — её место занимает сам билет. */
 .fc-trip-dash {
-  display: none;   /* вместо пунктира — зазор в 1px между кромками */
+  display: none;   /* вместо пунктира — зазор в 2px между кромками */
   position: absolute;
   left: 12px;
   right: 8px;
@@ -1135,13 +1243,13 @@ html, body {
   /* билет: маска расходится от центра, сам он подтянут вверх
      на скрытую часть, чтобы примыкать к блоку сверху */
   @keyframes fc-trip-open {
-    from { clip-path: inset(163.5px 0); transform: translateY(-163.5px); }
+    from { clip-path: inset(163px 0); transform: translateY(-163px); }
     to   { clip-path: inset(0 0 0 0);   transform: translateY(0); }
   }
   /* лента снизу поднята на всю скрытую высоту — 1:1 со скроллом,
      поэтому во время раскрытия она стоит на месте */
   @keyframes fc-trip-below {
-    from { transform: translateY(-327px); }
+    from { transform: translateY(-326px); }
     to   { transform: translateY(0); }
   }
   /* пунктир держится лишь в самом начале пути */
@@ -1164,7 +1272,7 @@ html, body {
     animation-timeline: --fc-trip;
     /* старт — когда блок прошёл 15% экрана снизу, длина пути равна
        раскрывающейся высоте: тогда компенсация точная */
-    animation-range: cover 15vh calc(15vh + 327px);
+    animation-range: cover 15vh calc(15vh + 326px);
   }
   .fc-trip-band     { animation-name: fc-trip-open; }
   .fc-trip-dash     { animation-name: fc-trip-dash; }
