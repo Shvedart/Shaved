@@ -967,6 +967,50 @@ const Feed = (() => {
          рисует он сам (см. CSS) — скрипт в это не вмешивается */
       const cssReveal = window.CSS && CSS.supports &&
         CSS.supports('animation-timeline', 'view()');
+      /* ── Доводка раскрытия ──
+         autoSnap: true — если блок раскрылся больше чем на порог,
+         но не до конца, страница сама дотягивает остаток. Только
+         когда палец отпущен и скролл встал: дёргать страницу
+         под пальцем — худшее, что можно сделать. */
+      const snapOn = block.autoSnap === true;
+      const SNAP_FROM = block.autoSnapFrom || 0.8;
+      const SNAP_WAIT = 140;   // мс тишины, после которых считаем, что встали
+      let snapTimer = 0, snapped = false, touchingPage = false, lastY = -1;
+      let snapRaf = 0;
+      const holdPage = v => () => {
+        touchingPage = v;
+        // тронули экран — доводку прекращаем на полуслове
+        if (v) { clearTimeout(snapTimer); snapTimer = 0; cancelAnimationFrame(snapRaf); snapRaf = 0; }
+      };
+      if (snapOn) {
+        for (const ev of ['pointerdown', 'touchstart'])
+          window.addEventListener(ev, holdPage(true), { passive: true });
+        for (const ev of ['pointerup', 'pointercancel', 'touchend', 'touchcancel'])
+          window.addEventListener(ev, holdPage(false), { passive: true });
+      }
+      /* Доводим сами, а не через behavior: smooth — у браузера своя
+         скорость, и на коротком остатке она выглядит рывком. Здесь
+         длительность зависит от остатка пути, а замедление к концу
+         делает остановку мягкой. */
+      function doSnap() {
+        snapTimer = 0;
+        if (touchingPage || snapped) return;
+        const left = (1 - revealE) * REVEAL_SPAN;
+        if (left < 1) return;
+        snapped = true;
+        const from = window.scrollY;
+        const dur = Math.min(900, 320 + left * 3.5);
+        const t0 = performance.now();
+        const step = now => {
+          if (touchingPage) { snapRaf = 0; return; }
+          const p = Math.min(1, (now - t0) / dur);
+          const k = 1 - Math.pow(1 - p, 3);   // плавное замедление
+          window.scrollTo(0, from + left * k);
+          snapRaf = p < 1 ? requestAnimationFrame(step) : 0;
+        };
+        snapRaf = requestAnimationFrame(step);
+      }
+
       let lastH = -1;
       function updateReveal() {
         tickingY = false;
@@ -995,6 +1039,21 @@ const Feed = (() => {
         }
         revealScale = cssReveal ? 1 : 1 + REVEAL_ZOOM * (1 - e);
         revealE = e;
+        if (snapOn) {
+          // таймер заводим только когда страница перестала двигаться:
+          // иначе он сбрасывался бы каждый кадр и не срабатывал никогда
+          const y = window.scrollY;
+          const движется = y !== lastY;
+          lastY = y;
+          if (e >= SNAP_FROM && e < 0.999 && !snapped) {
+            if (движется || touchingPage) { clearTimeout(snapTimer); snapTimer = 0; }
+            else if (!snapTimer) snapTimer = setTimeout(doSnap, SNAP_WAIT);
+          } else {
+            clearTimeout(snapTimer);
+            snapTimer = 0;
+            if (e < SNAP_FROM) snapped = false;   // ушли назад — можно снова
+          }
+        }
         // подсказку отсчитываем, только пока блок раскрыт и на экране
         if ((hintOn || autoOn) && !userSwiped) {
           const наЭкране = top < vh && top > -H_OPEN;
