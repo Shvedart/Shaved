@@ -868,10 +868,37 @@ const Feed = (() => {
         pressed = on;
         for (const l of pressLayers) l.style.transform = on ? `scale(${PRESS})` : '';
       }
+
+      /* Нажатие ждёт: в первый момент касания ещё не понять, тянут
+         ленту или жмут на карточку. Пауза плюс порог сдвига — если
+         палец поехал, нажатие так и не появится. */
+      const PRESS_DELAY = block.pressDelay || 110;   // мс до нажатия
+      const PRESS_SLOP = 8;                          // px, после которых это скролл
+      let pressTimer = 0, pressX = 0, pressY = 0;
+      const точка = e => (e.touches && e.touches[0]) || e;
+      function pressDown(e) {
+        const p = точка(e);
+        pressX = p.clientX; pressY = p.clientY;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => { pressTimer = 0; setPress(true); }, PRESS_DELAY);
+      }
+      function pressMove(e) {
+        if (!pressTimer && !pressed) return;
+        const p = точка(e);
+        if (Math.abs(p.clientX - pressX) > PRESS_SLOP ||
+            Math.abs(p.clientY - pressY) > PRESS_SLOP) pressUp();
+      }
+      function pressUp() {
+        clearTimeout(pressTimer);
+        pressTimer = 0;
+        setPress(false);
+      }
       for (const ev of ['pointerdown', 'touchstart'])
-        scroller.addEventListener(ev, () => setPress(true), { passive: true });
+        scroller.addEventListener(ev, pressDown, { passive: true });
+      for (const ev of ['pointermove', 'touchmove'])
+        scroller.addEventListener(ev, pressMove, { passive: true });
       for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel', 'scroll'])
-        scroller.addEventListener(ev, () => setPress(false), { passive: true });
+        scroller.addEventListener(ev, pressUp, { passive: true });
 
       /* ── Подсказка про горизонтальный скролл ──
          Блок раскрылся, а карусель не тронули — через паузу карточки
